@@ -34,6 +34,12 @@ FLAGS = flags.FLAGS
 BATCH_NORM_EPSILON = 1e-5
 
 
+
+GLOBAL_BN = True
+BATCH_NORM_DECAY = 0.9
+SK_RATIO = 0.0
+SE_RATIO = 0.0
+
 class BatchNormalization(tf.layers.BatchNormalization):
   """Batch Normalization layer that supports cross replica computation on TPU.
 
@@ -113,10 +119,10 @@ def batch_norm_relu(inputs, is_training, relu=True, init_zero=False,
   else:
     axis = -1
 
-  if FLAGS.global_bn:
+  if GLOBAL_BN:
     bn_foo = BatchNormalization(
         axis=axis,
-        momentum=FLAGS.batch_norm_decay,
+        momentum=BATCH_NORM_DECAY,
         epsilon=BATCH_NORM_EPSILON,
         center=center,
         scale=scale,
@@ -127,7 +133,7 @@ def batch_norm_relu(inputs, is_training, relu=True, init_zero=False,
     inputs = tf.layers.batch_normalization(
         inputs=inputs,
         axis=axis,
-        momentum=FLAGS.batch_norm_decay,
+        momentum=BATCH_NORM_DECAY,
         epsilon=BATCH_NORM_EPSILON,
         center=center,
         scale=scale,
@@ -368,7 +374,7 @@ def residual_block(inputs, filters, is_training, strides,
   shortcut = inputs
   if use_projection:
     # Projection shortcut in first layer to match filters and strides
-    if FLAGS.sk_ratio > 0:  # Use ResNet-D (https://arxiv.org/abs/1812.01187)
+    if SK_RATIO > 0:  # Use ResNet-D (https://arxiv.org/abs/1812.01187)
       if strides > 1:
         inputs = fixed_padding(inputs, 2, data_format)
       inputs = tf.layers.average_pooling2d(
@@ -395,8 +401,8 @@ def residual_block(inputs, filters, is_training, strides,
   inputs = batch_norm_relu(inputs, is_training, relu=False, init_zero=True,
                            data_format=data_format)
 
-  if FLAGS.se_ratio > 0:
-    inputs = se_layer(inputs, filters, FLAGS.se_ratio, data_format=data_format)
+  if SE_RATIO > 0:
+    inputs = se_layer(inputs, filters, SE_RATIO, data_format=data_format)
 
   return tf.nn.relu(inputs + shortcut)
 
@@ -432,7 +438,7 @@ def bottleneck_block(inputs, filters, is_training, strides,
     # Projection shortcut only in first block within a group. Bottleneck blocks
     # end with 4 times the number of filters.
     filters_out = 4 * filters
-    if FLAGS.sk_ratio > 0:  # Use ResNet-D (https://arxiv.org/abs/1812.01187)
+    if SK_RATIO > 0:  # Use ResNet-D (https://arxiv.org/abs/1812.01187)
       if strides > 1:
         shortcut = fixed_padding(inputs, 2, data_format)
       else:
@@ -461,9 +467,9 @@ def bottleneck_block(inputs, filters, is_training, strides,
       inputs, is_training=is_training, data_format=data_format,
       keep_prob=dropblock_keep_prob, dropblock_size=dropblock_size)
 
-  if FLAGS.sk_ratio > 0:
+  if SK_RATIO > 0:
     inputs = sk_conv2d(
-        inputs, filters, strides, FLAGS.sk_ratio,
+        inputs, filters, strides, SK_RATIO,
         is_training=is_training, data_format=data_format)
   else:
     inputs = conv2d_fixed_padding(
@@ -483,8 +489,8 @@ def bottleneck_block(inputs, filters, is_training, strides,
       inputs, is_training=is_training, data_format=data_format,
       keep_prob=dropblock_keep_prob, dropblock_size=dropblock_size)
 
-  if FLAGS.se_ratio > 0:
-    inputs = se_layer(inputs, filters, FLAGS.se_ratio, data_format=data_format)
+  if SE_RATIO > 0:
+    inputs = se_layer(inputs, filters, SE_RATIO, data_format=data_format)
 
   return tf.nn.relu(inputs + shortcut)
 
@@ -528,7 +534,7 @@ def block_group(inputs, filters, block_fn, blocks, strides, is_training, name,
   return tf.identity(inputs, name)
 
 
-def resnet_v1_generator(block_fn, layers, width_multiplier,
+def resnet_v1_generator_encoder(block_fn, layers, width_multiplier,
                         cifar_stem=False, data_format='channels_last',
                         dropblock_keep_probs=None, dropblock_size=None):
   """Generator for ResNet v1 models.
@@ -572,7 +578,7 @@ def resnet_v1_generator(block_fn, layers, width_multiplier,
       inputs = batch_norm_relu(inputs, is_training, data_format=data_format)
       inputs = tf.identity(inputs, 'initial_max_pool')
     else:
-      if FLAGS.sk_ratio > 0:  # Use ResNet-D (https://arxiv.org/abs/1812.01187)
+      if SK_RATIO > 0:  # Use ResNet-D (https://arxiv.org/abs/1812.01187)
         inputs = conv2d_fixed_padding(
             inputs=inputs, filters=64 * width_multiplier // 2, kernel_size=3,
             strides=2, data_format=data_format)
@@ -620,8 +626,8 @@ def resnet_v1_generator(block_fn, layers, width_multiplier,
 
     trainable_variables = {}
     filter_trainable_variables(trainable_variables, after_block=0)
-    if FLAGS.train_mode == 'finetune' and FLAGS.fine_tune_after_block == 0:
-      inputs = tf.stop_gradient(inputs)
+    # if FLAGS.train_mode == 'finetune' and FLAGS.fine_tune_after_block == 0:
+    #   inputs = tf.stop_gradient(inputs)
 
     inputs = block_group(
         inputs=inputs, filters=64 * width_multiplier, block_fn=block_fn,
@@ -631,8 +637,8 @@ def resnet_v1_generator(block_fn, layers, width_multiplier,
         dropblock_size=dropblock_size)
 
     filter_trainable_variables(trainable_variables, after_block=1)
-    if FLAGS.train_mode == 'finetune' and FLAGS.fine_tune_after_block == 1:
-      inputs = tf.stop_gradient(inputs)
+    # if FLAGS.train_mode == 'finetune' and FLAGS.fine_tune_after_block == 1:
+    #   inputs = tf.stop_gradient(inputs)
 
     inputs = block_group(
         inputs=inputs, filters=128 * width_multiplier, block_fn=block_fn,
@@ -642,8 +648,8 @@ def resnet_v1_generator(block_fn, layers, width_multiplier,
         dropblock_size=dropblock_size)
 
     filter_trainable_variables(trainable_variables, after_block=2)
-    if FLAGS.train_mode == 'finetune' and FLAGS.fine_tune_after_block == 2:
-      inputs = tf.stop_gradient(inputs)
+    # if FLAGS.train_mode == 'finetune' and FLAGS.fine_tune_after_block == 2:
+    #   inputs = tf.stop_gradient(inputs)
 
     inputs = block_group(
         inputs=inputs, filters=256 * width_multiplier, block_fn=block_fn,
@@ -653,8 +659,8 @@ def resnet_v1_generator(block_fn, layers, width_multiplier,
         dropblock_size=dropblock_size)
 
     filter_trainable_variables(trainable_variables, after_block=3)
-    if FLAGS.train_mode == 'finetune' and FLAGS.fine_tune_after_block == 3:
-      inputs = tf.stop_gradient(inputs)
+    # if FLAGS.train_mode == 'finetune' and FLAGS.fine_tune_after_block == 3:
+    #   inputs = tf.stop_gradient(inputs)
 
     inputs = block_group(
         inputs=inputs, filters=512 * width_multiplier, block_fn=block_fn,
@@ -664,16 +670,15 @@ def resnet_v1_generator(block_fn, layers, width_multiplier,
         dropblock_size=dropblock_size)
 
     filter_trainable_variables(trainable_variables, after_block=4)
-    if FLAGS.train_mode == 'finetune' and FLAGS.fine_tune_after_block == 4:
-      inputs = tf.stop_gradient(inputs)
+    # if FLAGS.train_mode == 'finetune' and FLAGS.fine_tune_after_block == 4:
+    #   inputs = tf.stop_gradient(inputs)
 
-    if data_format == 'channels_last':
-      inputs = tf.reduce_mean(inputs, [1, 2])
-    else:
-      inputs = tf.reduce_mean(inputs, [2, 3])
-    inputs = tf.identity(inputs, 'final_avg_pool')
-
-    # filter_trainable_variables(trainable_variables, after_block=5)
+    # if data_format == 'channels_last':
+    #   inputs = tf.reduce_mean(inputs, [1, 2])
+    # else:
+    #   inputs = tf.reduce_mean(inputs, [2, 3])
+    # inputs = tf.identity(inputs, 'final_avg_pool')
+    filter_trainable_variables(trainable_variables, after_block=5)
     add_to_collection(trainable_variables, 'trainable_variables_inblock_')
 
     return inputs
@@ -681,7 +686,7 @@ def resnet_v1_generator(block_fn, layers, width_multiplier,
   return model
 
 
-def resnet_v1(resnet_depth, width_multiplier,
+def resnet_encoder_v1(resnet_depth, width_multiplier,
               cifar_stem=False, data_format='channels_last',
               dropblock_keep_probs=None, dropblock_size=None):
   """Returns the ResNet model for a given size and number of output classes."""
@@ -698,9 +703,11 @@ def resnet_v1(resnet_depth, width_multiplier,
     raise ValueError('Not a valid resnet_depth:', resnet_depth)
 
   params = model_params[resnet_depth]
-  return resnet_v1_generator(
+  return resnet_v1_generator_encoder(
       params['block'], params['layers'], width_multiplier,
       cifar_stem=cifar_stem,
       dropblock_keep_probs=dropblock_keep_probs,
       dropblock_size=dropblock_size,
       data_format=data_format)
+
+

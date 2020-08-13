@@ -25,10 +25,7 @@ import os
 from absl import app
 from absl import flags
 
-import resnet_ae
-import resnet_encoder
-import resnet_decoder
-
+import resnet
 import data as data_lib
 import model as model_lib
 import model_util as model_util
@@ -37,7 +34,6 @@ import tensorflow.compat.v1 as tf
 import tensorflow_datasets as tfds
 import tensorflow_hub as hub
 
-# from tensorflow.python import debug as tf_debug
 
 FLAGS = flags.FLAGS
 
@@ -248,37 +244,6 @@ flags.DEFINE_boolean(
     'Whether or not to use Gaussian blur for augmentation during pretraining.')
 
 
-flags.DEFINE_boolean(
-    'use_td_loss', True,
-    'Use topdown loss.')
-
-flags.DEFINE_boolean(
-    'use_bu_loss', True,
-    'Use bottomup loss.')
-
-flags.DEFINE_string(
-    'td_loss', 'attractive', # 'attractive_repulsive'
-    'Use topdown loss.')
-
-flags.DEFINE_string(
-    'bu_loss', 'attractive', # 'attractive_repulsive'
-    'Use bottomup loss.')
-
-flags.DEFINE_integer(
-    'rec_loss_exponent', 2,
-    'reconstruction loss L1 - L1.')
-
-
-###### extra flags
-# use bottom up loss
-# use top down loss
-
-# bottom up loss: attractive / repulsive
-# top down loss: attractive / repulsive
-
-# top down loss False -> use encoder only, request only augmented images 
-# top down loss True -> use encoder + decoder, request augmented and center-cropped images
-
 def build_hub_module(model, num_classes, global_step, checkpoint_path):
   """Create TF-Hub module."""
 
@@ -399,20 +364,11 @@ def main(argv):
   eval_steps = int(math.ceil(num_eval_examples / FLAGS.eval_batch_size))
   epoch_steps = int(round(num_train_examples / FLAGS.train_batch_size))
 
-  resnet_encoder.BATCH_NORM_DECAY = FLAGS.batch_norm_decay
-  resnet_decoder.BATCH_NORM_DECAY = FLAGS.batch_norm_decay
-
-  model = resnet_ae.resnet_autoencoder_v1(
-        resnet_depth=FLAGS.resnet_depth,
-        width_multiplier=FLAGS.width_multiplier,
-        cifar_stem=FLAGS.image_size <= 32)
-#   if FLAGS.use_td_loss:
-#   else:
-#     resnet_encoder.BATCH_NORM_DECAY = FLAGS.batch_norm_decay
-#     model = resnet_encoder.resnet_encoder_v1(
-#         resnet_depth=FLAGS.resnet_depth,
-#         width_multiplier=FLAGS.width_multiplier,
-#         cifar_stem=FLAGS.image_size <= 32)
+  resnet.BATCH_NORM_DECAY = FLAGS.batch_norm_decay
+  model = resnet.resnet_v1(
+      resnet_depth=FLAGS.resnet_depth,
+      width_multiplier=FLAGS.width_multiplier,
+      cifar_stem=FLAGS.image_size <= 32)
 
   checkpoint_steps = (
       FLAGS.checkpoint_steps or (FLAGS.checkpoint_epochs * epoch_steps))
@@ -463,10 +419,8 @@ def main(argv):
       if result['global_step'] >= train_steps:
         return
   else:
-    # hooks = [tf_debug.LocalCLIDebugHook(ui_type="readline")]
-
     estimator.train(
-        data_lib.build_input_fn(builder, True), max_steps=train_steps) #, hooks=hooks
+        data_lib.build_input_fn(builder, True), max_steps=train_steps)
     if FLAGS.mode == 'train_then_eval':
       perform_evaluation(
           estimator=estimator,

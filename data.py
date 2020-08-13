@@ -121,14 +121,33 @@ def build_input_fn(builder, is_training):
       """Produces multiple transformations of the same batch."""
       if FLAGS.train_mode == 'pretrain':
         xs = []
-        for _ in range(2):  # Two transformations
-          xs.append(preprocess_fn_pretrain(image))
+        thetas = []
+        
+        if FLAGS.use_bu_loss:
+          for _ in range(2):  # Two transformations
+            im, theta = preprocess_fn_pretrain(image)
+            xs.append(im)
+            thetas.append(theta)
+        else:
+          im, theta = preprocess_fn_pretrain(image)
+          xs.append(im)
+          thetas.append(theta)
+          
+        if FLAGS.use_td_loss:
+          # original for reconstruction
+          target_im, target_theta = preprocess_fn_finetune(image)
+          xs.append(target_im)
+          thetas.append(target_theta)
+
+        thetas = tf.concat(thetas, -1)
         image = tf.concat(xs, -1)
         label = tf.zeros([num_classes])
+      
       else:
-        image = preprocess_fn_finetune(image)
+        image, thetas = preprocess_fn_finetune(image)
         label = tf.one_hot(label, num_classes)
-      return image, label, 1.0
+      
+      return image, label, thetas, 1.0
 
     dataset = builder.as_dataset(
         split=FLAGS.train_split if is_training else FLAGS.eval_split,
@@ -143,9 +162,9 @@ def build_input_fn(builder, is_training):
                           num_parallel_calls=tf.data.experimental.AUTOTUNE)
     dataset = dataset.batch(params['batch_size'], drop_remainder=is_training)
     dataset = pad_to_batch(dataset, params['batch_size'])
-    images, labels, mask = tf.data.make_one_shot_iterator(dataset).get_next()
+    images, labels, thetas, mask = tf.data.make_one_shot_iterator(dataset).get_next()
 
-    return images, {'labels': labels, 'mask': mask}
+    return images, {'labels': labels, 'thetas': thetas, 'mask': mask}
   return _input_fn
 
 

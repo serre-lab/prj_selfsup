@@ -39,7 +39,12 @@ def build_model_fn(model, num_classes, num_train_examples):
 
     # Check training mode.
     if FLAGS.train_mode == 'pretrain':
-      num_transforms = 2
+      num_transforms = 1
+      if FLAGS.use_td_loss:
+        num_transforms += 1
+      if FLAGS.use_bu_loss:
+        num_transforms += 1
+
       if FLAGS.fine_tune_after_block > -1:
         raise ValueError('Does not support layer freezing during pretraining,'
                          'should set fine_tune_after_block<=-1 for safety.')
@@ -51,35 +56,99 @@ def build_model_fn(model, num_classes, num_train_examples):
     # Split channels, and optionally apply extra batched augmentation.
     features_list = tf.split(
         features, num_or_size_splits=num_transforms, axis=-1)
+    if FLAGS.use_td_loss: 
+      target_images = features_list[-1]
+      features_list = features_list[:-1]
+      # transforms
+      thetas_list = tf.split(
+        labels['thetas'], num_or_size_splits=num_transforms, axis=-1)
+      thetas = tf.concat(thetas_list[:-1], 0)
+
     if FLAGS.use_blur and is_training and FLAGS.train_mode == 'pretrain':
       features_list = data_util.batch_random_blur(
           features_list, FLAGS.image_size, FLAGS.image_size)
+    
     features = tf.concat(features_list, 0)  # (num_transforms * bsz, h, w, c)
 
     # Base network forward pass.
     with tf.variable_scope('base_model'):
-      if FLAGS.train_mode == 'finetune' and FLAGS.fine_tune_after_block >= 4:
-        # Finetune just supervised (linear) head will not update BN stats.
-        model_train_mode = False
+      if FLAGS.train_mode == 'finetune':
+        if FLAGS.fine_tune_after_block >= 4:
+          # Finetune just supervised (linear) head will not update BN stats.
+          model_train_mode = False
       else:
+        if FLAGS.use_td_loss:
+          features = (features, thetas)
+        
         # Pretrain or finetuen anything else will update BN stats.
         model_train_mode = is_training
-      hiddens = model(features, is_training=model_train_mode)
+
+      outputs = model(features, is_training=model_train_mode)
 
     # Add head and loss.
     if FLAGS.train_mode == 'pretrain':
       tpu_context = params['context'] if 'context' in params else None
+      
+      if FLAGS.use_td_loss:
+        hiddens, reconstruction = outputs
+      else:
+        hiddens = outputs
+      if FLAGS.use_td_loss:
+        if FLAGS.td_loss=='attractive':
+          td_loss = obj_lib.add_td_attractive_loss(
+            reconstruction,
+            target_images,
+            power=FLAGS.rec_loss_exponent)
+          logits_td_con = tf.zeros([params['batch_size'], params['batch_size']])
+          labels_td_con = tf.zeros([params['batch_size'], params['batch_size']])
+
+        elif FLAGS.td_loss=='attractive_repulsive':
+          td_loss, logits_td_con, labels_td_con = obj_lib.add_light_td_attractive_repulsive_loss(
+            reconstruction,
+            target_images,
+            power=FLAGS.rec_loss_exponent,
+            temperature=FLAGS.temperature,
+            tpu_context=tpu_context if is_training else None)
+          
+        else:
+          raise 'Unknown loss'
+      else:
+        logits_td_con = tf.zeros([params['batch_size'], params['batch_size']])
+        labels_td_con = tf.zeros([params['batch_size'], params['batch_size']])
+
       hiddens_proj = model_util.projection_head(hiddens, is_training)
-      contrast_loss, logits_con, labels_con = obj_lib.add_contrastive_loss(
-          hiddens_proj,
-          hidden_norm=FLAGS.hidden_norm,
-          temperature=FLAGS.temperature,
-          tpu_context=tpu_context if is_training else None)
+
+      if FLAGS.use_bu_loss:
+        if FLAGS.bu_loss=='attractive':
+          bu_loss = obj_lib.add_bu_attractive_loss(
+            hiddens_proj,
+            hidden_norm=FLAGS.hidden_norm,)
+          logits_bu_con = tf.zeros([params['batch_size'], params['batch_size']])
+          labels_bu_con = tf.zeros([params['batch_size'], params['batch_size']])
+
+        elif FLAGS.bu_loss=='attractive_repulsive':
+          bu_loss, logits_bu_con, labels_bu_con = obj_lib.add_bu_attractive_repulsive_loss(
+            hiddens_proj,
+            hidden_norm=FLAGS.hidden_norm,
+            temperature=FLAGS.temperature,
+            tpu_context=tpu_context if is_training else None)  
+        else:
+          raise 'Unknown loss'
+      else:
+        logits_bu_con = tf.zeros([params['batch_size'], params['batch_size']])
+        labels_bu_con = tf.zeros([params['batch_size'], params['batch_size']])
+
       logits_sup = tf.zeros([params['batch_size'], num_classes])
+
     else:
-      contrast_loss = tf.zeros([])
-      logits_con = tf.zeros([params['batch_size'], 10])
-      labels_con = tf.zeros([params['batch_size'], 10])
+      # contrast_loss = tf.zeros([])
+      td_loss = tf.zeros([])
+      bu_loss = tf.zeros([])
+      logits_td_con = tf.zeros([params['batch_size'], 10])
+      labels_td_con = tf.zeros([params['batch_size'], 10])
+      logits_bu_con = tf.zeros([params['batch_size'], 10])
+      labels_bu_con = tf.zeros([params['batch_size'], 10])
+      hiddens = outputs
       hiddens = model_util.projection_head(hiddens, is_training)
       logits_sup = model_util.supervised_head(
           hiddens, num_classes, is_training)
@@ -111,9 +180,12 @@ def build_model_fn(model, num_classes, num_train_examples):
     if is_training:
       if FLAGS.train_summary_steps > 0:
         # Compute stats for the summary.
-        prob_con = tf.nn.softmax(logits_con)
-        entropy_con = - tf.reduce_mean(
-            tf.reduce_sum(prob_con * tf.math.log(prob_con + 1e-8), -1))
+        prob_bu_con = tf.nn.softmax(logits_bu_con)
+        entropy_bu_con = - tf.reduce_mean(
+            tf.reduce_sum(prob_bu_con * tf.math.log(prob_bu_con + 1e-8), -1))
+        prob_td_con = tf.nn.softmax(logits_td_con)
+        entropy_td_con = - tf.reduce_mean(
+            tf.reduce_sum(prob_td_con * tf.math.log(prob_td_con + 1e-8), -1))
 
         summary_writer = tf2.summary.create_file_writer(FLAGS.model_dir)
         # TODO(iamtingchen): remove this control_dependencies in the future.
@@ -123,28 +195,49 @@ def build_model_fn(model, num_classes, num_train_examples):
                 tf.math.floormod(tf.train.get_global_step(),
                                  FLAGS.train_summary_steps), 0)
             with tf2.summary.record_if(should_record):
-              contrast_acc = tf.equal(
-                  tf.argmax(labels_con, 1), tf.argmax(logits_con, axis=1))
-              contrast_acc = tf.reduce_mean(tf.cast(contrast_acc, tf.float32))
+              contrast_bu_acc = tf.equal(
+                  tf.argmax(labels_bu_con, 1), tf.argmax(logits_bu_con, axis=1))
+              contrast_bu_acc = tf.reduce_mean(tf.cast(contrast_bu_acc, tf.float32))
+              contrast_td_acc = tf.equal(
+                  tf.argmax(labels_td_con, 1), tf.argmax(logits_td_con, axis=1))
+              contrast_td_acc = tf.reduce_mean(tf.cast(contrast_td_acc, tf.float32))
+              
               label_acc = tf.equal(
                   tf.argmax(labels['labels'], 1), tf.argmax(logits_sup, axis=1))
               label_acc = tf.reduce_mean(tf.cast(label_acc, tf.float32))
+              
               tf2.summary.scalar(
-                  'train_contrast_loss',
-                  contrast_loss,
+                  'train_bottomup_loss',
+                  bu_loss,
                   step=tf.train.get_global_step())
               tf2.summary.scalar(
-                  'train_contrast_acc',
-                  contrast_acc,
+                  'train_topdown_loss',
+                  td_loss,
                   step=tf.train.get_global_step())
+              
+              tf2.summary.scalar(
+                  'train_bottomup_acc',
+                  contrast_bu_acc,
+                  step=tf.train.get_global_step())
+              tf2.summary.scalar(
+                  'train_topdown_acc',
+                  contrast_td_acc,
+                  step=tf.train.get_global_step())
+              
               tf2.summary.scalar(
                   'train_label_accuracy',
                   label_acc,
                   step=tf.train.get_global_step())
+              
               tf2.summary.scalar(
-                  'contrast_entropy',
-                  entropy_con,
+                  'contrast_bu_entropy',
+                  entropy_bu_con,
                   step=tf.train.get_global_step())
+              tf2.summary.scalar(
+                  'contrast_td_entropy',
+                  entropy_td_con,
+                  step=tf.train.get_global_step())
+              
               tf2.summary.scalar(
                   'learning_rate', learning_rate,
                   step=tf.train.get_global_step())
@@ -187,7 +280,8 @@ def build_model_fn(model, num_classes, num_train_examples):
           mode=mode, train_op=train_op, loss=loss, scaffold_fn=scaffold_fn)
     else:
 
-      def metric_fn(logits_sup, labels_sup, logits_con, labels_con, mask,
+      def metric_fn(logits_sup, labels_sup, logits_bu_con, labels_bu_con, 
+                    logits_td_con, labels_td_con, mask,
                     **kws):
         """Inner metric function."""
         metrics = {k: tf.metrics.mean(v, weights=mask)
@@ -197,20 +291,30 @@ def build_model_fn(model, num_classes, num_train_examples):
             weights=mask)
         metrics['label_top_5_accuracy'] = tf.metrics.recall_at_k(
             tf.argmax(labels_sup, 1), logits_sup, k=5, weights=mask)
-        metrics['contrastive_top_1_accuracy'] = tf.metrics.accuracy(
-            tf.argmax(labels_con, 1), tf.argmax(logits_con, axis=1),
+        
+        metrics['bottomup_top_1_accuracy'] = tf.metrics.accuracy(
+            tf.argmax(labels_bu_con, 1), tf.argmax(logits_bu_con, axis=1),
             weights=mask)
-        metrics['contrastive_top_5_accuracy'] = tf.metrics.recall_at_k(
-            tf.argmax(labels_con, 1), logits_con, k=5, weights=mask)
+        metrics['bottomup_top_5_accuracy'] = tf.metrics.recall_at_k(
+            tf.argmax(labels_bu_con, 1), logits_bu_con, k=5, weights=mask)
+
+        metrics['topdown_top_1_accuracy'] = tf.metrics.accuracy(
+            tf.argmax(labels_td_con, 1), tf.argmax(logits_td_con, axis=1),
+            weights=mask)
+        metrics['topdown_top_5_accuracy'] = tf.metrics.recall_at_k(
+            tf.argmax(labels_td_con, 1), logits_td_con, k=5, weights=mask)
         return metrics
 
       metrics = {
           'logits_sup': logits_sup,
           'labels_sup': labels['labels'],
-          'logits_con': logits_con,
-          'labels_con': labels_con,
+          'logits_bu_con': logits_bu_con,
+          'logits_td_con': logits_td_con,
+          'labels_bu_con': labels_bu_con,
+          'labels_td_con': labels_td_con,
           'mask': labels['mask'],
-          'contrast_loss': tf.fill((params['batch_size'],), contrast_loss),
+          'td_loss': tf.fill((params['batch_size'],), bu_loss),
+          'bu_loss': tf.fill((params['batch_size'],), td_loss),
           'regularization_loss': tf.fill((params['batch_size'],),
                                          tf.losses.get_regularization_loss()),
       }

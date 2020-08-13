@@ -22,7 +22,7 @@ from __future__ import print_function
 import math
 from absl import flags
 
-import resnet
+import resnet_encoder as resnet
 from lars_optimizer import LARSOptimizer
 
 import tensorflow.compat.v1 as tf
