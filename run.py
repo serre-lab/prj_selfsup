@@ -268,6 +268,13 @@ flags.DEFINE_integer(
     'rec_loss_exponent', 2,
     'reconstruction loss L1 - L1.')
 
+flags.DEFINE_float(
+    'td_loss_weight', 1,
+    'top down loss weight.')
+
+flags.DEFINE_float(
+    'bu_loss_weight', 1,
+    'bottom up loss weight.')
 
 ###### extra flags
 # use bottom up loss

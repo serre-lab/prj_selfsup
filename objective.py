@@ -114,7 +114,7 @@ def add_bu_attractive_loss(hidden,
   loss = tf.reduce_sum(loss)
   tf.losses.add_loss(loss)
   print('*'*180)
-  print('attr_bu')
+  print('attractive bottomup loss')
   print(loss)
   print('*'*180)
 
@@ -176,7 +176,7 @@ def add_bu_attractive_repulsive_loss(hidden,
 
 
   print('*'*180)
-  print('attr_rep_bu')
+  print('attractive repulsive bottomup loss')
   print(loss)
   print('*'*180)
 
@@ -200,16 +200,21 @@ def add_td_attractive_loss(reconstruction,
     A loss scalar.
   """
   # Get (normalized) hidden1 and hidden2.
+  batch_size = target.get_shape().as_list()[0]
+  rec_size = reconstruction.get_shape().as_list()[0]
   
-  reconstruction1, reconstruction2 = tf.split(reconstruction, 2, 0)
-  batch_size = tf.shape(reconstruction1)[0]
-  
-  loss = tf.reduce_sum(tf.reduce_mean((reconstruction1 - target) ** power, [1,2,3])*weights)/2 + \
-          tf.reduce_sum(tf.reduce_mean((reconstruction2 - target) ** power, [1,2,3])*weights)/2
-  loss = loss/tf.cast(batch_size, tf.float32)
-  
+  if batch_size != rec_size:
+    reconstruction1, reconstruction2 = tf.split(reconstruction, 2, 0)
+
+    loss = tf.reduce_sum(tf.reduce_mean((reconstruction1 - target) ** power, [1,2,3])*weights)/2 + \
+            tf.reduce_sum(tf.reduce_mean((reconstruction2 - target) ** power, [1,2,3])*weights)/2
+    loss = loss/tf.cast(batch_size, tf.float32)
+  else:
+    loss = tf.reduce_sum(tf.reduce_mean((reconstruction - target) ** power, [1,2,3])*weights)
+    loss = loss/tf.cast(batch_size, tf.float32)
+
   print('*'*180)
-  print('attr_td')
+  print('attractive topdown loss')
   print(loss)
   print('*'*180)
 
@@ -239,45 +244,83 @@ def add_td_attractive_repulsive_loss(reconstruction,
     The labels for contrastive prediction task.
   """
   # Get (normalized) hidden1 and hidden2.
-  reconstruction1, reconstruction2 = tf.split(reconstruction, 2, 0)
-  batch_size = tf.shape(reconstruction1)[0]
+  batch_size = target.get_shape().as_list()[0]
+  rec_size = reconstruction.get_shape().as_list()[0]
+  
+  if batch_size != rec_size:
 
-  # Gather hidden1/hidden2 across replicas and create local labels.
-  if tpu_context is not None:
-    reconstruction1_large = tpu_cross_replica_concat(reconstruction1, tpu_context)
-    reconstruction2_large = tpu_cross_replica_concat(reconstruction2, tpu_context)
-    target_large = tpu_cross_replica_concat(target, tpu_context)
-    
-    enlarged_batch_size = tf.shape(reconstruction1_large)[0]
-    # TODO(iamtingchen): more elegant way to convert u32 to s32 for replica_id.
-    replica_id = tf.cast(tf.cast(xla.replica_id(), tf.uint32), tf.int32)
-    labels_idx = tf.range(batch_size) + replica_id * batch_size
-    labels = tf.one_hot(labels_idx, enlarged_batch_size * 3)
-    # masks = tf.one_hot(labels_idx, enlarged_batch_size)
+    reconstruction1, reconstruction2 = tf.split(reconstruction, 2, 0)
+    # batch_size = tf.shape(reconstruction1)[0]
+
+    # Gather hidden1/hidden2 across replicas and create local labels.
+    if tpu_context is not None:
+      reconstruction1_large = tpu_cross_replica_concat(reconstruction1, tpu_context)
+      reconstruction2_large = tpu_cross_replica_concat(reconstruction2, tpu_context)
+      target_large = tpu_cross_replica_concat(target, tpu_context)
+      
+      enlarged_batch_size = tf.shape(reconstruction1_large)[0]
+      # TODO(iamtingchen): more elegant way to convert u32 to s32 for replica_id.
+      replica_id = tf.cast(tf.cast(xla.replica_id(), tf.uint32), tf.int32)
+      labels_idx = tf.range(batch_size) + replica_id * batch_size
+      labels = tf.one_hot(labels_idx, enlarged_batch_size * 3)
+      # masks = tf.one_hot(labels_idx, enlarged_batch_size)
+    else:
+      reconstruction1_large = reconstruction1
+      reconstruction2_large = reconstruction2
+      labels = tf.one_hot(tf.range(batch_size), batch_size * 3)
+      # masks = tf.one_hot(tf.range(batch_size), batch_size)
+
+    def distance_matrix(A, B, power):
+      A_ = tf.tile(A[:,None,:,:,:], [1, tf.shape(B)[0], 1, 1, 1])
+      B_ = tf.tile(B[None,:,:,:,:], [tf.shape(A)[0], 1, 1, 1, 1])
+      return tf.reduce_sum((A_ - B_) ** power, [2,3,4])/2
+      
+    logits_at = 1/(distance_matrix(reconstruction1, target_large, power) + 1e-5) / temperature
+    logits_aa = 1/(distance_matrix(reconstruction1, reconstruction1_large, power) + 1e-5) / temperature
+    logits_ab = 1/(distance_matrix(reconstruction1, reconstruction2_large, power) + 1e-5) / temperature
+
+    logits_bt = 1/(distance_matrix(reconstruction2, target_large, power) + 1e-5) / temperature
+    logits_ba = 1/(distance_matrix(reconstruction2, reconstruction1_large, power) + 1e-5) / temperature
+    logits_bb = 1/(distance_matrix(reconstruction2, reconstruction2_large, power) + 1e-5) / temperature
+
+    loss_a = tf.losses.softmax_cross_entropy(
+        labels, tf.concat([logits_at, logits_aa, logits_ab], 1), weights=weights)
+    loss_b = tf.losses.softmax_cross_entropy(
+        labels, tf.concat([logits_bt, logits_ba, logits_bb], 1), weights=weights)
+    loss = loss_a + loss_b
+  
   else:
-    reconstruction1_large = reconstruction1
-    reconstruction2_large = reconstruction2
-    labels = tf.one_hot(tf.range(batch_size), batch_size * 3)
-    # masks = tf.one_hot(tf.range(batch_size), batch_size)
+    # Gather hidden1/hidden2 across replicas and create local labels.
+    if tpu_context is not None:
+      reconstruction_large = tpu_cross_replica_concat(reconstruction, tpu_context)
+      target_large = tpu_cross_replica_concat(target, tpu_context)
+      
+      enlarged_batch_size = tf.shape(reconstruction_large)[0]
+      # TODO(iamtingchen): more elegant way to convert u32 to s32 for replica_id.
+      replica_id = tf.cast(tf.cast(xla.replica_id(), tf.uint32), tf.int32)
+      labels_idx = tf.range(batch_size) + replica_id * batch_size
+      labels = tf.one_hot(labels_idx, enlarged_batch_size * 2)
+      # masks = tf.one_hot(labels_idx, enlarged_batch_size)
+    else:
+      reconstruction_large = reconstruction
+      labels = tf.one_hot(tf.range(batch_size), batch_size * 2)
+      # masks = tf.one_hot(tf.range(batch_size), batch_size)
 
-  def distance_matrix(A, B, power):
-    A_ = tf.tile(A[:,None,:,:,:], [1, tf.shape(B)[0], 1, 1, 1])
-    B_ = tf.tile(B[None,:,:,:,:], [tf.shape(A)[0], 1, 1, 1, 1])
-    return tf.reduce_sum((A_ - B_) ** power, [2,3,4])/2
+    def distance_matrix(A, B, power):
+      A_ = tf.tile(A[:,None,:,:,:], [1, tf.shape(B)[0], 1, 1, 1])
+      B_ = tf.tile(B[None,:,:,:,:], [tf.shape(A)[0], 1, 1, 1, 1])
+      return tf.reduce_sum((A_ - B_) ** power, [2,3,4])/2
+      
+    logits_at = 1/(distance_matrix(reconstruction, target_large, power) + 1e-5) / temperature
+    logits_aa = 1/(distance_matrix(reconstruction, reconstruction_large, power) + 1e-5) / temperature
     
-  logits_at = 1/(distance_matrix(reconstruction1, target_large, power) + 1e-5) / temperature
-  logits_aa = 1/(distance_matrix(reconstruction1, reconstruction1_large, power) + 1e-5) / temperature
-  logits_ab = 1/(distance_matrix(reconstruction1, reconstruction2_large, power) + 1e-5) / temperature
-
-  logits_bt = 1/(distance_matrix(reconstruction2, target_large, power) + 1e-5) / temperature
-  logits_ba = 1/(distance_matrix(reconstruction2, reconstruction1_large, power) + 1e-5) / temperature
-  logits_bb = 1/(distance_matrix(reconstruction2, reconstruction2_large, power) + 1e-5) / temperature
-
-  loss_a = tf.losses.softmax_cross_entropy(
-      labels, tf.concat([logits_at, logits_aa, logits_ab], 1), weights=weights)
-  loss_b = tf.losses.softmax_cross_entropy(
-      labels, tf.concat([logits_bt, logits_ba, logits_bb], 1), weights=weights)
-  loss = loss_a + loss_b
+    loss = tf.losses.softmax_cross_entropy(
+        labels, tf.concat([logits_at, logits_aa], 1), weights=weights)
+  
+  print('*'*180)
+  print('attractive and repulsive topdown loss')
+  print(loss)
+  print('*'*180)
 
   return loss, logits_at, labels
 
@@ -301,29 +344,42 @@ def add_light_td_attractive_repulsive_loss(reconstruction,
     The logits for contrastive prediction task.
     The labels for contrastive prediction task.
   """
-  # Get (normalized) hidden1 and hidden2.
-  reconstruction1, reconstruction2 = tf.split(reconstruction, 2, 0)
-  batch_size = tf.shape(reconstruction1)[0]
-
-  labels = tf.one_hot(tf.range(batch_size), batch_size)
 
   def distance_matrix(A, B, power):
     A_ = tf.tile(A[:,None,:,:,:], [1, tf.shape(B)[0], 1, 1, 1])
     B_ = tf.tile(B[None,:,:,:,:], [tf.shape(A)[0], 1, 1, 1, 1])
     return tf.reduce_sum((A_ - B_) ** power, [2,3,4])/2
     
-  logits_at = 1/(distance_matrix(reconstruction1, target, power) + 1e-5) / temperature
-  logits_bt = 1/(distance_matrix(reconstruction2, target, power) + 1e-5) / temperature
+  # Get (normalized) hidden1 and hidden2.
+  batch_size = target.get_shape().as_list()[0]
+  rec_size = reconstruction.get_shape().as_list()[0]
   
-  loss_a = tf.losses.softmax_cross_entropy(
-      labels, logits_at, weights=weights)
-  loss_b = tf.losses.softmax_cross_entropy(
-      labels, logits_bt, weights=weights)
-  loss = loss_a + loss_b
+  if batch_size != rec_size:
 
+    reconstruction1, reconstruction2 = tf.split(reconstruction, 2, 0)
+    
+    labels = tf.one_hot(tf.range(batch_size), batch_size)
+      
+    logits_at = 1/(distance_matrix(reconstruction1, target, power) + 1e-5) / temperature
+    logits_bt = 1/(distance_matrix(reconstruction2, target, power) + 1e-5) / temperature
+    
+    loss_a = tf.losses.softmax_cross_entropy(
+        labels, logits_at, weights=weights)
+    loss_b = tf.losses.softmax_cross_entropy(
+        labels, logits_bt, weights=weights)
+    loss = loss_a + loss_b
+  
+  else:
+    
+    labels = tf.one_hot(tf.range(batch_size), batch_size)
+
+    logits_at = 1/(distance_matrix(reconstruction, target, power) + 1e-5) / temperature
+
+    loss = tf.losses.softmax_cross_entropy(
+        labels, logits_at, weights=weights)
 
   print('*'*180)
-  print('attr_rep_light_td')
+  print('light attractive and repulsive topdown loss')
   print(loss)
   print('*'*180)
 

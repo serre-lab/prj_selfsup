@@ -457,7 +457,7 @@ def random_blur(image, height, width, p=1.0):
       tf.less(tf.random_uniform([], minval=0, maxval=1, dtype=tf.float32),
               tf.cast(p, tf.float32)),
       lambda: _transform(image),
-      lambda: (image, 0))
+      lambda: (image, tf.cast(0, tf.float32) ))
   return image, sigma
 
 def batch_random_blur(images_list, height, width, blur_probability=0.5):
@@ -487,9 +487,10 @@ def batch_random_blur(images_list, height, width, blur_probability=0.5):
     images = images_new * selector + images * (1 - selector)
     images = tf.clip_by_value(images, 0., 1.)
     new_images_list.append(images)
-    sigmas.append(sigma*selector)
+    sigmas.append(tf.reshape(sigma*selector, [-1]))
 
-  return new_images_list
+
+  return new_images_list, sigmas
 
 
 def preprocess_for_train(image, height, width,

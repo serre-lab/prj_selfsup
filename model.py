@@ -65,9 +65,14 @@ def build_model_fn(model, num_classes, num_train_examples):
       thetas = tf.concat(thetas_list[:-1], 0)
 
     if FLAGS.use_blur and is_training and FLAGS.train_mode == 'pretrain':
-      features_list = data_util.batch_random_blur(
+      features_list, sigmas = data_util.batch_random_blur(
           features_list, FLAGS.image_size, FLAGS.image_size)
-    
+      sigmas = tf.concat(sigmas, 0)
+      thetas = tf.concat([thetas, sigmas[:,None]], 1) 
+    else:
+      sigmas = tf.zeros_like(thetas[:,0])
+      thetas = tf.concat([thetas, sigmas[:,None]], 1) 
+      
     features = tf.concat(features_list, 0)  # (num_transforms * bsz, h, w, c)
 
     # Base network forward pass.
@@ -94,50 +99,52 @@ def build_model_fn(model, num_classes, num_train_examples):
       else:
         hiddens = outputs
       if FLAGS.use_td_loss:
-        if FLAGS.td_loss=='attractive':
-          td_loss = obj_lib.add_td_attractive_loss(
-            reconstruction,
-            target_images,
-            power=FLAGS.rec_loss_exponent)
-          logits_td_con = tf.zeros([params['batch_size'], params['batch_size']])
-          labels_td_con = tf.zeros([params['batch_size'], params['batch_size']])
+        with tf.name_scope('td_loss'):
+          if FLAGS.td_loss=='attractive':
+            td_loss = obj_lib.add_td_attractive_loss(
+              reconstruction,
+              target_images,
+              power=FLAGS.rec_loss_exponent)
+            logits_td_con = tf.zeros([params['batch_size'], params['batch_size']])
+            labels_td_con = tf.zeros([params['batch_size'], params['batch_size']])
 
-        elif FLAGS.td_loss=='attractive_repulsive':
-          td_loss, logits_td_con, labels_td_con = obj_lib.add_light_td_attractive_repulsive_loss(
-            reconstruction,
-            target_images,
-            power=FLAGS.rec_loss_exponent,
-            temperature=FLAGS.temperature,
-            tpu_context=tpu_context if is_training else None)
-          
-        else:
-          raise 'Unknown loss'
+          elif FLAGS.td_loss=='attractive_repulsive':
+            td_loss, logits_td_con, labels_td_con = obj_lib.add_light_td_attractive_repulsive_loss(
+              reconstruction,
+              target_images,
+              power=FLAGS.rec_loss_exponent,
+              temperature=FLAGS.temperature,
+              tpu_context=tpu_context if is_training else None)
+            
+          else:
+            raise 'Unknown loss'
       else:
         logits_td_con = tf.zeros([params['batch_size'], params['batch_size']])
         labels_td_con = tf.zeros([params['batch_size'], params['batch_size']])
-
+        td_loss = tf.zeros([])
       hiddens_proj = model_util.projection_head(hiddens, is_training)
 
       if FLAGS.use_bu_loss:
-        if FLAGS.bu_loss=='attractive':
-          bu_loss = obj_lib.add_bu_attractive_loss(
-            hiddens_proj,
-            hidden_norm=FLAGS.hidden_norm,)
-          logits_bu_con = tf.zeros([params['batch_size'], params['batch_size']])
-          labels_bu_con = tf.zeros([params['batch_size'], params['batch_size']])
+        with tf.name_scope('bu_loss'):
+          if FLAGS.bu_loss=='attractive':
+            bu_loss = obj_lib.add_bu_attractive_loss(
+              hiddens_proj,
+              hidden_norm=FLAGS.hidden_norm)
+            logits_bu_con = tf.zeros([params['batch_size'], params['batch_size']])
+            labels_bu_con = tf.zeros([params['batch_size'], params['batch_size']])
 
-        elif FLAGS.bu_loss=='attractive_repulsive':
-          bu_loss, logits_bu_con, labels_bu_con = obj_lib.add_bu_attractive_repulsive_loss(
-            hiddens_proj,
-            hidden_norm=FLAGS.hidden_norm,
-            temperature=FLAGS.temperature,
-            tpu_context=tpu_context if is_training else None)  
-        else:
-          raise 'Unknown loss'
+          elif FLAGS.bu_loss=='attractive_repulsive':
+            bu_loss, logits_bu_con, labels_bu_con = obj_lib.add_bu_attractive_repulsive_loss(
+              hiddens_proj,
+              hidden_norm=FLAGS.hidden_norm,
+              temperature=FLAGS.temperature,
+              tpu_context=tpu_context if is_training else None)  
+          else:
+            raise 'Unknown loss'
       else:
         logits_bu_con = tf.zeros([params['batch_size'], params['batch_size']])
         labels_bu_con = tf.zeros([params['batch_size'], params['batch_size']])
-
+        bu_loss = tf.zeros([])
       logits_sup = tf.zeros([params['batch_size'], num_classes])
 
     else:
@@ -159,7 +166,14 @@ def build_model_fn(model, num_classes, num_train_examples):
 
     # Add weight decay to loss, for non-LARS optimizers.
     model_util.add_weight_decay(adjust_per_optimizer=True)
-    loss = tf.losses.get_total_loss()
+    
+    reg_loss = tf.losses.get_regularization_losses()
+    loss =  tf.add_n([td_loss * FLAGS.td_loss_weight, bu_loss * FLAGS.bu_loss_weight] + tf.losses.get_regularization_losses())
+    # td_loss * FLAGS.td_loss_weight + \
+    #         bu_loss * FLAGS.bu_loss_weight + \
+    #         tf.losses.get_regularization_losses()
+            
+    # loss = tf.losses.get_total_loss()
 
     if FLAGS.train_mode == 'pretrain':
       variables_to_train = tf.trainable_variables()
