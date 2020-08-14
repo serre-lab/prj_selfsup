@@ -88,10 +88,9 @@ def add_contrastive_loss(hidden,
   loss_b = tf.losses.softmax_cross_entropy(
       labels, tf.concat([logits_ba, logits_bb], 1), weights=weights)
   loss = loss_a + loss_b
-  
-  
 
   return loss, logits_ab, labels
+
 
 def add_bu_attractive_loss(hidden,
                          hidden_norm=True,
@@ -113,10 +112,6 @@ def add_bu_attractive_loss(hidden,
   loss = 2 - 2 * tf.reduce_sum(hidden1 * hidden2, axis=-1) * weights
   loss = tf.reduce_sum(loss)
   tf.losses.add_loss(loss)
-  print('*'*180)
-  print('attractive bottomup loss')
-  print(loss)
-  print('*'*180)
 
   return loss
   
@@ -174,12 +169,6 @@ def add_bu_attractive_repulsive_loss(hidden,
       labels, tf.concat([logits_ba, logits_bb], 1), weights=weights)
   loss = loss_a + loss_b
 
-
-  print('*'*180)
-  print('attractive repulsive bottomup loss')
-  print(loss)
-  print('*'*180)
-
   return loss, logits_ab, labels
 
 
@@ -209,14 +198,10 @@ def add_td_attractive_loss(reconstruction,
     loss = tf.reduce_sum(tf.reduce_mean((reconstruction1 - target) ** power, [1,2,3])*weights)/2 + \
             tf.reduce_sum(tf.reduce_mean((reconstruction2 - target) ** power, [1,2,3])*weights)/2
     loss = loss/tf.cast(batch_size, tf.float32)
+  
   else:
     loss = tf.reduce_sum(tf.reduce_mean((reconstruction - target) ** power, [1,2,3])*weights)
     loss = loss/tf.cast(batch_size, tf.float32)
-
-  print('*'*180)
-  print('attractive topdown loss')
-  print(loss)
-  print('*'*180)
 
   tf.losses.add_loss(loss)
 
@@ -263,25 +248,27 @@ def add_td_attractive_repulsive_loss(reconstruction,
       replica_id = tf.cast(tf.cast(xla.replica_id(), tf.uint32), tf.int32)
       labels_idx = tf.range(batch_size) + replica_id * batch_size
       labels = tf.one_hot(labels_idx, enlarged_batch_size * 3)
-      # masks = tf.one_hot(labels_idx, enlarged_batch_size)
+      masks = tf.one_hot(labels_idx, enlarged_batch_size)
     else:
       reconstruction1_large = reconstruction1
       reconstruction2_large = reconstruction2
       labels = tf.one_hot(tf.range(batch_size), batch_size * 3)
-      # masks = tf.one_hot(tf.range(batch_size), batch_size)
+      masks = tf.one_hot(tf.range(batch_size), batch_size)
 
     def distance_matrix(A, B, power):
       A_ = tf.tile(A[:,None,:,:,:], [1, tf.shape(B)[0], 1, 1, 1])
       B_ = tf.tile(B[None,:,:,:,:], [tf.shape(A)[0], 1, 1, 1, 1])
       return tf.reduce_sum((A_ - B_) ** power, [2,3,4])/2
-      
+    
     logits_at = 1/(distance_matrix(reconstruction1, target_large, power) + 1e-5) / temperature
     logits_aa = 1/(distance_matrix(reconstruction1, reconstruction1_large, power) + 1e-5) / temperature
+    logits_aa = logits_aa - masks * LARGE_NUM
     logits_ab = 1/(distance_matrix(reconstruction1, reconstruction2_large, power) + 1e-5) / temperature
 
     logits_bt = 1/(distance_matrix(reconstruction2, target_large, power) + 1e-5) / temperature
     logits_ba = 1/(distance_matrix(reconstruction2, reconstruction1_large, power) + 1e-5) / temperature
     logits_bb = 1/(distance_matrix(reconstruction2, reconstruction2_large, power) + 1e-5) / temperature
+    logits_bb = logits_bb - masks * LARGE_NUM
 
     loss_a = tf.losses.softmax_cross_entropy(
         labels, tf.concat([logits_at, logits_aa, logits_ab], 1), weights=weights)
@@ -300,12 +287,14 @@ def add_td_attractive_repulsive_loss(reconstruction,
       replica_id = tf.cast(tf.cast(xla.replica_id(), tf.uint32), tf.int32)
       labels_idx = tf.range(batch_size) + replica_id * batch_size
       labels = tf.one_hot(labels_idx, enlarged_batch_size * 2)
-      # masks = tf.one_hot(labels_idx, enlarged_batch_size)
+      masks = tf.one_hot(labels_idx, enlarged_batch_size)
     else:
       reconstruction_large = reconstruction
       labels = tf.one_hot(tf.range(batch_size), batch_size * 2)
-      # masks = tf.one_hot(tf.range(batch_size), batch_size)
+      masks = tf.one_hot(tf.range(batch_size), batch_size)
 
+    # reconstruction
+    
     def distance_matrix(A, B, power):
       A_ = tf.tile(A[:,None,:,:,:], [1, tf.shape(B)[0], 1, 1, 1])
       B_ = tf.tile(B[None,:,:,:,:], [tf.shape(A)[0], 1, 1, 1, 1])
@@ -313,14 +302,10 @@ def add_td_attractive_repulsive_loss(reconstruction,
       
     logits_at = 1/(distance_matrix(reconstruction, target_large, power) + 1e-5) / temperature
     logits_aa = 1/(distance_matrix(reconstruction, reconstruction_large, power) + 1e-5) / temperature
+    logits_aa = logits_aa - masks * LARGE_NUM
     
     loss = tf.losses.softmax_cross_entropy(
-        labels, tf.concat([logits_at, logits_aa], 1), weights=weights)
-  
-  print('*'*180)
-  print('attractive and repulsive topdown loss')
-  print(loss)
-  print('*'*180)
+        labels, tf.concat([logits_at, logits_aa], 1), weights=weights) #tf.concat([logits_at, logits_aa], 1)
 
   return loss, logits_at, labels
 
@@ -377,11 +362,6 @@ def add_light_td_attractive_repulsive_loss(reconstruction,
 
     loss = tf.losses.softmax_cross_entropy(
         labels, logits_at, weights=weights)
-
-  print('*'*180)
-  print('light attractive and repulsive topdown loss')
-  print(loss)
-  print('*'*180)
 
   return loss, logits_at, labels
 

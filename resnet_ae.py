@@ -49,12 +49,15 @@ def resnet_autoencoder_v1_generator(encoder, decoder, data_format='channels_last
       with tf.variable_scope('encoder'): # variable_scope name_scope
         features = encoder(inputs, is_training)
       
+      # B 7 7 2048
       if data_format == 'channels_last':
         outputs = tf.reduce_mean(features, [1, 2])
       else:
         outputs = tf.reduce_mean(features, [2, 3])
       outputs = tf.identity(outputs, 'final_avg_pool')
       
+      # B 2048
+
       h_w = features.get_shape().as_list()[1]
       # print(h_w)
 

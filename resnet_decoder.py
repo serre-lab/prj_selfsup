@@ -728,18 +728,24 @@ def resnet_v1_generator_decoder(block_fn, layers, width_multiplier,
       
       inputs = batch_norm_relu(inputs, is_training, data_format=data_format)
       
+      # 112 112 64
+      
       resize_shape = [resize_shape[0]*2,resize_shape[1]*2]
       inputs = tf.image.resize(inputs, resize_shape)
       inputs = tf.identity(inputs, 'resize_L')
 
+      # 224 224 64
+      
       inputs = conv2d_fixed_padding(
-          inputs=inputs, filters=64 * width_multiplier, kernel_size=7,
+          inputs=inputs, filters=64 * width_multiplier, kernel_size=3,
           strides=1, data_format=data_format)
       inputs = batch_norm_relu(inputs, is_training, data_format=data_format)
       inputs = conv2d_fixed_padding(
           inputs=inputs, filters=3, kernel_size=3,
           strides=1, data_format=data_format)
-    
+
+      # 224 224 3
+
     filter_trainable_variables(trainable_variables, after_block=5)
     add_to_collection(trainable_variables, 'trainable_variables_inblock_')
 

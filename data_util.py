@@ -562,6 +562,30 @@ def preprocess_for_eval(image, height, width, crop=True):
   return image, theta
 
 
+def preprocess_for_target(image, height, width, crop=False):
+  """Preprocesses the given image for evaluation.
+
+  Args:
+    image: `Tensor` representing an image of arbitrary size.
+    height: Height of output image.
+    width: Width of output image.
+    crop: Whether or not to (center) crop the test images.
+
+  Returns:
+    A preprocessed image `Tensor`.
+  """
+  if crop:
+    image = center_crop(image, height, width, crop_proportion=CROP_PROPORTION)
+  image = tf.reshape(image, [height, width, 3])
+  image = tf.clip_by_value(image, 0., 1.)
+  theta = tf.constant(
+          [(1-CROP_PROPORTION)/2, (1-CROP_PROPORTION)/2, 
+          1-(1-CROP_PROPORTION)/2, 1-(1-CROP_PROPORTION)/2,
+          0,0,0,0,0,0], 
+          dtype=tf.float32) 
+  return image, theta
+
+
 def preprocess_image(image, height, width, is_training=False,
                      color_distort=True, test_crop=True):
   """Preprocesses the given image.

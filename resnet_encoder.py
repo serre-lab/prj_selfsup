@@ -626,8 +626,8 @@ def resnet_v1_generator_encoder(block_fn, layers, width_multiplier,
 
     trainable_variables = {}
     filter_trainable_variables(trainable_variables, after_block=0)
-    # if FLAGS.train_mode == 'finetune' and FLAGS.fine_tune_after_block == 0:
-    #   inputs = tf.stop_gradient(inputs)
+    if FLAGS.train_mode == 'finetune' and FLAGS.fine_tune_after_block == 0:
+      inputs = tf.stop_gradient(inputs)
 
     inputs = block_group(
         inputs=inputs, filters=64 * width_multiplier, block_fn=block_fn,
@@ -637,8 +637,8 @@ def resnet_v1_generator_encoder(block_fn, layers, width_multiplier,
         dropblock_size=dropblock_size)
 
     filter_trainable_variables(trainable_variables, after_block=1)
-    # if FLAGS.train_mode == 'finetune' and FLAGS.fine_tune_after_block == 1:
-    #   inputs = tf.stop_gradient(inputs)
+    if FLAGS.train_mode == 'finetune' and FLAGS.fine_tune_after_block == 1:
+      inputs = tf.stop_gradient(inputs)
 
     inputs = block_group(
         inputs=inputs, filters=128 * width_multiplier, block_fn=block_fn,
@@ -648,8 +648,8 @@ def resnet_v1_generator_encoder(block_fn, layers, width_multiplier,
         dropblock_size=dropblock_size)
 
     filter_trainable_variables(trainable_variables, after_block=2)
-    # if FLAGS.train_mode == 'finetune' and FLAGS.fine_tune_after_block == 2:
-    #   inputs = tf.stop_gradient(inputs)
+    if FLAGS.train_mode == 'finetune' and FLAGS.fine_tune_after_block == 2:
+      inputs = tf.stop_gradient(inputs)
 
     inputs = block_group(
         inputs=inputs, filters=256 * width_multiplier, block_fn=block_fn,
@@ -659,8 +659,8 @@ def resnet_v1_generator_encoder(block_fn, layers, width_multiplier,
         dropblock_size=dropblock_size)
 
     filter_trainable_variables(trainable_variables, after_block=3)
-    # if FLAGS.train_mode == 'finetune' and FLAGS.fine_tune_after_block == 3:
-    #   inputs = tf.stop_gradient(inputs)
+    if FLAGS.train_mode == 'finetune' and FLAGS.fine_tune_after_block == 3:
+      inputs = tf.stop_gradient(inputs)
 
     inputs = block_group(
         inputs=inputs, filters=512 * width_multiplier, block_fn=block_fn,
@@ -670,8 +670,8 @@ def resnet_v1_generator_encoder(block_fn, layers, width_multiplier,
         dropblock_size=dropblock_size)
 
     filter_trainable_variables(trainable_variables, after_block=4)
-    # if FLAGS.train_mode == 'finetune' and FLAGS.fine_tune_after_block == 4:
-    #   inputs = tf.stop_gradient(inputs)
+    if FLAGS.train_mode == 'finetune' and FLAGS.fine_tune_after_block == 4:
+      inputs = tf.stop_gradient(inputs)
 
     # if data_format == 'channels_last':
     #   inputs = tf.reduce_mean(inputs, [1, 2])

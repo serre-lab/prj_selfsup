@@ -79,7 +79,6 @@ def build_model_fn(model, num_classes, num_train_examples):
     
     features = tf.concat(features_list, 0)  # (num_transforms * bsz, h, w, c)
     
-    
     # Base network forward pass.
     with tf.variable_scope('base_model'):
       if FLAGS.train_mode == 'finetune':
@@ -95,12 +94,6 @@ def build_model_fn(model, num_classes, num_train_examples):
 
       outputs = model(features, is_training=model_train_mode)
     
-    # print('#'*180)
-    # print('#'*180)
-    # print(num_transforms)
-    # print('#'*180)
-    # print('#'*180)
-
     # Add head and loss.
     if FLAGS.train_mode == 'pretrain':
       tpu_context = params['context'] if 'context' in params else None
@@ -109,7 +102,7 @@ def build_model_fn(model, num_classes, num_train_examples):
         hiddens, reconstruction = outputs
       else:
         hiddens = outputs
-        reconstruction = tf.zeros_like(target_images)
+        # reconstruction = tf.zeros_like(target_images)
       if FLAGS.use_td_loss:
         with tf.name_scope('td_loss'):
           if FLAGS.td_loss=='attractive':

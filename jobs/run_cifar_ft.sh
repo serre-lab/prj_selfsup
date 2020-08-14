@@ -34,9 +34,13 @@ model_dir=/home/azerroug/prj_selfsup_test_ft
 
 use_tpu=False
 
+# fine_tune_after_block
+
+GPU_IDX=0
+
 rm -r $model_dir
 
-CUDA_VISIBLE_DEVICES=0 python run.py \
+CUDA_VISIBLE_DEVICES=GPU_IDX python run.py \
   --mode=$mode --train_mode=$train_mode \
   --fine_tune_after_block=$fine_tune_after_block \
   --zero_init_logits_layer=$zero_init_logits_layer \
