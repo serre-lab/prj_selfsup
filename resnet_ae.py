@@ -42,9 +42,9 @@ def resnet_autoencoder_v1_generator(encoder, decoder, data_format='channels_last
   def model(inputs, is_training):
     """Creation of the model graph."""
     # if isinstance(inputs, tuple):
-    if FLAGS.use_td_loss:
-      print('#'*80)
-      print(inputs)
+    if FLAGS.use_td_loss and isinstance(inputs, tuple):
+      # print('#'*80)
+      # print(inputs)
       inputs, augs = inputs
       with tf.variable_scope('encoder'): # variable_scope name_scope
         features = encoder(inputs, is_training)
@@ -56,7 +56,7 @@ def resnet_autoencoder_v1_generator(encoder, decoder, data_format='channels_last
       outputs = tf.identity(outputs, 'final_avg_pool')
       
       h_w = features.get_shape().as_list()[1]
-      print(h_w)
+      # print(h_w)
 
       augs = tf.tile(augs[:,None,None,:], tf.constant([1,h_w,h_w,1]))
       

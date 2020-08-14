@@ -3,7 +3,9 @@
 train_mode=pretrain
 
 train_batch_size=128 
+# train_batch_size=512 
 train_epochs=10 
+# train_epochs=1000 
 
 learning_rate=1.0 
 weight_decay=1e-4 
@@ -17,7 +19,7 @@ resnet_depth=18
 use_blur=True 
 color_jitter_strength=0.5 
 
-model_dir="/home/azerroug/prj_selfsup_test_2" 
+model_dir="/home/azerroug/prj_selfsup_test_3" 
 use_tpu=False
 
 use_td_loss=True #False

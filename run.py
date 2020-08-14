@@ -395,6 +395,9 @@ def main(argv):
   if FLAGS.train_summary_steps > 0:
     tf.config.set_soft_device_placement(True)
 
+#   assert (not FLAGS.use_td_loss) or (not FLAGS.train_mode == 'finetune'), 'no top down loss during finetuning'
+  if FLAGS.train_mode == 'finetune':
+    FLAGS.use_td_loss = False
 
   builder = tfds.builder(FLAGS.dataset, data_dir=FLAGS.data_dir)
   builder.download_and_prepare()
@@ -447,12 +450,25 @@ def main(argv):
       keep_checkpoint_max=FLAGS.keep_checkpoint_max,
       master=FLAGS.master,
       cluster=cluster)
+  
+  print('#'*180)
+  print('#'*180)
+  
   estimator = tf.estimator.tpu.TPUEstimator(
       model_lib.build_model_fn(model, num_classes, num_train_examples),
       config=run_config,
       train_batch_size=FLAGS.train_batch_size,
       eval_batch_size=FLAGS.eval_batch_size,
       use_tpu=FLAGS.use_tpu)
+  
+#   print('#'*180)
+#   print('#'*180)
+  
+#   estimator.train(
+#         data_lib.build_input_fn(builder, True), max_steps=1)
+  
+#   weights = estimator.get_variable_value('base_model/encoder/conv2d/kernel:0')
+#   print(weights)
 
   if FLAGS.mode == 'eval':
     for ckpt in tf.train.checkpoints_iterator(
@@ -471,7 +487,7 @@ def main(argv):
         return
   else:
     # hooks = [tf_debug.LocalCLIDebugHook(ui_type="readline")]
-
+    
     estimator.train(
         data_lib.build_input_fn(builder, True), max_steps=train_steps) #, hooks=hooks
     if FLAGS.mode == 'train_then_eval':
