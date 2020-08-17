@@ -415,7 +415,7 @@ def random_color_jitter(image, p=1.0):
 
     image, theta_grey = tf.cond(
       tf.less(tf.random_uniform([], minval=0, maxval=1, dtype=tf.float32),
-              tf.cast(0.8, tf.float32)),
+              tf.cast(0.2, tf.float32)),
       lambda: (to_grayscale(image), tf.cast(1, tf.float32)),
       lambda: (image, tf.cast(0, tf.float32)) )
     theta_color = tf.concat([theta_color,tf.reshape(theta_grey, [1])], axis=0)
@@ -427,7 +427,7 @@ def random_color_jitter(image, p=1.0):
 
   image, theta_color = tf.cond(
         tf.less(tf.random_uniform([], minval=0, maxval=1, dtype=tf.float32),
-                tf.cast(0.8, tf.float32)),
+                tf.cast(p, tf.float32)),
         lambda: _transform(image),
         lambda: (image, tf.constant([0,0,0,0,0], tf.float32)) )
 

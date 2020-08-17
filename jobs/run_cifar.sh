@@ -20,7 +20,7 @@ color_jitter_strength=0.5
 model_dir="/home/azerroug/prj_selfsup_test_2" 
 use_tpu=False
 
-use_td_loss=True #False
+use_td_loss=False #False
 use_bu_loss=True
 
 td_loss=attractive_repulsive #'attractive_repulsive'
