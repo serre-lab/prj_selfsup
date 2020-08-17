@@ -114,7 +114,8 @@ def build_input_fn(builder, is_training):
   def _input_fn(params):
     """Inner input function."""
     preprocess_fn_pretrain = get_preprocess_fn(is_training, is_pretrain=True)
-    preprocess_fn_finetune = get_preprocess_fn(is_training, is_pretrain=False)
+    # preprocess_fn_finetune = get_preprocess_fn(is_training, is_pretrain=False) 
+    preprocess_fn_finetune = get_preprocess_target_fn() 
     num_classes = builder.info.features['label'].num_classes
 
     def map_fn(image, label):
@@ -181,4 +182,17 @@ def get_preprocess_fn(is_training, is_pretrain):
       width=FLAGS.image_size,
       is_training=is_training,
       color_distort=is_pretrain,
+      test_crop=test_crop)
+
+def get_preprocess_target_fn():
+  """Get function that accepts an image and returns a preprocessed image."""
+  # Disable test cropping for small images (e.g. CIFAR)
+  if FLAGS.image_size <= 32:
+    test_crop = False
+  else:
+    test_crop = True
+  return functools.partial(
+      data_util.preprocess_target,
+      height=FLAGS.image_size,
+      width=FLAGS.image_size,
       test_crop=test_crop)

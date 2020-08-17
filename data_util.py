@@ -562,6 +562,7 @@ def preprocess_for_eval(image, height, width, crop=True):
   return image, theta
 
 
+
 def preprocess_image(image, height, width, is_training=False,
                      color_distort=True, test_crop=True):
   """Preprocesses the given image.
@@ -583,6 +584,26 @@ def preprocess_image(image, height, width, is_training=False,
     return preprocess_for_train(image, height, width, color_distort)
   else:
     return preprocess_for_eval(image, height, width, test_crop)
+
+
+def preprocess_target(image, height, width, test_crop=True):
+  """Preprocesses the given image.
+
+  Args:
+    image: `Tensor` representing an image of arbitrary size.
+    height: Height of output image.
+    width: Width of output image.
+    is_training: `bool` for whether the preprocessing is for training.
+    color_distort: whether to apply the color distortion.
+    test_crop: whether or not to extract a central crop of the images
+        (as for standard ImageNet evaluation) during the evaluation.
+
+  Returns:
+    A preprocessed image `Tensor` of range [0, 1].
+  """
+  image = tf.image.convert_image_dtype(image, dtype=tf.float32)
+  
+  return preprocess_for_eval(image, height, width, test_crop)
 
 
 
