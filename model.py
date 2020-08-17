@@ -52,10 +52,11 @@ def build_model_fn(model, num_classes, num_train_examples):
       num_transforms = 1
     else:
       raise ValueError('Unknown train_mode {}'.format(FLAGS.train_mode))
-
+    
     # Split channels, and optionally apply extra batched augmentation.
     features_list = tf.split(
         features, num_or_size_splits=num_transforms, axis=-1)
+    
     if FLAGS.use_td_loss: 
       target_images = features_list[-1]
       features_list = features_list[:-1]
@@ -63,18 +64,21 @@ def build_model_fn(model, num_classes, num_train_examples):
       thetas_list = tf.split(
         labels['thetas'], num_or_size_splits=num_transforms, axis=-1)
       thetas = tf.concat(thetas_list[:-1], 0)
+    
 
     if FLAGS.use_blur and is_training and FLAGS.train_mode == 'pretrain':
       features_list, sigmas = data_util.batch_random_blur(
           features_list, FLAGS.image_size, FLAGS.image_size)
-      sigmas = tf.concat(sigmas, 0)
-      thetas = tf.concat([thetas, sigmas[:,None]], 1) 
+      if FLAGS.use_td_loss: 
+        sigmas = tf.concat(sigmas, 0)
+        thetas = tf.concat([thetas, sigmas[:,None]], 1) 
     else:
-      sigmas = tf.zeros_like(thetas[:,0])
-      thetas = tf.concat([thetas, sigmas[:,None]], 1) 
-      
+      if FLAGS.use_td_loss: 
+        sigmas = tf.zeros_like(thetas[:,0])
+        thetas = tf.concat([thetas, sigmas[:,None]], 1) 
+    
     features = tf.concat(features_list, 0)  # (num_transforms * bsz, h, w, c)
-
+    
     # Base network forward pass.
     with tf.variable_scope('base_model'):
       if FLAGS.train_mode == 'finetune':
@@ -85,19 +89,20 @@ def build_model_fn(model, num_classes, num_train_examples):
         if FLAGS.use_td_loss:
           features = (features, thetas)
         
-        # Pretrain or finetuen anything else will update BN stats.
+        # Pretrain or finetune anything else will update BN stats.
         model_train_mode = is_training
 
       outputs = model(features, is_training=model_train_mode)
-
+    
     # Add head and loss.
     if FLAGS.train_mode == 'pretrain':
       tpu_context = params['context'] if 'context' in params else None
       
-      if FLAGS.use_td_loss:
+      if FLAGS.use_td_loss and isinstance(outputs, tuple):
         hiddens, reconstruction = outputs
       else:
         hiddens = outputs
+        # reconstruction = tf.zeros_like(target_images)
       if FLAGS.use_td_loss:
         with tf.name_scope('td_loss'):
           if FLAGS.td_loss=='attractive':
@@ -159,7 +164,7 @@ def build_model_fn(model, num_classes, num_train_examples):
       hiddens = model_util.projection_head(hiddens, is_training)
       logits_sup = model_util.supervised_head(
           hiddens, num_classes, is_training)
-      obj_lib.add_supervised_loss(
+      sup_loss = obj_lib.add_supervised_loss(
           labels=labels['labels'],
           logits=logits_sup,
           weights=labels['mask'])
@@ -168,11 +173,13 @@ def build_model_fn(model, num_classes, num_train_examples):
     model_util.add_weight_decay(adjust_per_optimizer=True)
     
     reg_loss = tf.losses.get_regularization_losses()
-    loss =  tf.add_n([td_loss * FLAGS.td_loss_weight, bu_loss * FLAGS.bu_loss_weight] + tf.losses.get_regularization_losses())
-    # td_loss * FLAGS.td_loss_weight + \
-    #         bu_loss * FLAGS.bu_loss_weight + \
-    #         tf.losses.get_regularization_losses()
-            
+
+    
+    if FLAGS.train_mode == 'pretrain':
+      loss =  tf.add_n([td_loss * FLAGS.td_loss_weight, bu_loss * FLAGS.bu_loss_weight] + tf.losses.get_regularization_losses())
+    else:
+      loss =  tf.add_n([sup_loss] + tf.losses.get_regularization_losses())
+           
     # loss = tf.losses.get_total_loss()
 
     if FLAGS.train_mode == 'pretrain':
@@ -264,10 +271,15 @@ def build_model_fn(model, num_classes, num_train_examples):
         train_op = optimizer.minimize(
             loss, global_step=tf.train.get_or_create_global_step(),
             var_list=variables_to_train)
-
+      
+      
       if FLAGS.checkpoint:
         def scaffold_fn():
           """Scaffold function to restore non-logits vars from checkpoint."""
+          tf.logging.info('*'*180)
+          tf.logging.info('Initializing from checkpoint %s'%FLAGS.checkpoint)
+          tf.logging.info('*'*180)
+
           tf.train.init_from_checkpoint(
               FLAGS.checkpoint,
               {v.op.name: v.op.name

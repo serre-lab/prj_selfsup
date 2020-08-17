@@ -562,7 +562,6 @@ def preprocess_for_eval(image, height, width, crop=True):
   return image, theta
 
 
-
 def preprocess_image(image, height, width, is_training=False,
                      color_distort=True, test_crop=True):
   """Preprocesses the given image.
