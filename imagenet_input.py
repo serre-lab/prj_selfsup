@@ -184,7 +184,7 @@ class ImageNetTFExampleInput(object):
 
     # return image, label
 
-    return image, {'labels': labels, 'thetas': thetas, 'mask': mask} # label, thetas, 1.0
+    return image, {'labels': label, 'thetas': thetas, 'mask': 1.0} # label, thetas, 1.0
 
     
 
