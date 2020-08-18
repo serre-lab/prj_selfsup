@@ -169,13 +169,19 @@ def build_input_fn(builder, is_training):
   return _input_fn
 
 
-def get_preprocess_fn(is_training, is_pretrain):
+def get_preprocess_fn(is_training, is_pretrain): #, target=False
   """Get function that accepts an image and returns a preprocessed image."""
   # Disable test cropping for small images (e.g. CIFAR)
   if FLAGS.image_size <= 32:
     test_crop = False
   else:
     test_crop = True
+
+  # if target:
+  #   preprocess_fn = data_util.preprocess_image
+  # else:
+  #   preprocess_fn = data_util.preprocess_target
+
   return functools.partial(
       data_util.preprocess_image,
       height=FLAGS.image_size,

@@ -8,9 +8,13 @@ import abc
 import collections
 import functools
 import os
-from absl import logging
+from absl import logging, flags
 import tensorflow.compat.v1 as tf
-from official.resnet import resnet_preprocessing
+# from official.resnet import resnet_preprocessing
+import data_util_imagenet
+
+
+FLAGS = flags.FLAGS
 
 
 def image_serving_input_fn():
@@ -18,8 +22,8 @@ def image_serving_input_fn():
 
   def _preprocess_image(image_bytes):
     """Preprocess a single raw image."""
-    image = resnet_preprocessing.preprocess_image(
-        image_bytes=image_bytes, is_training=False)
+    image = data_util_imagenet.preprocess_image(
+        image=image_bytes, is_training=False)
     return image
 
   image_bytes_list = tf.placeholder(
@@ -64,21 +68,7 @@ class ImageNetTFExampleInput(object):
                augment_name=None,
                randaug_num_layers=None,
                randaug_magnitude=None):
-    self.image_preprocessing_fn = resnet_preprocessing.preprocess_image
-
-    ################################################################################################################################################
-    if FLAGS.image_size <= 32:
-        test_crop = False
-    else:
-        test_crop = True
-    self.image_preprocessing_fn = functools.partial(
-        data_util.preprocess_image,
-        height=FLAGS.image_size,
-        width=FLAGS.image_size,
-        is_training=is_training,
-        color_distort=is_pretrain,
-        test_crop=test_crop)
-    ################################################################################################################################################
+    self.image_preprocessing_fn = data_util_imagenet.preprocess_image
 
     self.is_training = is_training
     self.use_bfloat16 = use_bfloat16
@@ -90,18 +80,38 @@ class ImageNetTFExampleInput(object):
     self.randaug_num_layers = randaug_num_layers
     self.randaug_magnitude = randaug_magnitude
 
-  def set_shapes(self, batch_size, images, labels):
+  def set_shapes(self, batch_size, images, labels, thetas, mask):
     """Statically set the batch_size dimension."""
+
+    # if FLAGS.train_mode == 'pretrain':
+    #   num_transforms = 1
+    #   if FLAGS.use_td_loss:
+    #     num_transforms += 1
+    #   if FLAGS.use_bu_loss:
+    #     num_transforms += 1
+    # else:
+    #   num_transforms = 1
+
     if self.transpose_input:
       images.set_shape(images.get_shape().merge_with(
           tf.TensorShape([None, None, None, batch_size])))
       images = tf.reshape(images, [-1])
       labels.set_shape(labels.get_shape().merge_with(
           tf.TensorShape([batch_size])))
+    #   thetas
+      thetas.set_shape(thetas.get_shape().merge_with(
+          tf.TensorShape([None, batch_size])))
+      mask.set_shape(mask.get_shape().merge_with(
+          tf.TensorShape([batch_size])))
+
     else:
       images.set_shape(images.get_shape().merge_with(
-          tf.TensorShape([batch_size, None, None, None])))
+          tf.TensorShape([batch_size, None, None, None, None]))) #num_transforms
       labels.set_shape(labels.get_shape().merge_with(
+          tf.TensorShape([batch_size])))
+      thetas.set_shape(thetas.get_shape().merge_with(
+          tf.TensorShape([batch_size, None])))
+      mask.set_shape(mask.get_shape().merge_with(
           tf.TensorShape([batch_size])))
 
     return images, labels
@@ -120,26 +130,63 @@ class ImageNetTFExampleInput(object):
 
     parsed = tf.parse_single_example(value, keys_to_features)
     image_bytes = tf.reshape(parsed['image/encoded'], shape=[])
-
-    image = self.image_preprocessing_fn(
-        image_bytes=image_bytes,
-        is_training=self.is_training,
-        image_size=self.image_size,
-        use_bfloat16=self.use_bfloat16,
-        augment_name=self.augment_name,
-        randaug_num_layers=self.randaug_num_layers,
-        randaug_magnitude=self.randaug_magnitude)
-
     label = tf.cast(
         tf.reshape(parsed['image/class/label'], shape=[]), dtype=tf.int32)
 
-    if not self.include_background_label:
-      # 'image/class/label' is encoded as an integer from 1 to num_label_classes
-      # In order to generate the correct one-hot label vector from this number,
-      # we subtract the number by 1 to make it in [0, num_label_classes).
-      label -= 1
+    # image = self.image_preprocessing_fn(
+    #     image_bytes=image_bytes,
+    #     is_training=self.is_training,
+    #     image_size=self.image_size,
+    #     use_bfloat16=self.use_bfloat16,
+    #     augment_name=self.augment_name,
+    #     randaug_num_layers=self.randaug_num_layers,
+    #     randaug_magnitude=self.randaug_magnitude)
 
-    return image, label
+
+    preprocess_fn_pretrain = data_util_imagenet.get_preprocess_fn(self.is_training, is_pretrain=True)
+    preprocess_fn_finetune = data_util_imagenet.get_preprocess_fn(self.is_training, is_pretrain=False) 
+    preprocess_fn_target = data_util_imagenet.get_preprocess_target_fn() 
+    num_classes = 1000 # builder.info.features['label'].num_classes
+    
+    if FLAGS.train_mode == 'pretrain':
+      xs = []
+      thetas = []
+      
+      if FLAGS.use_bu_loss:
+        for _ in range(2):  # Two transformations
+          im, theta = preprocess_fn_pretrain(image)
+          xs.append(im)
+          thetas.append(theta)
+      else:
+        im, theta = preprocess_fn_pretrain(image)
+        xs.append(im)
+        thetas.append(theta)
+        
+      if FLAGS.use_td_loss:
+        # original for reconstruction
+        target_im, target_theta = preprocess_fn_target(image)
+        xs.append(target_im)
+        thetas.append(target_theta)
+
+      thetas = tf.concat(thetas, -1)
+      image = tf.concat(xs, -1)
+      label = tf.zeros([num_classes])
+    
+    else:
+      image, thetas = preprocess_fn_finetune(image)
+      label = tf.one_hot(label, num_classes)
+    
+    # if not self.include_background_label:
+    #   # 'image/class/label' is encoded as an integer from 1 to num_label_classes
+    #   # In order to generate the correct one-hot label vector from this number,
+    #   # we subtract the number by 1 to make it in [0, num_label_classes).
+    #   label -= 1
+
+    # return image, label
+
+    return image, label, thetas, 1.0
+
+    
 
   @abc.abstractmethod
   def make_source_dataset(self, index, num_hosts):
@@ -200,7 +247,7 @@ class ImageNetTFExampleInput(object):
     # Transpose for performance on TPU
     if self.transpose_input:
       dataset = dataset.map(
-          lambda images, labels: (tf.transpose(images, [1, 2, 3, 0]), labels),
+          lambda images, labels, thatas, mask: (tf.transpose(images, [1, 2, 3, 0]), labels, thatas, mask),
           num_parallel_calls=self.num_parallel_calls)
 
     # Assign static batch size dimension
@@ -363,7 +410,7 @@ class ImageNetBigtableInput(ImageNetTFExampleInput):
   """Generates ImageNet input_fn from a Bigtable for training or evaluation."""
 
   def __init__(self, is_training, use_bfloat16, transpose_input, selection,
-               augment_name, randaug_num_layers, randaug_magnitude):
+               augment_name=None, randaug_num_layers=None, randaug_magnitude=None):
     """Constructs an ImageNet input from a BigtableSelection.
     Args:
       is_training: `bool` for whether the input is for training

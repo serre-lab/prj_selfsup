@@ -33,6 +33,9 @@ import data as data_lib
 import model as model_lib
 import model_util as model_util
 
+import imagenet_bigtable
+import imagenet_input
+
 import tensorflow.compat.v1 as tf
 import tensorflow_datasets as tfds
 import tensorflow_hub as hub
@@ -266,7 +269,7 @@ flags.DEFINE_string(
 
 flags.DEFINE_integer(
     'rec_loss_exponent', 2,
-    'reconstruction loss L1 - L1.')
+    'reconstruction loss L1 - L2.')
 
 flags.DEFINE_float(
     'td_loss_weight', 1,
@@ -275,8 +278,6 @@ flags.DEFINE_float(
 flags.DEFINE_float(
     'bu_loss_weight', 1,
     'bottom up loss weight.')
-
-
 
 
 
@@ -415,6 +416,8 @@ def perform_evaluation(estimator, input_fn, eval_steps, model, num_classes,
   return result
 
 
+FAKE_DATA_DIR = 'gs://cloud-tpu-test-datasets/fake_imagenet'
+
 def main(argv):
   if len(argv) > 1:
     raise app.UsageError('Too many command-line arguments.')
@@ -423,12 +426,45 @@ def main(argv):
   if FLAGS.train_summary_steps > 0:
     tf.config.set_soft_device_placement(True)
 
+  # Input pipelines are slightly different (with regards to shuffling and
+  # preprocessing) between training and evaluation.
+  if FLAGS.bigtable_instance:
+    tf.logging.info('Using Bigtable dataset, table %s', FLAGS.bigtable_table)
+    select_train, select_eval = imagenet_bigtable._select_tables_from_flags()
+    imagenet_train, imagenet_eval = [
+        imagenet_input.ImageNetBigtableInput(  # pylint: disable=g-complex-comprehension
+            is_training=is_training,
+            use_bfloat16=False, #use_bfloat16
+            transpose_input=False, #params.transpose_input
+            selection=selection,
+            )
+        for (is_training, selection) in [(True, select_train), (False, select_eval)]
+    ]
+  else:
+    if FLAGS.data_dir == FAKE_DATA_DIR:
+      tf.logging.info('Using fake dataset.')
+    else:
+      tf.logging.info('Using dataset: %s', FLAGS.data_dir)
+    imagenet_train, imagenet_eval = [
+        imagenet_input.ImageNetInput(  # pylint: disable=g-complex-comprehension
+            is_training=is_training,
+            data_dir=FLAGS.data_dir,
+            transpose_input=False, #params.transpose_input,
+            cache=is_training, # params.use_cache and is_training,
+            image_size=FLAGS.image_size, #params.image_size,
+            num_parallel_calls=8, # params.num_parallel_calls,
+            include_background_label=1000, #(params.num_label_classes == 1001),
+            use_bfloat16=False, #use_bfloat16,
+            )
+        for is_training in [True, False]
+    ]
 
-  builder = tfds.builder(FLAGS.dataset, data_dir=FLAGS.data_dir)
-  builder.download_and_prepare()
-  num_train_examples = builder.info.splits[FLAGS.train_split].num_examples
-  num_eval_examples = builder.info.splits[FLAGS.eval_split].num_examples
-  num_classes = builder.info.features['label'].num_classes
+#   builder = tfds.builder(FLAGS.dataset, data_dir=FLAGS.data_dir)
+#   builder.download_and_prepare()
+
+  num_train_examples = 1281167 #builder.info.splits[FLAGS.train_split].num_examples
+  num_eval_examples = 50000 #builder.info.splits[FLAGS.eval_split].num_examples
+  num_classes = 1000 #builder.info.features['label'].num_classes
 
   train_steps = model_util.get_train_steps(num_train_examples)
   eval_steps = int(math.ceil(num_eval_examples / FLAGS.eval_batch_size))
@@ -440,14 +476,7 @@ def main(argv):
   model = resnet_ae.resnet_autoencoder_v1(
         resnet_depth=FLAGS.resnet_depth,
         width_multiplier=FLAGS.width_multiplier,
-        cifar_stem=FLAGS.image_size <= 32)
-#   if FLAGS.use_td_loss:
-#   else:
-#     resnet_encoder.BATCH_NORM_DECAY = FLAGS.batch_norm_decay
-#     model = resnet_encoder.resnet_encoder_v1(
-#         resnet_depth=FLAGS.resnet_depth,
-#         width_multiplier=FLAGS.width_multiplier,
-#         cifar_stem=FLAGS.image_size <= 32)
+        cifar_stem=False)
 
   checkpoint_steps = (
       FLAGS.checkpoint_steps or (FLAGS.checkpoint_epochs * epoch_steps))
@@ -488,7 +517,8 @@ def main(argv):
       try:
         result = perform_evaluation(
             estimator=estimator,
-            input_fn=data_lib.build_input_fn(builder, False),
+            # input_fn=data_lib.build_input_fn(builder, False),
+            input_fn=imagenet_eval.input_fn,
             eval_steps=eval_steps,
             model=model,
             num_classes=num_classes,
@@ -501,11 +531,14 @@ def main(argv):
     # hooks = [tf_debug.LocalCLIDebugHook(ui_type="readline")]
 
     estimator.train(
-        data_lib.build_input_fn(builder, True), max_steps=train_steps) #, hooks=hooks
+        # data_lib.build_input_fn(builder, True), 
+        imagenet_train.input_fn,
+        max_steps=train_steps) #, hooks=hooks
     if FLAGS.mode == 'train_then_eval':
       perform_evaluation(
           estimator=estimator,
-          input_fn=data_lib.build_input_fn(builder, False),
+        #   input_fn=data_lib.build_input_fn(builder, False),
+          input_fn=imagenet_eval.input_fn,
           eval_steps=eval_steps,
           model=model,
           num_classes=num_classes)
