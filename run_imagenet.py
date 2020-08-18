@@ -426,39 +426,39 @@ def main(argv):
   if FLAGS.train_summary_steps > 0:
     tf.config.set_soft_device_placement(True)
 
-  # Input pipelines are slightly different (with regards to shuffling and
-  # preprocessing) between training and evaluation.
-  if FLAGS.bigtable_instance:
-    tf.logging.info('Using Bigtable dataset, table %s', FLAGS.bigtable_table)
-    select_train, select_eval = imagenet_bigtable._select_tables_from_flags()
-    imagenet_train, imagenet_eval = [
-        imagenet_input.ImageNetBigtableInput(  # pylint: disable=g-complex-comprehension
-            is_training=is_training,
-            use_bfloat16=False, #use_bfloat16
-            transpose_input=False, #params.transpose_input
-            selection=selection,
-            )
-        for (is_training, selection) in [(True, select_train), (False, select_eval)]
-    ]
+#   # Input pipelines are slightly different (with regards to shuffling and
+#   # preprocessing) between training and evaluation.
+#   if FLAGS.bigtable_instance:
+#     tf.logging.info('Using Bigtable dataset, table %s', FLAGS.bigtable_table)
+#     select_train, select_eval = imagenet_bigtable._select_tables_from_flags()
+#     imagenet_train, imagenet_eval = [
+#         imagenet_input.ImageNetBigtableInput(  # pylint: disable=g-complex-comprehension
+#             is_training=is_training,
+#             use_bfloat16=False, #use_bfloat16
+#             transpose_input=False, #params.transpose_input
+#             selection=selection,
+#             )
+#         for (is_training, selection) in [(True, select_train), (False, select_eval)]
+#     ]
+#   else:
+  if FLAGS.data_dir == FAKE_DATA_DIR:
+    tf.logging.info('Using fake dataset.')
   else:
-    if FLAGS.data_dir == FAKE_DATA_DIR:
-      tf.logging.info('Using fake dataset.')
-    else:
-      tf.logging.info('Using dataset: %s', FLAGS.data_dir)
-    imagenet_train, imagenet_eval = [
-        imagenet_input.ImageNetInput(  # pylint: disable=g-complex-comprehension
-            is_training=is_training,
-            data_dir=FLAGS.data_dir,
-            transpose_input=False, #params.transpose_input,
-            cache=is_training, # params.use_cache and is_training,
-            image_size=FLAGS.image_size, #params.image_size,
-            num_parallel_calls=8, # params.num_parallel_calls,
-            include_background_label=1000, #(params.num_label_classes == 1001),
-            use_bfloat16=False, #use_bfloat16,
-            )
-        for is_training in [True, False]
-    ]
-
+    tf.logging.info('Using dataset: %s', FLAGS.data_dir)
+  imagenet_train, imagenet_eval = [
+      imagenet_input.ImageNetInput(  # pylint: disable=g-complex-comprehension
+          is_training=is_training,
+          data_dir=FLAGS.data_dir,
+          transpose_input=False, #params.transpose_input,
+          cache=is_training, # params.use_cache and is_training,
+          image_size=FLAGS.image_size, #params.image_size,
+          num_parallel_calls=8, # params.num_parallel_calls,
+          include_background_label=1000, #(params.num_label_classes == 1001),
+          use_bfloat16=False, #use_bfloat16,
+          )
+      for is_training in [True, False]
+  ]
+  
 #   builder = tfds.builder(FLAGS.dataset, data_dir=FLAGS.data_dir)
 #   builder.download_and_prepare()
 

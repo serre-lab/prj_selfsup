@@ -169,6 +169,8 @@ def build_input_fn(builder, is_training):
   return _input_fn
 
 
+
+
 def get_preprocess_fn(is_training, is_pretrain): #, target=False
   """Get function that accepts an image and returns a preprocessed image."""
   # Disable test cropping for small images (e.g. CIFAR)

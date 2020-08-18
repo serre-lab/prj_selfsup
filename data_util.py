@@ -386,14 +386,17 @@ def random_crop_with_resize(image, height, width, p=1.0):
     image, theta_crop = crop_and_resize(image, height, width)
     return image, theta_crop
   
-  with tf.colocate_with(image):
-    crop_default = tf.constant([0.0,0.0,1.0,1.0])
+  def _transform_2(image):
+    with tf.colocate_with(image):
+      crop_default = tf.constant([0.0,0.0,1.0,1.0])
+    return tf.image.resize_bicubic([image], [height, width])[0], crop_default
   
   image, theta_crop = tf.cond(
           tf.less(tf.random_uniform([], minval=0, maxval=1, dtype=tf.float32),
                   tf.cast(p, tf.float32)),
           lambda: _transform(image),
-          lambda: (image, crop_default))
+          lambda: _transform_2(image))
+  
   return image, theta_crop
   # return random_apply(_transform, p=p, x=image)
 

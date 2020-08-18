@@ -387,6 +387,15 @@ class ImageNetInput(ImageNetTFExampleInput):
         tf.data.experimental.parallel_interleave(
             fetch_dataset, cycle_length=64, sloppy=True))
 
+    
+    # if FLAGS.cache_dataset:
+    #   dataset = dataset.cache()
+    
+    # if is_training:
+    #   buffer_multiplier = 50 if FLAGS.image_size <= 32 else 10
+    #   dataset = dataset.shuffle(params['batch_size'] * buffer_multiplier)
+    #   dataset = dataset.repeat(-1)
+
     if self.cache:
       dataset = dataset.cache().apply(
           tf.data.experimental.shuffle_and_repeat(1024 * 16))
