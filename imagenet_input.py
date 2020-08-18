@@ -184,7 +184,7 @@ class ImageNetTFExampleInput(object):
 
     # return image, label
 
-    return image, label, thetas, 1.0
+    return image, {'labels': labels, 'thetas': thetas, 'mask': mask} # label, thetas, 1.0
 
     
 
@@ -245,10 +245,10 @@ class ImageNetTFExampleInput(object):
             drop_remainder=True))
 
     # Transpose for performance on TPU
-    if self.transpose_input:
-      dataset = dataset.map(
-          lambda images, labels, thatas, mask: (tf.transpose(images, [1, 2, 3, 0]), labels, thatas, mask),
-          num_parallel_calls=self.num_parallel_calls)
+    # if self.transpose_input:
+    #   dataset = dataset.map(
+    #       lambda images, labels, thatas, mask: (tf.transpose(images, [1, 2, 3, 0]), labels, thatas, mask),
+    #       num_parallel_calls=self.num_parallel_calls)
 
     # Assign static batch size dimension
     dataset = dataset.map(functools.partial(self.set_shapes, batch_size))

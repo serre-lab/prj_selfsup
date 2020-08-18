@@ -114,8 +114,8 @@ def build_input_fn(builder, is_training):
   def _input_fn(params):
     """Inner input function."""
     preprocess_fn_pretrain = get_preprocess_fn(is_training, is_pretrain=True)
-    # preprocess_fn_finetune = get_preprocess_fn(is_training, is_pretrain=False) 
-    preprocess_fn_finetune = get_preprocess_target_fn() 
+    preprocess_fn_finetune = get_preprocess_fn(is_training, is_pretrain=False) 
+    preprocess_fn_target = get_preprocess_target_fn() 
     num_classes = builder.info.features['label'].num_classes
 
     def map_fn(image, label):
@@ -136,7 +136,7 @@ def build_input_fn(builder, is_training):
           
         if FLAGS.use_td_loss:
           # original for reconstruction
-          target_im, target_theta = preprocess_fn_finetune(image)
+          target_im, target_theta = preprocess_fn_target(image)
           xs.append(target_im)
           thetas.append(target_theta)
 
