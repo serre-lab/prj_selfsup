@@ -398,6 +398,7 @@ def random_crop_with_resize(image, height, width, p=1.0):
   def _transform_2(image):
     with tf.colocate_with(image):
       crop_default = tf.constant([0.0,0.0,1.0,1.0])
+    image = tf.image.decode_jpeg(image, channels=3)
     return tf.image.resize_bicubic([image], [height, width])[0], crop_default
   
   image, theta_crop = tf.cond(

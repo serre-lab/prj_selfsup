@@ -97,7 +97,7 @@ class ImageNetTFExampleInput(object):
           tf.TensorShape([None, None, None, batch_size])))
       images = tf.reshape(images, [-1])
       labels.set_shape(labels.get_shape().merge_with(
-          tf.TensorShape([batch_size])))
+          tf.TensorShape([None, batch_size])))
     #   thetas
       thetas.set_shape(thetas.get_shape().merge_with(
           tf.TensorShape([None, batch_size])))
@@ -106,9 +106,9 @@ class ImageNetTFExampleInput(object):
 
     else:
       images.set_shape(images.get_shape().merge_with(
-          tf.TensorShape([batch_size, None, None, None, None]))) #num_transforms
+          tf.TensorShape([batch_size, None, None, None]))) #num_transforms
       labels.set_shape(labels.get_shape().merge_with(
-          tf.TensorShape([batch_size])))
+          tf.TensorShape([batch_size, None])))
       thetas.set_shape(thetas.get_shape().merge_with(
           tf.TensorShape([batch_size, None])))
       mask.set_shape(mask.get_shape().merge_with(
