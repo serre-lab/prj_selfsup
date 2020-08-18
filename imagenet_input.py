@@ -80,7 +80,7 @@ class ImageNetTFExampleInput(object):
     self.randaug_num_layers = randaug_num_layers
     self.randaug_magnitude = randaug_magnitude
 
-  def set_shapes(self, batch_size, images, labels, thetas, mask):
+  def set_shapes(self, batch_size, images, labels): #, thetas, mask
     """Statically set the batch_size dimension."""
 
     # if FLAGS.train_mode == 'pretrain':
@@ -92,27 +92,27 @@ class ImageNetTFExampleInput(object):
     # else:
     #   num_transforms = 1
 
-    if self.transpose_input:
-      images.set_shape(images.get_shape().merge_with(
-          tf.TensorShape([None, None, None, batch_size])))
-      images = tf.reshape(images, [-1])
-      labels.set_shape(labels.get_shape().merge_with(
-          tf.TensorShape([None, batch_size])))
-    #   thetas
-      thetas.set_shape(thetas.get_shape().merge_with(
-          tf.TensorShape([None, batch_size])))
-      mask.set_shape(mask.get_shape().merge_with(
-          tf.TensorShape([batch_size])))
+    # if self.transpose_input:
+    #   images.set_shape(images.get_shape().merge_with(
+    #       tf.TensorShape([None, None, None, batch_size])))
+    #   images = tf.reshape(images, [-1])
+    #   labels.set_shape(labels.get_shape().merge_with(
+    #       tf.TensorShape([None, batch_size])))
+    # #   thetas
+    #   thetas.set_shape(thetas.get_shape().merge_with(
+    #       tf.TensorShape([None, batch_size])))
+    #   mask.set_shape(mask.get_shape().merge_with(
+    #       tf.TensorShape([batch_size])))
 
-    else:
-      images.set_shape(images.get_shape().merge_with(
-          tf.TensorShape([batch_size, None, None, None]))) #num_transforms
-      labels.set_shape(labels.get_shape().merge_with(
-          tf.TensorShape([batch_size, None])))
-      thetas.set_shape(thetas.get_shape().merge_with(
-          tf.TensorShape([batch_size, None])))
-      mask.set_shape(mask.get_shape().merge_with(
-          tf.TensorShape([batch_size])))
+    # else:
+    images.set_shape(images.get_shape().merge_with(
+        tf.TensorShape([batch_size, None, None, None]))) #num_transforms
+    labels['labels'].set_shape(labels['labels'].get_shape().merge_with(
+        tf.TensorShape([batch_size, None])))
+    labels['thetas'].set_shape(labels['thetas'].get_shape().merge_with(
+        tf.TensorShape([batch_size, None])))
+    labels['mask'].set_shape(labels['mask'].get_shape().merge_with(
+        tf.TensorShape([batch_size])))
 
     return images, labels
 
