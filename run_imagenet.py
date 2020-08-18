@@ -425,6 +425,9 @@ def main(argv):
   # Enable training summary.
   if FLAGS.train_summary_steps > 0:
     tf.config.set_soft_device_placement(True)
+  
+  if FLAGS.train_mode == 'finetune':
+    FLAGS.use_td_loss = False
 
 #   # Input pipelines are slightly different (with regards to shuffling and
 #   # preprocessing) between training and evaluation.
@@ -458,7 +461,7 @@ def main(argv):
           )
       for is_training in [True, False]
   ]
-  
+
 #   builder = tfds.builder(FLAGS.dataset, data_dir=FLAGS.data_dir)
 #   builder.download_and_prepare()
 
