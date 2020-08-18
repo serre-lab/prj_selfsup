@@ -34,7 +34,7 @@ DATA_DIR=gs://imagenet_data/train/
 MODEL_DIR=$STORAGE_BUCKET/model_test_ft
 CHKPT_DIR=$STORAGE_BUCKET/model_test
 
-python run_imagenet.py \
+python3 run_imagenet.py \
   --mode=$mode --train_mode=$train_mode \
   --fine_tune_after_block=$fine_tune_after_block --zero_init_logits_layer=$zero_init_logits_layer \
   --variable_schema=$variable_schema \
