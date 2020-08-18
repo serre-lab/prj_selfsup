@@ -23,7 +23,7 @@ def image_serving_input_fn():
   def _preprocess_image(image_bytes):
     """Preprocess a single raw image."""
     image = data_util_imagenet.preprocess_image(
-        image=image_bytes, is_training=False)
+        image=image_bytes, height=FLAGS.image_size, width=FLAGS.image_size, is_training=False, color_distort=False, test_crop=True)
     return image
 
   image_bytes_list = tf.placeholder(
@@ -154,17 +154,17 @@ class ImageNetTFExampleInput(object):
       
       if FLAGS.use_bu_loss:
         for _ in range(2):  # Two transformations
-          im, theta = preprocess_fn_pretrain(image)
+          im, theta = preprocess_fn_pretrain(image_bytes)
           xs.append(im)
           thetas.append(theta)
       else:
-        im, theta = preprocess_fn_pretrain(image)
+        im, theta = preprocess_fn_pretrain(image_bytes)
         xs.append(im)
         thetas.append(theta)
         
       if FLAGS.use_td_loss:
         # original for reconstruction
-        target_im, target_theta = preprocess_fn_target(image)
+        target_im, target_theta = preprocess_fn_target(image_bytes)
         xs.append(target_im)
         thetas.append(target_theta)
 
@@ -173,7 +173,7 @@ class ImageNetTFExampleInput(object):
       label = tf.zeros([num_classes])
     
     else:
-      image, thetas = preprocess_fn_finetune(image)
+      image, thetas = preprocess_fn_finetune(image_bytes)
       label = tf.one_hot(label, num_classes)
     
     # if not self.include_background_label:
@@ -439,7 +439,7 @@ class ImageNetBigtableInput(ImageNetTFExampleInput):
   def make_source_dataset(self, index, num_hosts):
     """See base class."""
     try:
-      from tensorflow.contrib.cloud import BigtableClient  # pylint: disable=g-import-not-at-top
+      from tensorflow.contrib.cloud import BigtableClient 
     except ImportError as e:
       logging.exception('Bigtable is not supported in TensorFlow 2.x.')
       raise e

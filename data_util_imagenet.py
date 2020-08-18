@@ -391,7 +391,7 @@ def random_crop_with_resize(image, height, width, p=1.0):
   Returns:
     A preprocessed image `Tensor`.
   """
-  def _transform(image):  # pylint: disable=missing-docstring
+  def _transform(image):  
     image, theta_crop = crop_and_resize(image, height, width)
     return image, theta_crop
   
@@ -635,7 +635,7 @@ def get_preprocess_fn(is_training, is_pretrain): #, target=False
   #   preprocess_fn = data_util.preprocess_target
 
   return functools.partial(
-      data_util.preprocess_image,
+      preprocess_image,
       height=FLAGS.image_size,
       width=FLAGS.image_size,
       is_training=is_training,
@@ -650,7 +650,7 @@ def get_preprocess_target_fn():
   else:
     test_crop = True
   return functools.partial(
-      data_util.preprocess_target,
+      preprocess_target,
       height=FLAGS.image_size,
       width=FLAGS.image_size,
       test_crop=test_crop)
