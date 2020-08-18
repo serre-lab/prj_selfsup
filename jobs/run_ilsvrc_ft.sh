@@ -1,3 +1,4 @@
+
 mode=train_then_eval
 train_mode=finetune
 
@@ -27,14 +28,14 @@ train_summary_steps=0
 
 use_tpu=True
 
-TPU_NAME=<tpu-name>
-STORAGE_BUCKET=gs://<storage-bucket>
-DATA_DIR=$STORAGE_BUCKET/<path-to-tensorflow-dataset>
-MODEL_DIR=$STORAGE_BUCKET/<path-to-store-checkpoints>
-CHKPT_DIR=/tmp/simclr_test
+export TPU_NAME='prj-selfsup-tpu'
+export STORAGE_BUCKET='gs://serrelab/prj-selfsup'
+DATA_DIR=gs://imagenet_data/train/
+MODEL_DIR=$STORAGE_BUCKET/model_test_ft
+CHKPT_DIR=$STORAGE_BUCKET/model_test
 
-
-python run.py --mode=train_then_eval --train_mode=$train_mode \
+python run_imagenet.py \
+  --mode=$mode --train_mode=$train_mode \
   --fine_tune_after_block=$fine_tune_after_block --zero_init_logits_layer=$zero_init_logits_layer \
   --variable_schema=$variable_schema \
   --global_bn=$global_bn --optimizer=$optimizer --learning_rate=$learning_rate --weight_decay=$weight_decay \
