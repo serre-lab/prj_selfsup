@@ -186,6 +186,7 @@ class ImageNetTFExampleInput(object):
 
     return image, {'labels': label, 'thetas': thetas, 'mask': 1.0} # label, thetas, 1.0
 
+
     
 
   @abc.abstractmethod
