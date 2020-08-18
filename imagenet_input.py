@@ -187,8 +187,6 @@ class ImageNetTFExampleInput(object):
     return image, {'labels': label, 'thetas': thetas, 'mask': 1.0} # label, thetas, 1.0
 
 
-    
-
   @abc.abstractmethod
   def make_source_dataset(self, index, num_hosts):
     """Makes dataset of serialized TFExamples.
