@@ -18,13 +18,6 @@ resnet_depth=50
 
 train_summary_steps=0
 
-use_tpu=True
-
-export TPU_NAME='prj-selfsup-tpu'
-export STORAGE_BUCKET='gs://serrelab/prj-selfsup'
-DATA_DIR=gs://imagenet_data/train/
-MODEL_DIR=$STORAGE_BUCKET/model_test
-
 use_td_loss=False #False
 use_bu_loss=True
 
@@ -34,13 +27,36 @@ bu_loss=attractive_repulsive #'attractive_repulsive'
 td_loss_weight=1.0
 bu_loss_weight=1.0
 
+num_parallel_calls=8
+
+use_tpu=True
+
+experiment_name="${train_mode}_R${resnet_depth}_lr${learning_rate}_T${temperature}"
+
+
+export TPU_NAME='prj-selfsup-tpu'
+export STORAGE_BUCKET='gs://serrelab/prj-selfsup'
+DATA_DIR=gs://imagenet_data/train/
+MODEL_DIR=$STORAGE_BUCKET/$experiment_name
+
+
 python3 run_imagenet.py \
   --train_mode=$train_mode \
   --train_batch_size=$train_batch_size --train_epochs=$train_epochs --temperature=$temperature \
   --learning_rate=$learning_rate --learning_rate_scaling=$learning_rate_scaling --weight_decay=$weight_decay \
-  --dataset=$dataset --image_size=$image_size --eval_split=$eval_split \
+  --dataset=$dataset --image_size=$image_size --eval_split=$eval_split --num_parallel_calls=$num_parallel_calls \
   --data_dir=$DATA_DIR --model_dir=$MODEL_DIR \
   --use_td_loss=$use_td_loss --use_bu_loss=$use_bu_loss \
   --td_loss=$td_loss --bu_loss=$bu_loss \
   --td_loss_weight=$td_loss_weight --bu_loss_weight=$bu_loss_weight \
   --use_tpu=$use_tpu --tpu_name=$TPU_NAME --train_summary_steps=$train_summary_steps
+
+
+
+# TODO
+
+# naming experiments/folders
+# experiment database (neptune)
+# optimizing runtime
+# verify imagenet consistency -> push images to summary
+# cleaning code

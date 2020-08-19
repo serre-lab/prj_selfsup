@@ -3,7 +3,7 @@
 train_mode=pretrain
 
 # train_batch_size=128 
-train_batch_size=512 
+train_batch_size=64 
 # train_epochs=10 
 train_epochs=1000 
 
@@ -19,10 +19,13 @@ resnet_depth=18
 use_blur=True 
 color_jitter_strength=0.5 
 
-model_dir="/home/azerroug/prj_selfsup_test_3" 
+experiment_name="cifar_test"
+use_neptune=True
+
+model_dir="/home/aimen/projects/prj_selfsup_test_3" 
 use_tpu=False
 
-use_td_loss=False #False
+use_td_loss=True #False
 use_bu_loss=True
 
 td_loss=attractive_repulsive #'attractive_repulsive'
@@ -51,7 +54,8 @@ CUDA_VISIBLE_DEVICES=GPU_IDX python run.py \
     --use_td_loss=$use_td_loss --use_bu_loss=$use_bu_loss \
     --td_loss=$td_loss --bu_loss=$bu_loss \
     --td_loss_weight=$td_loss_weight --bu_loss_weight=$bu_loss_weight \
-    --model_dir=$model_dir --use_tpu=$use_tpu
+    --model_dir=$model_dir --use_tpu=$use_tpu \
+    --experiment_name=$experiment_name --use_neptune=$use_neptune  
 
 
 # TODO

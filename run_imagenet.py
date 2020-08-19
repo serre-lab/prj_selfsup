@@ -25,20 +25,29 @@ import os
 from absl import app
 from absl import flags
 
-import resnet_ae
-import resnet_encoder
-import resnet_decoder
+# import resnet_ae
+# import resnet_encoder
+# import resnet_decoder
 
-import data as data_lib
-import model as model_lib
-import model_util as model_util
+# import data as data_lib
+# import model as model_lib
+# import model_util as model_util
 
-import imagenet_bigtable
-import imagenet_input
+from model import resnet_ae, resnet_encoder, resnet_decoder, model_util
+from model import model as model_lib
+
+import data.imagenet.data as imagenet_input
 
 import tensorflow.compat.v1 as tf
 import tensorflow_datasets as tfds
 import tensorflow_hub as hub
+
+import neptune
+import neptune_tensorboard as neptune_tb
+
+neptune.init(project_qualified_name='Serre-Lab/self-sup')
+neptune_tb.integrate_with_tensorflow()
+
 
 # from tensorflow.python import debug as tf_debug
 
@@ -112,6 +121,10 @@ flags.DEFINE_bool(
     'ImageNet, this is a very bad idea, but for smaller datasets it can '
     'improve performance.')
 
+flags.DEFINE_integer(
+    'num_parallel_calls', 8,
+    'Name of a dataset.')
+    
 flags.DEFINE_enum(
     'mode', 'train', ['train', 'eval', 'train_then_eval'],
     'Whether to perform training or evaluation.')
@@ -280,6 +293,13 @@ flags.DEFINE_float(
     'bottom up loss weight.')
 
 
+flags.DEFINE_boolean(
+    'use_neptune', True,
+    'Logging with neptune.')
+
+flags.DEFINE_string(
+    'experiment_name', 'test',
+    'used for logging in neptune.')
 
 flags.DEFINE_string(
     'bigtable_project', None,
@@ -419,6 +439,8 @@ def perform_evaluation(estimator, input_fn, eval_steps, model, num_classes,
 FAKE_DATA_DIR = 'gs://cloud-tpu-test-datasets/fake_imagenet'
 
 def main(argv):
+  
+  
   if len(argv) > 1:
     raise app.UsageError('Too many command-line arguments.')
 
@@ -455,8 +477,8 @@ def main(argv):
           transpose_input=False, #params.transpose_input,
           cache=is_training, # params.use_cache and is_training,
           image_size=FLAGS.image_size, #params.image_size,
-          num_parallel_calls=8, # params.num_parallel_calls,
-          include_background_label=1000, #(params.num_label_classes == 1001),
+          num_parallel_calls=FLAGS.num_parallel_calls, # 8, params.num_parallel_calls,
+          include_background_label=False, #(params.num_label_classes == 1001),
           use_bfloat16=False, #use_bfloat16,
           )
       for is_training in [True, False]
@@ -513,24 +535,58 @@ def main(argv):
       train_batch_size=FLAGS.train_batch_size,
       eval_batch_size=FLAGS.eval_batch_size,
       use_tpu=FLAGS.use_tpu)
-
-  if FLAGS.mode == 'eval':
-    for ckpt in tf.train.checkpoints_iterator(
-        run_config.model_dir, min_interval_secs=15):
-      try:
-        result = perform_evaluation(
-            estimator=estimator,
-            # input_fn=data_lib.build_input_fn(builder, False),
-            input_fn=imagenet_eval.input_fn,
-            eval_steps=eval_steps,
-            model=model,
-            num_classes=num_classes,
-            checkpoint_path=ckpt)
-      except tf.errors.NotFoundError:
-        continue
-      if result['global_step'] >= train_steps:
-        return
+  if FLAGS.use_neptune:
+    with neptune.create_experiment(name=FLAGS.experiment_name, params=FLAGS):
+  
+      if FLAGS.mode == 'eval':
+        for ckpt in tf.train.checkpoints_iterator(
+            run_config.model_dir, min_interval_secs=15):
+          try:
+            result = perform_evaluation(
+                estimator=estimator,
+                # input_fn=data_lib.build_input_fn(builder, False),
+                input_fn=imagenet_eval.input_fn,
+                eval_steps=eval_steps,
+                model=model,
+                num_classes=num_classes,
+                checkpoint_path=ckpt)
+          except tf.errors.NotFoundError:
+            continue
+          if result['global_step'] >= train_steps:
+            return
+      else:
+        # hooks = [tf_debug.LocalCLIDebugHook(ui_type="readline")]
+    
+        estimator.train(
+            # data_lib.build_input_fn(builder, True), 
+            imagenet_train.input_fn,
+            max_steps=train_steps) #, hooks=hooks
+        if FLAGS.mode == 'train_then_eval':
+          perform_evaluation(
+              estimator=estimator,
+            #   input_fn=data_lib.build_input_fn(builder, False),
+              input_fn=imagenet_eval.input_fn,
+              eval_steps=eval_steps,
+              model=model,
+              num_classes=num_classes)
   else:
+    if FLAGS.mode == 'eval':
+      for ckpt in tf.train.checkpoints_iterator(
+          run_config.model_dir, min_interval_secs=15):
+        try:
+          result = perform_evaluation(
+              estimator=estimator,
+              # input_fn=data_lib.build_input_fn(builder, False),
+              input_fn=imagenet_eval.input_fn,
+              eval_steps=eval_steps,
+              model=model,
+              num_classes=num_classes,
+              checkpoint_path=ckpt)
+        except tf.errors.NotFoundError:
+          continue
+        if result['global_step'] >= train_steps:
+          return
+    else:
     # hooks = [tf_debug.LocalCLIDebugHook(ui_type="readline")]
 
     estimator.train(
@@ -539,12 +595,12 @@ def main(argv):
         max_steps=train_steps) #, hooks=hooks
     if FLAGS.mode == 'train_then_eval':
       perform_evaluation(
-          estimator=estimator,
+            estimator=estimator,
         #   input_fn=data_lib.build_input_fn(builder, False),
-          input_fn=imagenet_eval.input_fn,
-          eval_steps=eval_steps,
-          model=model,
-          num_classes=num_classes)
+            input_fn=imagenet_eval.input_fn,
+            eval_steps=eval_steps,
+            model=model,
+            num_classes=num_classes)
 
 
 if __name__ == '__main__':

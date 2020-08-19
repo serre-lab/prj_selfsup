@@ -21,9 +21,9 @@ from __future__ import print_function
 
 from absl import flags
 
-import data_util as data_util
-import model_util as model_util
-import objective as obj_lib
+import data.default.data_util as data_util
+import model.model_util as model_util
+import model.objective as obj_lib
 
 import tensorflow.compat.v1 as tf
 import tensorflow.compat.v2 as tf2
@@ -172,7 +172,7 @@ def build_model_fn(model, num_classes, num_train_examples):
     # Add weight decay to loss, for non-LARS optimizers.
     model_util.add_weight_decay(adjust_per_optimizer=True)
     
-    reg_loss = tf.losses.get_regularization_losses()
+    # reg_loss = tf.losses.get_regularization_losses()
 
     
     if FLAGS.train_mode == 'pretrain':

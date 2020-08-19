@@ -11,7 +11,7 @@ import os
 from absl import logging, flags
 import tensorflow.compat.v1 as tf
 # from official.resnet import resnet_preprocessing
-import data_util_imagenet
+import data.imagenet.data_util as data_util
 
 
 FLAGS = flags.FLAGS
@@ -22,7 +22,7 @@ def image_serving_input_fn():
 
   def _preprocess_image(image_bytes):
     """Preprocess a single raw image."""
-    image = data_util_imagenet.preprocess_image(
+    image = data_util.preprocess_image(
         image=image_bytes, height=FLAGS.image_size, width=FLAGS.image_size, is_training=False, color_distort=False, test_crop=True)
     return image
 
@@ -68,7 +68,7 @@ class ImageNetTFExampleInput(object):
                augment_name=None,
                randaug_num_layers=None,
                randaug_magnitude=None):
-    self.image_preprocessing_fn = data_util_imagenet.preprocess_image
+    self.image_preprocessing_fn = data_util.preprocess_image
 
     self.is_training = is_training
     self.use_bfloat16 = use_bfloat16
@@ -82,15 +82,6 @@ class ImageNetTFExampleInput(object):
 
   def set_shapes(self, batch_size, images, labels): #, thetas, mask
     """Statically set the batch_size dimension."""
-
-    # if FLAGS.train_mode == 'pretrain':
-    #   num_transforms = 1
-    #   if FLAGS.use_td_loss:
-    #     num_transforms += 1
-    #   if FLAGS.use_bu_loss:
-    #     num_transforms += 1
-    # else:
-    #   num_transforms = 1
 
     # if self.transpose_input:
     #   images.set_shape(images.get_shape().merge_with(
@@ -133,19 +124,9 @@ class ImageNetTFExampleInput(object):
     label = tf.cast(
         tf.reshape(parsed['image/class/label'], shape=[]), dtype=tf.int32)
 
-    # image = self.image_preprocessing_fn(
-    #     image_bytes=image_bytes,
-    #     is_training=self.is_training,
-    #     image_size=self.image_size,
-    #     use_bfloat16=self.use_bfloat16,
-    #     augment_name=self.augment_name,
-    #     randaug_num_layers=self.randaug_num_layers,
-    #     randaug_magnitude=self.randaug_magnitude)
-
-
-    preprocess_fn_pretrain = data_util_imagenet.get_preprocess_fn(self.is_training, is_pretrain=True)
-    preprocess_fn_finetune = data_util_imagenet.get_preprocess_fn(self.is_training, is_pretrain=False) 
-    preprocess_fn_target = data_util_imagenet.get_preprocess_target_fn() 
+    preprocess_fn_pretrain = data_util.get_preprocess_fn(self.is_training, is_pretrain=True)
+    preprocess_fn_finetune = data_util.get_preprocess_fn(self.is_training, is_pretrain=False) 
+    preprocess_fn_target = data_util.get_preprocess_target_fn() 
     num_classes = 1000 # builder.info.features['label'].num_classes
     
     if FLAGS.train_mode == 'pretrain':
@@ -176,14 +157,6 @@ class ImageNetTFExampleInput(object):
       image, thetas = preprocess_fn_finetune(image_bytes)
       label = tf.one_hot(label, num_classes)
     
-    # if not self.include_background_label:
-    #   # 'image/class/label' is encoded as an integer from 1 to num_label_classes
-    #   # In order to generate the correct one-hot label vector from this number,
-    #   # we subtract the number by 1 to make it in [0, num_label_classes).
-    #   label -= 1
-
-    # return image, label
-
     return image, {'labels': label, 'thetas': thetas, 'mask': 1.0} # label, thetas, 1.0
 
 
