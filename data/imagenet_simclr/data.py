@@ -130,11 +130,11 @@ class ImageNetTFExampleInput(object):
     if FLAGS.train_mode == 'pretrain':
       xs = []
       for _ in range(2):  # Two transformations
-        xs.append(preprocess_fn_pretrain(image)[0])
+        xs.append(preprocess_fn_pretrain(image_bytes)[0])
       image = tf.concat(xs, -1)
       label = tf.zeros([num_classes])
     else:
-      image = preprocess_fn_finetune(image)[0]
+      image = preprocess_fn_finetune(image_bytes)[0]
       label = tf.one_hot(label, num_classes)
     
     return image, {'labels': label, 'mask': 1.0} # label, thetas, 1.0
