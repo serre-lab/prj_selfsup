@@ -24,6 +24,7 @@ import math
 import os
 from absl import app
 from absl import flags
+import sys
 
 # import resnet_ae
 # import resnet_encoder
@@ -47,7 +48,6 @@ import neptune_tensorboard as neptune_tb
 
 neptune.init(project_qualified_name='Serre-Lab/self-sup')
 neptune_tb.integrate_with_tensorflow()
-
 
 # from tensorflow.python import debug as tf_debug
 
