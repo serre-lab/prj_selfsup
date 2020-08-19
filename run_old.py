@@ -25,10 +25,10 @@ import os
 from absl import app
 from absl import flags
 
-import resnet
-import data as data_lib
-import model as model_lib
-import model_util as model_util
+import model_simclr.resnet as resnet
+import data.simclr.data as data_lib
+import model_simclr.model as model_lib
+import model_simclr.model_util as model_util
 
 import tensorflow.compat.v1 as tf
 import tensorflow_datasets as tfds

@@ -26,18 +26,13 @@ from absl import app
 from absl import flags
 import sys
 
-# import resnet_ae
-# import resnet_encoder
-# import resnet_decoder
+import model_simclr.resnet as resnet
 
-# import data as data_lib
-# import model as model_lib
-# import model_util as model_util
+import data.imagenet_simclr.data as imagenet_input
+# import data.imagenet.data as imagenet_input
 
-from model import resnet_ae, resnet_encoder, resnet_decoder, model_util
-from model import model as model_lib
-
-import data.imagenet.data as imagenet_input
+import model_simclr.model as model_lib
+import model_simclr.model_util as model_util
 
 import tensorflow.compat.v1 as tf
 import tensorflow_datasets as tfds
@@ -48,8 +43,6 @@ import neptune_tensorboard as neptune_tb
 
 neptune.init(project_qualified_name='Serre-Lab/self-sup')
 neptune_tb.integrate_with_tensorflow()
-
-# from tensorflow.python import debug as tf_debug
 
 FLAGS = flags.FLAGS
 
@@ -91,7 +84,7 @@ flags.DEFINE_integer(
     'Number of steps to train for. If provided, overrides train_epochs.')
 
 flags.DEFINE_integer(
-    'eval_batch_size', 256,
+    'eval_batch_size', 256, 
     'Batch size for eval.')
 
 flags.DEFINE_integer(
@@ -121,10 +114,6 @@ flags.DEFINE_bool(
     'ImageNet, this is a very bad idea, but for smaller datasets it can '
     'improve performance.')
 
-flags.DEFINE_integer(
-    'num_parallel_calls', 8,
-    'Name of a dataset.')
-    
 flags.DEFINE_enum(
     'mode', 'train', ['train', 'eval', 'train_then_eval'],
     'Whether to perform training or evaluation.')
@@ -264,34 +253,9 @@ flags.DEFINE_boolean(
     'Whether or not to use Gaussian blur for augmentation during pretraining.')
 
 
-flags.DEFINE_boolean(
-    'use_td_loss', True,
-    'Use topdown loss.')
-
-flags.DEFINE_boolean(
-    'use_bu_loss', True,
-    'Use bottomup loss.')
-
-flags.DEFINE_string(
-    'td_loss', 'attractive', # 'attractive_repulsive'
-    'Use topdown loss.')
-
-flags.DEFINE_string(
-    'bu_loss', 'attractive', # 'attractive_repulsive'
-    'Use bottomup loss.')
-
 flags.DEFINE_integer(
-    'rec_loss_exponent', 2,
-    'reconstruction loss L1 - L2.')
-
-flags.DEFINE_float(
-    'td_loss_weight', 1,
-    'top down loss weight.')
-
-flags.DEFINE_float(
-    'bu_loss_weight', 1,
-    'bottom up loss weight.')
-
+    'num_parallel_calls', 8,
+    'Name of a dataset.')
 
 flags.DEFINE_boolean(
     'use_neptune', True,
@@ -301,39 +265,6 @@ flags.DEFINE_string(
     'experiment_name', 'test',
     'used for logging in neptune.')
 
-flags.DEFINE_string(
-    'bigtable_project', None,
-    'The Cloud Bigtable project.  If None, --gcp_project will be used.')
-flags.DEFINE_string(
-    'bigtable_instance', None,
-    'The Cloud Bigtable instance to load data from.')
-flags.DEFINE_string(
-    'bigtable_table', 'imagenet',
-    'The Cloud Bigtable table to load data from.')
-flags.DEFINE_string(
-    'bigtable_train_prefix', 'train_',
-    'The prefix identifying training rows.')
-flags.DEFINE_string(
-    'bigtable_eval_prefix', 'validation_',
-    'The prefix identifying evaluation rows.')
-flags.DEFINE_string(
-    'bigtable_column_family', 'tfexample',
-    'The column family storing TFExamples.')
-flags.DEFINE_string(
-    'bigtable_column_qualifier', 'example',
-    'The column name storing TFExamples.')
-
-
-    
-###### extra flags
-# use bottom up loss
-# use top down loss
-
-# bottom up loss: attractive / repulsive
-# top down loss: attractive / repulsive
-
-# top down loss False -> use encoder only, request only augmented images 
-# top down loss True -> use encoder + decoder, request augmented and center-cropped images
 
 def build_hub_module(model, num_classes, global_step, checkpoint_path):
   """Create TF-Hub module."""
@@ -435,8 +366,8 @@ def perform_evaluation(estimator, input_fn, eval_steps, model, num_classes,
 
   return result
 
-
 FAKE_DATA_DIR = 'gs://cloud-tpu-test-datasets/fake_imagenet'
+
 
 def argv_to_dict():
     args = sys.argv[1:]
@@ -447,18 +378,23 @@ def argv_to_dict():
     return arg_dict
 
 def main(argv):
-  
-  
   if len(argv) > 1:
     raise app.UsageError('Too many command-line arguments.')
 
   # Enable training summary.
   if FLAGS.train_summary_steps > 0:
     tf.config.set_soft_device_placement(True)
-  
-  if FLAGS.train_mode == 'finetune':
-    FLAGS.use_td_loss = False
 
+
+#   builder = tfds.builder(FLAGS.dataset, data_dir=FLAGS.data_dir)
+#   builder.download_and_prepare()
+#   num_train_examples = builder.info.splits[FLAGS.train_split].num_examples
+#   num_eval_examples = builder.info.splits[FLAGS.eval_split].num_examples
+#   num_classes = builder.info.features['label'].num_classes
+
+#   train_steps = model_util.get_train_steps(num_train_examples)
+#   eval_steps = int(math.ceil(num_eval_examples / FLAGS.eval_batch_size))
+#   epoch_steps = int(round(num_train_examples / FLAGS.train_batch_size))
   if FLAGS.data_dir == FAKE_DATA_DIR:
     tf.logging.info('Using fake dataset.')
   else:
@@ -485,13 +421,11 @@ def main(argv):
   eval_steps = int(math.ceil(num_eval_examples / FLAGS.eval_batch_size))
   epoch_steps = int(round(num_train_examples / FLAGS.train_batch_size))
 
-  resnet_encoder.BATCH_NORM_DECAY = FLAGS.batch_norm_decay
-  resnet_decoder.BATCH_NORM_DECAY = FLAGS.batch_norm_decay
-
-  model = resnet_ae.resnet_autoencoder_v1(
-        resnet_depth=FLAGS.resnet_depth,
-        width_multiplier=FLAGS.width_multiplier,
-        cifar_stem=False)
+  resnet.BATCH_NORM_DECAY = FLAGS.batch_norm_decay
+  model = resnet.resnet_v1(
+      resnet_depth=FLAGS.resnet_depth,
+      width_multiplier=FLAGS.width_multiplier,
+      cifar_stem=FLAGS.image_size <= 32)
 
   checkpoint_steps = (
       FLAGS.checkpoint_steps or (FLAGS.checkpoint_epochs * epoch_steps))
@@ -525,6 +459,7 @@ def main(argv):
       train_batch_size=FLAGS.train_batch_size,
       eval_batch_size=FLAGS.eval_batch_size,
       use_tpu=FLAGS.use_tpu)
+  
   if FLAGS.use_neptune:
     with neptune.create_experiment(name=FLAGS.experiment_name, params=argv_to_dict()):
   
@@ -534,7 +469,6 @@ def main(argv):
           try:
             result = perform_evaluation(
                 estimator=estimator,
-                # input_fn=data_lib.build_input_fn(builder, False),
                 input_fn=imagenet_eval.input_fn,
                 eval_steps=eval_steps,
                 model=model,
@@ -545,28 +479,23 @@ def main(argv):
           if result['global_step'] >= train_steps:
             return
       else:
-        # hooks = [tf_debug.LocalCLIDebugHook(ui_type="readline")]
-    
         estimator.train(
-            # data_lib.build_input_fn(builder, True), 
-            imagenet_train.input_fn,
-            max_steps=train_steps) #, hooks=hooks
+            imagenet_train.input_fn, max_steps=train_steps)
         if FLAGS.mode == 'train_then_eval':
           perform_evaluation(
               estimator=estimator,
-            #   input_fn=data_lib.build_input_fn(builder, False),
               input_fn=imagenet_eval.input_fn,
               eval_steps=eval_steps,
               model=model,
               num_classes=num_classes)
   else:
+  
     if FLAGS.mode == 'eval':
       for ckpt in tf.train.checkpoints_iterator(
           run_config.model_dir, min_interval_secs=15):
         try:
           result = perform_evaluation(
               estimator=estimator,
-              # input_fn=data_lib.build_input_fn(builder, False),
               input_fn=imagenet_eval.input_fn,
               eval_steps=eval_steps,
               model=model,
@@ -577,16 +506,11 @@ def main(argv):
         if result['global_step'] >= train_steps:
           return
     else:
-    # hooks = [tf_debug.LocalCLIDebugHook(ui_type="readline")]
-
       estimator.train(
-        # data_lib.build_input_fn(builder, True), 
-        imagenet_train.input_fn,
-        max_steps=train_steps) #, hooks=hooks
-    if FLAGS.mode == 'train_then_eval':
-      perform_evaluation(
+          imagenet_train.input_fn, max_steps=train_steps)
+      if FLAGS.mode == 'train_then_eval':
+        perform_evaluation(
             estimator=estimator,
-        #   input_fn=data_lib.build_input_fn(builder, False),
             input_fn=imagenet_eval.input_fn,
             eval_steps=eval_steps,
             model=model,
