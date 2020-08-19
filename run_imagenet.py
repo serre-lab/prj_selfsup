@@ -457,7 +457,7 @@ def main(argv):
 #     tf.logging.info('Using Bigtable dataset, table %s', FLAGS.bigtable_table)
 #     select_train, select_eval = imagenet_bigtable._select_tables_from_flags()
 #     imagenet_train, imagenet_eval = [
-#         imagenet_input.ImageNetBigtableInput(  # pylint: disable=g-complex-comprehension
+#         imagenet_input.ImageNetBigtableInput(
 #             is_training=is_training,
 #             use_bfloat16=False, #use_bfloat16
 #             transpose_input=False, #params.transpose_input
@@ -471,7 +471,7 @@ def main(argv):
   else:
     tf.logging.info('Using dataset: %s', FLAGS.data_dir)
   imagenet_train, imagenet_eval = [
-      imagenet_input.ImageNetInput(  # pylint: disable=g-complex-comprehension
+      imagenet_input.ImageNetInput(
           is_training=is_training,
           data_dir=FLAGS.data_dir,
           transpose_input=False, #params.transpose_input,
@@ -589,7 +589,7 @@ def main(argv):
     else:
     # hooks = [tf_debug.LocalCLIDebugHook(ui_type="readline")]
 
-    estimator.train(
+      estimator.train(
         # data_lib.build_input_fn(builder, True), 
         imagenet_train.input_fn,
         max_steps=train_steps) #, hooks=hooks
