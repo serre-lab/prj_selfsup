@@ -26,6 +26,9 @@ resnet_depth=18
 
 train_summary_steps=0
 
+use_neptune=True
+experiment_name="${train_mode}_R${resnet_depth}_lr${learning_rate}"
+
 use_tpu=True
 
 export TPU_NAME='prj-selfsup-tpu'
@@ -42,7 +45,8 @@ python3 run_old_imagenet.py \
   --train_epochs=$train_epochs --train_batch_size=$train_batch_size --warmup_epochs=$warmup_epochs \
   --dataset=$dataset --image_size=$image_size --eval_split=$eval_split \
   --data_dir=$DATA_DIR --model_dir=$MODEL_DIR --checkpoint=$CHKPT_DIR \
-  --use_tpu=True --tpu_name=$TPU_NAME --train_summary_steps=$train_summary_steps
+  --use_tpu=True --tpu_name=$TPU_NAME --train_summary_steps=$train_summary_steps \
+  --experiment_name=$experiment_name --use_neptune=$use_neptune
 
 
 # TODO
