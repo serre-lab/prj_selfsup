@@ -29,10 +29,11 @@ bu_loss_weight=1.0
 
 num_parallel_calls=8
 
-use_tpu=True
-
+use_neptune=True
 experiment_name="${train_mode}_R${resnet_depth}_lr${learning_rate}_T${temperature}"
 
+
+use_tpu=True
 
 export TPU_NAME='prj-selfsup-tpu'
 export STORAGE_BUCKET='gs://serrelab/prj-selfsup'
@@ -49,7 +50,8 @@ python3 run_imagenet.py \
   --use_td_loss=$use_td_loss --use_bu_loss=$use_bu_loss \
   --td_loss=$td_loss --bu_loss=$bu_loss \
   --td_loss_weight=$td_loss_weight --bu_loss_weight=$bu_loss_weight \
-  --use_tpu=$use_tpu --tpu_name=$TPU_NAME --train_summary_steps=$train_summary_steps
+  --use_tpu=$use_tpu --tpu_name=$TPU_NAME --train_summary_steps=$train_summary_steps \
+  --experiment_name=$experiment_name --use_neptune=$use_neptune
 
 
 
