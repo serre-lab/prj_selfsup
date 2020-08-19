@@ -44,18 +44,3 @@ python3 run_imagenet.py \
   --data_dir=$DATA_DIR --model_dir=$MODEL_DIR --checkpoint=$CHKPT_DIR \
   --use_tpu=True --tpu_name=$TPU_NAME --train_summary_steps=$train_summary_steps
 
-
-# TODO
-
-# data
-# get aug params (theta), augmented images (Xt_1, Xt_2), original image (X)
-# DONE
-
-# model
-# choosing the decoder/Unet model
-# DONE
-
-# loss implementation
-# bottom up: attraction - repulsion
-# top down: attraction - repulsion
-# weighting the losses (lambda)
