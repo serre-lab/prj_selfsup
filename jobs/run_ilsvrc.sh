@@ -27,7 +27,7 @@ bu_loss=attractive_repulsive #'attractive_repulsive'
 td_loss_weight=1.0
 bu_loss_weight=1.0
 
-num_parallel_calls=8
+num_parallel_calls=16
 
 use_neptune=True
 experiment_name="${train_mode}_R${resnet_depth}_lr${learning_rate}_T${temperature}"
