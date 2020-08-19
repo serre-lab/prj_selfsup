@@ -17,6 +17,8 @@ resnet_depth=50
 
 train_summary_steps=0
 
+num_parallel_calls=8
+
 use_neptune=True
 experiment_name="${train_mode}_R${resnet_depth}_lr${learning_rate}_T${temperature}"
 
