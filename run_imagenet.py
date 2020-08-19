@@ -438,6 +438,14 @@ def perform_evaluation(estimator, input_fn, eval_steps, model, num_classes,
 
 FAKE_DATA_DIR = 'gs://cloud-tpu-test-datasets/fake_imagenet'
 
+def argv_to_dict():
+    args = sys.argv[1:]
+    arg_dict = {}
+    for arg in args:
+        arg = arg.replace('--','').split('=')
+        arg_dict[arg[0]] = arg[1]
+    return arg_dict
+
 def main(argv):
   
   
@@ -536,7 +544,7 @@ def main(argv):
       eval_batch_size=FLAGS.eval_batch_size,
       use_tpu=FLAGS.use_tpu)
   if FLAGS.use_neptune:
-    with neptune.create_experiment(name=FLAGS.experiment_name, params=FLAGS):
+    with neptune.create_experiment(name=FLAGS.experiment_name, params=argv_to_dict()):
   
       if FLAGS.mode == 'eval':
         for ckpt in tf.train.checkpoints_iterator(
