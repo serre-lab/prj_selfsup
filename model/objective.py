@@ -365,6 +365,180 @@ def add_light_td_attractive_repulsive_loss(reconstruction,
 
   return loss, logits_at, labels
 
+###################################################################################################
+###################################################################################################
+###################################################################################################
+###################################################################################################
+
+def add_dot_product_td_attractive_repulsive_loss(reconstruction,
+                                      target,
+                                      power=2,
+                                      temperature=1.0,
+                                      tpu_context=None,
+                                      weights=1.0):
+  """Compute top down attractive and repulsive loss base on pixel-wise error.
+
+  Args:
+    hidden: hidden vector (`Tensor`) of shape (bsz, dim).
+    hidden_norm: whether or not to use normalization on the hidden vector.
+    temperature: a `floating` number for temperature scaling.
+    tpu_context: context information for tpu.
+    weights: a weighting number or vector.
+
+  Returns:
+    A loss scalar.
+    The logits for contrastive prediction task.
+    The labels for contrastive prediction task.
+  """
+  # Get (normalized) hidden1 and hidden2.
+  batch_size = target.get_shape().as_list()[0]
+  rec_size = reconstruction.get_shape().as_list()[0]
+  
+  if batch_size != rec_size:
+
+    reconstruction1, reconstruction2 = tf.split(reconstruction, 2, 0)
+    # batch_size = tf.shape(reconstruction1)[0]
+
+    # Gather hidden1/hidden2 across replicas and create local labels.
+    if tpu_context is not None:
+      reconstruction1_large = tpu_cross_replica_concat(reconstruction1, tpu_context)
+      reconstruction2_large = tpu_cross_replica_concat(reconstruction2, tpu_context)
+      target_large = tpu_cross_replica_concat(target, tpu_context)
+      
+      enlarged_batch_size = tf.shape(reconstruction1_large)[0]
+      # TODO(iamtingchen): more elegant way to convert u32 to s32 for replica_id.
+      replica_id = tf.cast(tf.cast(xla.replica_id(), tf.uint32), tf.int32)
+      labels_idx = tf.range(batch_size) + replica_id * batch_size
+      labels = tf.one_hot(labels_idx, enlarged_batch_size * 3)
+      masks = tf.one_hot(labels_idx, enlarged_batch_size)
+    else:
+      reconstruction1_large = reconstruction1
+      reconstruction2_large = reconstruction2
+      labels = tf.one_hot(tf.range(batch_size), batch_size * 3)
+      masks = tf.one_hot(tf.range(batch_size), batch_size)
+
+    # target = tf.reshape(target, [batch_size, -1])
+    reconstruction1 = tf.reshape(reconstruction1, [batch_size, -1])
+    reconstruction2 = tf.reshape(reconstruction2, [batch_size, -1])
+    
+    target_large = tf.reshape(target_large, [enlarged_batch_size, -1])
+    reconstruction1_large = tf.reshape(reconstruction1_large, [enlarged_batch_size, -1])
+    reconstruction2_large = tf.reshape(reconstruction2_large, [enlarged_batch_size, -1])
+
+    logits_at = tf.matmul(reconstruction1, target_large, transpose_b=True) / temperature
+    logits_bt = tf.matmul(reconstruction2, target_large, transpose_b=True) / temperature
+
+    logits_aa = tf.matmul(reconstruction1, reconstruction1_large, transpose_b=True) / temperature
+    logits_aa = logits_aa - masks * LARGE_NUM
+
+    logits_bb = tf.matmul(reconstruction2, reconstruction2_large, transpose_b=True) / temperature
+    logits_bb = logits_bb - masks * LARGE_NUM
+
+    logits_ab = tf.matmul(reconstruction1, reconstruction2_large, transpose_b=True) / temperature
+    logits_ba = tf.matmul(reconstruction2, reconstruction1_large, transpose_b=True) / temperature
+    
+    loss_a = tf.losses.softmax_cross_entropy(
+        labels, tf.concat([logits_at, logits_aa, logits_ab], 1), weights=weights)
+    loss_b = tf.losses.softmax_cross_entropy(
+        labels, tf.concat([logits_bt, logits_ba, logits_bb], 1), weights=weights)
+    loss = loss_a + loss_b
+  
+  else:
+    # Gather hidden1/hidden2 across replicas and create local labels.
+    if tpu_context is not None:
+      reconstruction_large = tpu_cross_replica_concat(reconstruction, tpu_context)
+      target_large = tpu_cross_replica_concat(target, tpu_context)
+      
+      enlarged_batch_size = tf.shape(reconstruction_large)[0]
+      # TODO(iamtingchen): more elegant way to convert u32 to s32 for replica_id.
+      replica_id = tf.cast(tf.cast(xla.replica_id(), tf.uint32), tf.int32)
+      labels_idx = tf.range(batch_size) + replica_id * batch_size
+      labels = tf.one_hot(labels_idx, enlarged_batch_size * 2)
+      masks = tf.one_hot(labels_idx, enlarged_batch_size)
+    else:
+      reconstruction_large = reconstruction
+      labels = tf.one_hot(tf.range(batch_size), batch_size * 2)
+      masks = tf.one_hot(tf.range(batch_size), batch_size)
+
+    reconstruction = tf.reshape(reconstruction, [batch_size, -1])
+    
+    target_large = tf.reshape(target_large, [enlarged_batch_size, -1])
+    reconstruction_large = tf.reshape(reconstruction_large, [enlarged_batch_size, -1])
+    
+    logits_at = tf.matmul(reconstruction, target_large, transpose_b=True) / temperature
+    logits_aa = tf.matmul(reconstruction, reconstruction_large, transpose_b=True) / temperature
+    logits_aa = logits_aa - masks * LARGE_NUM
+    
+
+    loss = tf.losses.softmax_cross_entropy(
+        labels, tf.concat([logits_at, logits_aa], 1), weights=weights) #tf.concat([logits_at, logits_aa], 1)
+
+  return loss, logits_at, labels
+
+
+def add_light_dot_product_td_attractive_repulsive_loss(reconstruction,
+                                      target,
+                                      power=2,
+                                      temperature=1.0,
+                                      tpu_context=None,
+                                      weights=1.0):
+  """Compute a light version of the top down attractive and repulsive loss base on pixel-wise error.
+      This version uses a lot less negative examples
+  Args:
+    hidden: hidden vector (`Tensor`) of shape (bsz, dim).
+    hidden_norm: whether or not to use normalization on the hidden vector.
+    temperature: a `floating` number for temperature scaling.
+    tpu_context: context information for tpu.
+    weights: a weighting number or vector.
+
+  Returns:
+    A loss scalar.
+    The logits for contrastive prediction task.
+    The labels for contrastive prediction task.
+  """
+
+  # Get (normalized) hidden1 and hidden2.
+  batch_size = target.get_shape().as_list()[0]
+  rec_size = reconstruction.get_shape().as_list()[0]
+  
+  if batch_size != rec_size:
+
+    reconstruction1, reconstruction2 = tf.split(reconstruction, 2, 0)
+    
+    labels = tf.one_hot(tf.range(batch_size), batch_size)
+    
+    reconstruction1 = tf.reshape(reconstruction1, [batch_size, -1])
+    reconstruction2 = tf.reshape(reconstruction2, [batch_size, -1])
+    target = tf.reshape(target, [batch_size, -1])
+
+
+    reconstruction = tf.reshape(reconstruction, [batch_size, -1])
+    target = tf.reshape(target, [batch_size, -1])
+
+    logits_at = tf.matmul(reconstruction1, target, transpose_b=True) / temperature
+    logits_bt = tf.matmul(reconstruction2, target, transpose_b=True) / temperature
+
+    loss_a = tf.losses.softmax_cross_entropy(
+        labels, logits_at, weights=weights)
+    loss_b = tf.losses.softmax_cross_entropy(
+        labels, logits_bt, weights=weights)
+
+    loss = loss_a + loss_b
+  
+  else:
+    
+    labels = tf.one_hot(tf.range(batch_size), batch_size)
+
+    reconstruction = tf.reshape(reconstruction, [batch_size, -1])
+    target = tf.reshape(target, [batch_size, -1])
+
+    logits_at = tf.matmul(reconstruction, target, transpose_b=True) / temperature
+    
+    loss = tf.losses.softmax_cross_entropy(
+        labels, logits_at, weights=weights)
+
+  return loss, logits_at, labels
+
 
 def tpu_cross_replica_concat(tensor, tpu_context=None):
   """Reduce a concatenation of the `tensor` across TPU cores.
