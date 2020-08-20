@@ -149,9 +149,6 @@ def build_model_fn(model, num_classes, num_train_examples):
                   'learning_rate', learning_rate,
                   step=tf.train.get_global_step())
 
-              tf2.summary.image(
-                  'training images', features[:10],
-                  step=tf.train.get_global_step())
               
       optimizer = model_util.get_optimizer(learning_rate)
       control_deps = tf.get_collection(tf.GraphKeys.UPDATE_OPS)

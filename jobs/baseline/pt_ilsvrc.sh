@@ -3,7 +3,7 @@
 train_mode=pretrain
 
 train_batch_size=4096 # 4096 
-train_epochs=100 
+train_epochs=800 
 
 learning_rate=0.075 
 weight_decay=1e-4 
@@ -15,7 +15,7 @@ image_size=224
 eval_split=validation
 resnet_depth=50 
 
-train_summary_steps=10
+train_summary_steps=0
 
 num_parallel_calls=8
 
