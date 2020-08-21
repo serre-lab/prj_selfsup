@@ -43,6 +43,55 @@ GLOBAL_BN = True
 BATCH_NORM_DECAY = 0.9
 SK_RATIO = 0.0
 SE_RATIO = 0.0
+DEFAULT_METRIC_MODEL = [
+  {'conv', ['conv1_1', 3, 1, 3, 64]},  # noqa name, kernel, stride, in, out
+  {'conv', ['conv1_2', 3, 1, 64, 128]},  # noqa name, kernel, stride, in, out
+  {'pool', ['pool1', 2, 2, 128, 128]},  # noqa name, kernel, stride, in, out
+  {'conv', ['conv2_2', 3, 1, 128, 128]},  # noqa name, kernel, stride, in, out
+  {'conv', ['conv2_2', 3, 1, 128, 256]},  # noqa name, kernel, stride, in, out
+  {'pool', ['pool2', 2, 2, 256, 256]},  # noqa name, kernel, stride, in, out
+  {'conv', ['conv3_1', 3, 1, 256, 256]},  # noqa name, kernel, stride, in, out
+  {'conv', ['conv3_2', 3, 1, 256, 128]},  # noqa name, kernel, stride, in, out
+  {'global_mean', ['gap', 3, 1, 128, 128]},  # noqa name, kernel, stride, in, out
+]
+
+
+def learned_metric(
+    inputs,
+    data_format,
+    is_training,
+    model=DEFAULT_METRIC_MODEL):
+  """Learn the metric with a network."""
+  for layer in model:
+    op, vals = layer.items()
+    kernel, stride, fan_in, fan_out = vals
+    if op == "conv":
+      inputs = conv2d_fixed_padding(
+        inputs=inputs,
+        filters=fan_out,
+        kernel_size=kernel,
+        strides=stride,
+        data_format=data_format)
+      inputs = batch_norm_relu(
+        inputs,
+        is_training,
+        data_format=data_format)
+    elif op == "pool":
+      inputs = tf.layers.max_pooling2d(
+        inputs=inputs,
+        pool_size=kernel,
+        strides=stride,
+        padding='SAME',
+        data_format=data_format)
+    elif op == "global_mean":
+      if data_format == 'channels_last':  # noqa
+        inputs = tf.reduce_mean(inputs, [1, 2])
+      else:  # noqa
+        inputs = tf.reduce_mean(inputs, [2, 3])
+    else:
+      raise NotImplementedError(op)
+  return inputs
+
 
 class BatchNormalization(tf.layers.BatchNormalization):
   """Batch Normalization layer that supports cross replica computation on TPU.
@@ -745,7 +794,6 @@ def resnet_v1_generator_decoder(block_fn, layers, width_multiplier,
           strides=1, data_format=data_format)
 
       # 224 224 3
-
     filter_trainable_variables(trainable_variables, after_block=5)
     add_to_collection(trainable_variables, 'trainable_variables_inblock_')
     
