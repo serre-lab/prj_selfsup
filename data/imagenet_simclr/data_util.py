@@ -249,7 +249,7 @@ def center_crop(image_bytes, height, width, crop_proportion):
   crop_window = tf.stack([offset_height, offset_width,
                           crop_height, crop_width])
   image = tf.image.decode_and_crop_jpeg(image_bytes, crop_window, channels=3)
-
+  image = tf.image.convert_image_dtype(image, dtype=tf.float32)
   image = tf.image.resize_bicubic([image], [height, width])[0]
 
   return image
@@ -306,6 +306,7 @@ def distorted_bounding_box_crop(image_bytes,
     #     image, offset_y, offset_x, target_height, target_width)
     crop_window = tf.stack([offset_y, offset_x, target_height, target_width])
     image = tf.image.decode_and_crop_jpeg(image_bytes, crop_window, channels=3)
+    image = tf.image.convert_image_dtype(image, dtype=tf.float32)
 
     theta_crop = tf.stack([offset_y/shape[0], offset_x/shape[1], (offset_y+target_height)/shape[0], (offset_x+target_width)/shape[1]])
     theta_crop = tf.cast(theta_crop, dtype=tf.float32)
@@ -399,6 +400,7 @@ def random_crop_with_resize(image, height, width, p=1.0):
     with tf.colocate_with(image):
       crop_default = tf.constant([0.0,0.0,1.0,1.0])
     image = tf.image.decode_jpeg(image, channels=3)
+    image = tf.image.convert_image_dtype(image, dtype=tf.float32)
     return tf.image.resize_bicubic([image], [height, width])[0], crop_default
   
   image, theta_crop = tf.cond(
@@ -522,12 +524,15 @@ def preprocess_for_train(image, height, width,
     A preprocessed image `Tensor`.
   """
   image = tf.image.decode_jpeg(image, channels=3)
+  image = tf.image.convert_image_dtype(image, dtype=tf.float32)
+
   image = tf.image.resize_bicubic([image], [height, width])[0]
 
   # if crop:
   #   image, theta_crop = random_crop_with_resize(image, height, width)
   # else:
   #   image = tf.image.decode_jpeg(image, channels=3)
+  #   image = tf.image.convert_image_dtype(image, dtype=tf.float32)
   #   image = tf.image.resize_bicubic([image], [height, width])[0]
   #   theta_crop = tf.constant([0.0,0.0,1.0,1.0], dtype=tf.float32)
   
@@ -569,6 +574,7 @@ def preprocess_for_eval(image, height, width, crop=True):
     image = center_crop(image, height, width, crop_proportion=CROP_PROPORTION)
   else:
     image = tf.image.decode_jpeg(image, channels=3)
+    image = tf.image.convert_image_dtype(image, dtype=tf.float32)
     image = tf.image.resize_bicubic([image], [height, width])[0]
 
   image = tf.reshape(image, [height, width, 3])
