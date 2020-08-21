@@ -414,10 +414,10 @@ def random_crop_with_resize(image, height, width, p=1.0):
 def random_color_jitter(image, p=1.0):
   def _transform(image):
     ##################################################################################################
-    # color_jitter_t = functools.partial(
-    #     color_jitter, strength=FLAGS.color_jitter_strength)
     color_jitter_t = functools.partial(
-        color_jitter, strength=0.8)
+        color_jitter, strength=FLAGS.color_jitter_strength)
+    # color_jitter_t = functools.partial(
+    #     color_jitter, strength=0.8)
     ##################################################################################################
     # color transformation    
     image, theta_color = tf.cond(
@@ -628,31 +628,20 @@ def preprocess_target(image, height, width, test_crop=True):
 def get_preprocess_fn(is_training, is_pretrain): #, target=False
   """Get function that accepts an image and returns a preprocessed image."""
   # Disable test cropping for small images (e.g. CIFAR)
-  ################################################################################################################
-  # if FLAGS.image_size <= 32:
-  #   test_crop = False
-  # else:
-  #   test_crop = True
-  test_crop = True
+  if FLAGS.image_size <= 32:
+    test_crop = False
+  else:
+    test_crop = True
 
   # if target:
   #   preprocess_fn = data_util.preprocess_image
   # else:
   #   preprocess_fn = data_util.preprocess_target
 
-  ################################################################################################################
-  # return functools.partial(
-  #     preprocess_image,
-  #     height=FLAGS.image_size,
-  #     width=FLAGS.image_size,
-  #     is_training=is_training,
-  #     color_distort=is_pretrain,
-  #     test_crop=test_crop)
-
   return functools.partial(
       preprocess_image,
-      height=224,
-      width=224,
+      height=FLAGS.image_size,
+      width=FLAGS.image_size,
       is_training=is_training,
       color_distort=is_pretrain,
       test_crop=test_crop)
@@ -660,26 +649,15 @@ def get_preprocess_fn(is_training, is_pretrain): #, target=False
 def get_preprocess_target_fn():
   """Get function that accepts an image and returns a preprocessed image."""
   # Disable test cropping for small images (e.g. CIFAR)
-  ################################################################################################################
-  # if FLAGS.image_size <= 32:
-  #   test_crop = False
-  # else:
-  #   test_crop = True
-
-  test_crop = True
-
-  ################################################################################################################
-  # return functools.partial(
-  #     preprocess_target,
-  #     height=FLAGS.image_size,
-  #     width=FLAGS.image_size,
-  #     test_crop=test_crop)
+  if FLAGS.image_size <= 32:
+    test_crop = False
+  else:
+    test_crop = True
   return functools.partial(
       preprocess_target,
-      height=224,
-      width=224,
+      height=FLAGS.image_size,
+      width=FLAGS.image_size,
       test_crop=test_crop)
-
 
 
 

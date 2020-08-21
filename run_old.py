@@ -244,6 +244,17 @@ flags.DEFINE_boolean(
     'Whether or not to use Gaussian blur for augmentation during pretraining.')
 
 
+
+flags.DEFINE_boolean(
+    'use_neptune', True,
+    'Logging with neptune.')
+
+flags.DEFINE_string(
+    'experiment_name', 'test',
+    'used for logging in neptune.')
+
+
+
 def build_hub_module(model, num_classes, global_step, checkpoint_path):
   """Create TF-Hub module."""
 
