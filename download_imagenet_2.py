@@ -15,7 +15,7 @@ In this script, we show that tensorflow dataset library tries to solve most of
 the above mentioned problems.
 """
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 import tensorflow_datasets as tfds
 import numpy as np
 
@@ -29,9 +29,11 @@ tf.enable_eager_execution()
 def main():
     print("Demonstration for using Imagenet2012 dataset with tensorflow datset")
     
-    buffer_size=64
-    dataset = tf.data.TFRecordDataset('gs://imagenet_data/train/train-00995-of-01024', buffer_size=buffer_size)
-
+    buffer_size=8*1024*1024
+    dataset = tf.data.TFRecordDataset(filenames=['gs://imagenet_data/train/train-00995-of-01024'])
+    print(dataset)
+    
+    
     keys_to_features = {
         'image/encoded': tf.FixedLenFeature((), tf.string, ''),
         'image/class/label': tf.FixedLenFeature([], tf.int64, -1),
@@ -55,21 +57,17 @@ def main():
     #         drop_remainder=True))
     
     dataset = dataset.map(data_parser)
-
-    im = dataset.take(1)
-
     
-    # iterator = dataset.make_one_shot_iterator()
-    # res = iterator.get_next()
-
-    # with tf.Session() as sess:
-    #     im = sess.run(res)
-    
+    # im = dataset.take(1)
+    im = next(iter(dataset))
     im = im.numpy()
 
-    print("Image_shape", im.numpy().shape)
+    #iterator = dataset.make_one_shot_iterator()
+    #res = iterator.get_next()
 
-    imsave("image1.png", im.numpy()[:,:,:3])
+    print("Image_shape", im.shape)
+
+    imsave("image1.png", im[:,:,:3])
     
 if __name__ == "__main__":
     main()
