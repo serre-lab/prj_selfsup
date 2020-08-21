@@ -42,7 +42,7 @@ def main():
     imagenet_train, imagenet_eval = [
         imagenet_input.ImageNetInput(
             is_training=is_training,
-            data_dir="gs://serrelab/imagenet_data/train/",
+            data_dir="gs://imagenet_data/train/",
             transpose_input=False, #params.transpose_input,
             cache=False and is_training, # params.use_cache and is_training,
             image_size=224, #params.image_size,
