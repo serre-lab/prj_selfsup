@@ -106,6 +106,10 @@ def build_model_fn(model, num_classes, num_train_examples):
       if FLAGS.use_td_loss:
         with tf.name_scope('td_loss'):
           if FLAGS.td_loss=='attractive':
+            
+            reconstruction = tf.tanh(reconstruction)
+            target_images = target_images*2-1
+
             td_loss = obj_lib.add_td_attractive_loss(
               reconstruction,
               target_images,
@@ -114,6 +118,10 @@ def build_model_fn(model, num_classes, num_train_examples):
             labels_td_con = tf.zeros([params['batch_size'], params['batch_size']])
 
           elif FLAGS.td_loss=='attractive_repulsive':
+
+            reconstruction = tf.tanh(reconstruction)
+            target_images = target_images*2-1
+
             td_loss, logits_td_con, labels_td_con = obj_lib.add_light_td_attractive_repulsive_loss(
               reconstruction,
               target_images,
