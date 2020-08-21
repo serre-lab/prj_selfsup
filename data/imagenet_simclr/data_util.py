@@ -523,11 +523,7 @@ def preprocess_for_train(image, height, width,
   Returns:
     A preprocessed image `Tensor`.
   """
-  # image = tf.image.decode_jpeg(image, channels=3)
-  # image = tf.image.convert_image_dtype(image, dtype=tf.float32)
-
-  # image = tf.image.resize_bicubic([image], [height, width])[0]
-
+  
   if crop:
     image, theta_crop = random_crop_with_resize(image, height, width)
   else:
