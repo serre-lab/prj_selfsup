@@ -43,6 +43,9 @@ flags.DEFINE_float(
     'color_jitter_strength', 1.0,
     'The strength of color jittering.')
 
+flags.DEFINE_enum(
+            'train_mode', 'pretrain', ['pretrain', 'finetune'],
+                'The train mode controls different objectives and trainable components.')
 
 def main(argv):
     print("Demonstration for using Imagenet2012 dataset with tensorflow datset")
@@ -107,8 +110,8 @@ def main(argv):
 
     print("Image_shape", im.shape)
 
-    imsave("imagenet_examples/image1.png", im[:,:,:3])
-    imsave("imagenet_examples/image2.png", im[:,:,3:])
+    imsave("image_examples/image1.png", im[:,:,:3])
+    imsave("image_examples/image2.png", im[:,:,3:])
     
 if __name__ == "__main__":
     # main()

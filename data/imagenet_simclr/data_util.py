@@ -527,6 +527,7 @@ def preprocess_for_train(image, height, width,
     image = tf.image.decode_jpeg(image, channels=3)
     image = tf.image.resize_bicubic([image], [height, width])[0]
     theta_crop = tf.constant([0.0,0.0,1.0,1.0], dtype=tf.float32)
+  
     
   # if flip:
   #   do_flip = tf.random_uniform([]) > 0.5
