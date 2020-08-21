@@ -21,6 +21,7 @@ import numpy as np
 
 from scipy.misc import imsave
 
+import data.imagenet_simclr.data as imagenet_input
 tf.enable_eager_execution()
 
 def main():
@@ -28,54 +29,74 @@ def main():
     # List all the datasets provided in the tensorflow_datasets
     # print(tfds.list_builders())
     # Step 1: get a dataset builder for the required dataset
-    dataset_name = "imagenet2012"
-    if dataset_name in tfds.list_builders():
-        imagenet_dataset_builder = tfds.builder(dataset_name)
-        print("retrived " + dataset_name + " builder")
-    else:
-        return
-    # get all the information regarding dataset
-    print(imagenet_dataset_builder.info)
-    print("Image shape", imagenet_dataset_builder.info.features['image'].shape)
-    print("class",imagenet_dataset_builder.info.features['label'].num_classes)
-    print("classname",imagenet_dataset_builder.info.features['label'].names)
-    print("NrTrain",imagenet_dataset_builder.info.splits['train'].num_examples)
-    print("Val",imagenet_dataset_builder.info.splits['validation'].num_examples)
-    # Download and prepare the dataset internally
-    # The dataset should be downloaded to ~/tensorflow-datasets/download
-    # but for Imagenet case, we need to manually download the dataset and
-    # specify the manual_dir where the downloaded files are kept.
-    manual_dataset_dir = "gs://serrelab/imagenet2012/"
-    # The download_and_prepare function will assume that two files namely
-    # ILSVRC2012_img_train.tar and ILSVRC2012_img_val.tar are present in
-    # directory manual_dataset_dir + "/manual/imagenet2012"
-    imagenet_download_config = tfds.download.DownloadConfig(
-                                                manual_dir = manual_dataset_dir)
-    # Conditionally, download config can be passed as second argument.
-    imagenet_dataset_builder.download_and_prepare(
-                                    download_dir = manual_dataset_dir)
-    # Once this is complete (that just pre-process without downloading anything)
-    # it will create a director "~/tensorflow_datasets/imagenet2012/2.0.0"
-    # having 1000 train tfrecords and 5 validation tfrecords in addition to some
-    # bookkeeping json and label txt files.
 
-    # now, we get the tf.data.Dataset structure which tensorflow data-pipeline
-    # understands and process in tf graph.
-    imagenet_train = imagenet_dataset_builder.as_dataset(split=tfds.Split.TRAIN)
-    assert isinstance(imagenet_train, tf.data.Dataset)
-    imagenet_validation = imagenet_dataset_builder.as_dataset(
-                                                    split=tfds.Split.VALIDATION)
-    assert isinstance(imagenet_validation, tf.data.Dataset)
+    # dataset_name = "imagenet2012"
+    # if dataset_name in tfds.list_builders():
+    #     imagenet_dataset_builder = tfds.builder(dataset_name)
+    #     print("retrived " + dataset_name + " builder")
+    # else:
+    #     return
 
+    imagenet_train_, imagenet_eval_ = [
+        imagenet_input.ImageNetInput(
+            is_training=is_training,
+            data_dir="gs://serrelab/imagenet_data/train/",
+            transpose_input=False, #params.transpose_input,
+            cache=False and is_training, # params.use_cache and is_training,
+            image_size=224, #params.image_size,
+            num_parallel_calls=8, # 8, params.num_parallel_calls,
+            include_background_label=False, #(params.num_label_classes == 1001),
+            use_bfloat16=False, #use_bfloat16,
+            )
+        for is_training in [True, False]
+    ]
+
+    # # get all the information regarding dataset
+    # print(imagenet_dataset_builder.info)
+    # print("Image shape", imagenet_dataset_builder.info.features['image'].shape)
+    # print("class",imagenet_dataset_builder.info.features['label'].num_classes)
+    # print("classname",imagenet_dataset_builder.info.features['label'].names)
+    # print("NrTrain",imagenet_dataset_builder.info.splits['train'].num_examples)
+    # print("Val",imagenet_dataset_builder.info.splits['validation'].num_examples)
+
+
+    # # Download and prepare the dataset internally
+    # # The dataset should be downloaded to ~/tensorflow-datasets/download
+    # # but for Imagenet case, we need to manually download the dataset and
+    # # specify the manual_dir where the downloaded files are kept.
+    # manual_dataset_dir = "gs://serrelab/imagenet2012/"
+    # # The download_and_prepare function will assume that two files namely
+    # # ILSVRC2012_img_train.tar and ILSVRC2012_img_val.tar are present in
+    # # directory manual_dataset_dir + "/manual/imagenet2012"
+    # imagenet_download_config = tfds.download.DownloadConfig(
+    #                                             manual_dir = manual_dataset_dir)
+    # # Conditionally, download config can be passed as second argument.
+    # imagenet_dataset_builder.download_and_prepare(
+    #                                 download_dir = manual_dataset_dir)
+    # # Once this is complete (that just pre-process without downloading anything)
+    # # it will create a director "~/tensorflow_datasets/imagenet2012/2.0.0"
+    # # having 1000 train tfrecords and 5 validation tfrecords in addition to some
+    # # bookkeeping json and label txt files.
+
+    # # now, we get the tf.data.Dataset structure which tensorflow data-pipeline
+    # # understands and process in tf graph.
+    # imagenet_train = imagenet_dataset_builder.as_dataset(split=tfds.Split.TRAIN)
+    # assert isinstance(imagenet_train, tf.data.Dataset)
+    # imagenet_validation = imagenet_dataset_builder.as_dataset(
+    #                                                 split=tfds.Split.VALIDATION)
+    # assert isinstance(imagenet_validation, tf.data.Dataset)
+    imagenet_train_dataset = imagenet_train.input_fn()
     # Now we can peek into the sample images present in the dataset with take
-    (imagenet_example,) = imagenet_train.take(1) # returns a dictionary
+    (imagenet_example,) = imagenet_train_dataset.take(1) # returns a dictionary
     img, label = imagenet_example["image"], imagenet_example["label"]
     # img and label are constant tensors, with numpy field containing numpy arry
     print("Image_shape", img.numpy().shape)
-    print("Label_shape", label.numpy().shape)
+    # print("Label_shape", label.numpy().shape)
+    
     # print out the image file on the disk, and print the corresponding label
-    imsave("image.png", img.numpy())
-    print("label", label.numpy())
+    imsave("image1.png", img.numpy()[:,:,:3])
+    imsave("image2.png", img.numpy()[:,:,3:])
+    # print("label", label.numpy())
 
     # From the tf.data.Datasets imagenet_train and imagenet_validation,
     # the input pipeline can be created for tf training and serving.

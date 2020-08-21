@@ -468,7 +468,7 @@ def main(argv):
           is_training=is_training,
           data_dir=FLAGS.data_dir,
           transpose_input=False, #params.transpose_input,
-          cache=is_training, # params.use_cache and is_training,
+          cache=FLAGS.cache_dataset and is_training, # params.use_cache and is_training,
           image_size=FLAGS.image_size, #params.image_size,
           num_parallel_calls=FLAGS.num_parallel_calls, # 8, params.num_parallel_calls,
           include_background_label=False, #(params.num_label_classes == 1001),
