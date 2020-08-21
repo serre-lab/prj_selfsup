@@ -19,6 +19,8 @@ import tensorflow as tf
 import tensorflow_datasets as tfds
 import numpy as np
 
+import scipy
+import scipy.misc
 from scipy.misc import imsave
 
 import data.imagenet_simclr.data as imagenet_input
