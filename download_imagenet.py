@@ -39,14 +39,14 @@ def main():
     # else:
     #     return
 
-    imagenet_train_, imagenet_eval_ = [
+    imagenet_train, imagenet_eval = [
         imagenet_input.ImageNetInput(
             is_training=is_training,
             data_dir="gs://serrelab/imagenet_data/train/",
             transpose_input=False, #params.transpose_input,
             cache=False and is_training, # params.use_cache and is_training,
             image_size=224, #params.image_size,
-            num_parallel_calls=8, # 8, params.num_parallel_calls,
+            num_parallel_calls=1, # 8, params.num_parallel_calls,
             include_background_label=False, #(params.num_label_classes == 1001),
             use_bfloat16=False, #use_bfloat16,
             )
