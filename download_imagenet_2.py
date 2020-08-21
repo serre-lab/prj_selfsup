@@ -107,7 +107,8 @@ def main():
 
     print("Image_shape", im.shape)
 
-    imsave("image1.png", im[:,:,:3])
+    imsave("imagenet_examples/image1.png", im[:,:,:3])
+    imsave("imagenet_examples/image2.png", im[:,:,3:])
     
 if __name__ == "__main__":
     # main()
