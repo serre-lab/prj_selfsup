@@ -521,12 +521,12 @@ def preprocess_for_train(image, height, width,
   Returns:
     A preprocessed image `Tensor`.
   """
-  if crop:
-    image, theta_crop = random_crop_with_resize(image, height, width)
-  else:
-    image = tf.image.decode_jpeg(image, channels=3)
-    image = tf.image.resize_bicubic([image], [height, width])[0]
-    theta_crop = tf.constant([0.0,0.0,1.0,1.0], dtype=tf.float32)
+  # if crop:
+  #   image, theta_crop = random_crop_with_resize(image, height, width)
+  # else:
+  #   image = tf.image.decode_jpeg(image, channels=3)
+  #   image = tf.image.resize_bicubic([image], [height, width])[0]
+  #   theta_crop = tf.constant([0.0,0.0,1.0,1.0], dtype=tf.float32)
   
     
   # if flip:
@@ -544,7 +544,7 @@ def preprocess_for_train(image, height, width,
   
   # theta = tf.concat([theta_crop, tf.reshape(theta_flip, [1]), theta_color], axis=0)
   
-  theta = theta_crop
+  theta = tf.constant([0.0,0.0,1.0,1.0], dtype=tf.float32)
   image = tf.reshape(image, [height, width, 3])
   image = tf.clip_by_value(image, 0., 1.)
   return image, theta
