@@ -127,15 +127,22 @@ class ImageNetTFExampleInput(object):
     # preprocess_fn_target = data_util.get_preprocess_target_fn() 
     num_classes = 1000 # builder.info.features['label'].num_classes
     
-    if FLAGS.train_mode == 'pretrain':
-      xs = []
-      for _ in range(2):  # Two transformations
-        xs.append(preprocess_fn_pretrain(image_bytes)[0])
-      image = tf.concat(xs, -1)
-      label = tf.zeros([num_classes])
-    else:
-      image = preprocess_fn_finetune(image_bytes)[0]
-      label = tf.one_hot(label, num_classes)
+    ##################################################################################################
+    xs = []
+    for _ in range(2):  # Two transformations
+      xs.append(preprocess_fn_pretrain(image_bytes)[0])
+    image = tf.concat(xs, -1)
+    label = tf.zeros([num_classes])
+  
+    # if FLAGS.train_mode == 'pretrain':
+    #   xs = []
+    #   for _ in range(2):  # Two transformations
+    #     xs.append(preprocess_fn_pretrain(image_bytes)[0])
+    #   image = tf.concat(xs, -1)
+    #   label = tf.zeros([num_classes])
+    # else:
+    #   image = preprocess_fn_finetune(image_bytes)[0]
+    #   label = tf.one_hot(label, num_classes)
     
     return image, {'labels': label, 'mask': 1.0} # label, thetas, 1.0
 
