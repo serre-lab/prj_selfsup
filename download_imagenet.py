@@ -87,7 +87,7 @@ def main():
     # imagenet_validation = imagenet_dataset_builder.as_dataset(
     #                                                 split=tfds.Split.VALIDATION)
     # assert isinstance(imagenet_validation, tf.data.Dataset)
-    imagenet_train_dataset = imagenet_train.input_fn()
+    imagenet_train_dataset = imagenet_train.input_fn({'batch_size':1})
     # Now we can peek into the sample images present in the dataset with take
     (imagenet_example,) = imagenet_train_dataset.take(1) # returns a dictionary
     img, label = imagenet_example["image"], imagenet_example["label"]
