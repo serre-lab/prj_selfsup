@@ -109,6 +109,8 @@ def main(argv):
     #res = iterator.get_next()
 
     print("Image_shape", im.shape)
+    print("Image_shape", im[:,:,:3].mean())
+    print("Image_shape", im[:,:,3:].mean())
 
     imsave("image_examples/image1.png", im[:,:,:3])
     imsave("image_examples/image2.png", im[:,:,3:])

@@ -548,8 +548,8 @@ def preprocess_for_train(image, height, width,
   # theta = tf.concat([theta_crop, tf.reshape(theta_flip, [1]), theta_color], axis=0)
   
   theta = tf.constant([0.0,0.0,1.0,1.0], dtype=tf.float32)
-  image = tf.reshape(image, [height, width, 3])
-  image = tf.clip_by_value(image, 0., 1.)
+  # image = tf.reshape(image, [height, width, 3])
+  # image = tf.clip_by_value(image, 0., 1.)
   return image, theta
 
 
