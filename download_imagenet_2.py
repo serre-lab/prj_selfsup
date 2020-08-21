@@ -44,7 +44,7 @@ flags.DEFINE_float(
     'The strength of color jittering.')
 
 
-def main():
+def main(argv):
     print("Demonstration for using Imagenet2012 dataset with tensorflow datset")
     
     buffer_size=8*1024*1024
