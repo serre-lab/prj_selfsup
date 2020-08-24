@@ -18,7 +18,7 @@ resnet_depth=50
 
 train_summary_steps=0
 
-use_td_loss=False #False
+use_td_loss=True #False
 use_bu_loss=True
 
 td_loss=attractive_repulsive #'attractive_repulsive'
