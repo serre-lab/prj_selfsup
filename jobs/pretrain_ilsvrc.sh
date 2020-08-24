@@ -6,7 +6,7 @@ train_batch_size=4096 # 4096
 train_epochs=300 
 temperature=0.1
 
-learning_rate=0.075 
+learning_rate=0.1 
 weight_decay=1e-4 
 temperature=0.1
 learning_rate_scaling=sqrt
