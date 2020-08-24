@@ -1,0 +1,2 @@
+export NEPTUNE_API_TOKEN="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vdWkubmVwdHVuZS5haSIsImFwaV91cmwiOiJodHRwczovL3VpLm5lcHR1bmUuYWkiLCJhcGlfa2V5IjoiNmE5MDc1YmMtZGYxYy00OTNjLWFkOGEtMjFkNTc4ZmFiZTI1In0="
+git config --global credential.helper 'cache --timeout=3600000'
