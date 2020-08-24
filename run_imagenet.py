@@ -50,7 +50,6 @@ neptune.init(project_qualified_name='Serre-Lab/self-sup')
 neptune_tb.integrate_with_tensorflow()
 
 # from tensorflow.python import debug as tf_debug
-tf.compat.v1.disable_eager_execution()
 
 FLAGS = flags.FLAGS
 
@@ -594,5 +593,6 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  tf.disable_v2_behavior()  # Disable eager mode when running with TF2.
+  # tf.disable_v2_behavior()  # Disable eager mode when running with TF2.
+  # tf.disable_eager_execution()
   app.run(main)
