@@ -39,7 +39,7 @@ BATCH_NORM_EPSILON = 1e-5
 
 def resnet_autoencoder_v1_generator(encoder, decoder, metric, data_format='channels_last'):
 
-  def model(inputs, is_training):
+  def model(inputs, target_images, is_training):
     """Creation of the model graph."""
     # if isinstance(inputs, tuple):
     if FLAGS.use_td_loss and isinstance(inputs, tuple):
@@ -72,16 +72,25 @@ def resnet_autoencoder_v1_generator(encoder, decoder, metric, data_format='chann
       features = tf.concat([features, augs], axis=-1)
     
       with tf.variable_scope('decoder'):
-        images = decoder(features, is_training=is_training)
-      print("Metric-images: ")
-      print(images)
+        recon_images = decoder(features, is_training=is_training)
+      print("Reconstructed-images: ")
+      print(recon_images)
       print("---")
       with tf.variable_scope('metric'):
-        metric_images = metric(images, is_training=is_training)
-      print("Metric-images: ")
+        # Squash both recon and target images
+        recon_images = tf.tanh(recon_images)
+        target_images = (target_images * 2) - 1
+        both_images = tf.concat([recon_images, target_images], -1)  # B H W 6
+        metric_hidden = metric(images, is_training=is_training)
+        B = metric_hidden.get_shape().as_list()[0]
+        metric_hidden = tf.reshape(metric_hidden, [B, -1])
+        # Prep recon_images for visualization
+        recon_images = (recon_images + 1) / 2
+      print("Transformed and target metrics: ")
+      print(metric_images)
       print(metric_images)
       print("---")
-      return outputs, images, metric_images
+      return outputs, recon_images, metric_hidden
 
     else:
       # augs = None
