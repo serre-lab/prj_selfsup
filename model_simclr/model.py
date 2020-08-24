@@ -162,6 +162,10 @@ def build_model_fn(model, num_classes, num_train_examples):
       if FLAGS.checkpoint:
         def scaffold_fn():
           """Scaffold function to restore non-logits vars from checkpoint."""
+          tf.logging.info('*'*180)
+          tf.logging.info('Initializing from checkpoint %s'%FLAGS.checkpoint)
+          tf.logging.info('*'*180)
+
           tf.train.init_from_checkpoint(
               FLAGS.checkpoint,
               {v.op.name: v.op.name

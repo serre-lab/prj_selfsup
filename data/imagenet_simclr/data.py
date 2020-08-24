@@ -202,6 +202,9 @@ class ImageNetTFExampleInput(object):
     #       lambda images, labels, thatas, mask: (tf.transpose(images, [1, 2, 3, 0]), labels, thatas, mask),
     #       num_parallel_calls=self.num_parallel_calls)
 
+    # Pad batch dimension
+    dataset = dataset.map(functools.partial(self.pad_to_batch, batch_size))
+
     # Assign static batch size dimension
     dataset = dataset.map(functools.partial(self.set_shapes, batch_size))
 
@@ -209,6 +212,35 @@ class ImageNetTFExampleInput(object):
     dataset = dataset.prefetch(tf.data.experimental.AUTOTUNE)
     return dataset
 
+  def pad_to_batch(self, batch_size, images, labels):
+    """Given Tensors yielded by a Dataset, pads all to the batch size."""
+    # flat_args = tf.nest.flatten(args)
+
+    # This will throw if flat_args is empty. However, as of this writing,
+    # tf.data.Dataset.map will throw first with an internal error, so we do
+    # not check this case explicitly.
+    images_shape = tf.shape(images)
+    images_batch_size = images_shape[0]
+    difference = batch_size - images_batch_size
+
+    images = tf.pad(
+          images, [[0, difference]] + [[0, 0],[0, 0],[0, 0]]) # * (images.shape.ndims - 1)
+    images.set_shape([batch_size] + images.shape.as_list()[1:])
+
+    labels['labels'].set_shape(labels['labels'].get_shape().merge_with(
+        tf.TensorShape([batch_size, None])))
+    labels['mask'].set_shape(labels['mask'].get_shape().merge_with(
+        tf.TensorShape([batch_size])))
+
+    labels['labels'] = tf.pad(
+          labels['labels'], [[0, difference], [0,0]])
+    labels['labels'].set_shape([batch_size] + labels['labels'].shape.as_list()[1:])
+
+    labels['mask'] = tf.pad(
+          labels['mask'], [[0, difference]])
+    labels['mask'].set_shape([batch_size])
+
+    return images, labels
 
 class ImageNetInput(ImageNetTFExampleInput):
   """Generates ImageNet input_fn from a series of TFRecord files.
