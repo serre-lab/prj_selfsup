@@ -27,15 +27,15 @@ bu_loss=attractive_repulsive #'attractive_repulsive'
 td_loss_weight=1.0
 bu_loss_weight=1.0
 
-num_parallel_calls=8
+num_parallel_calls=0  # 8
 
 use_neptune=True
 experiment_name="BU_ATT_REP_${train_mode}_R${resnet_depth}_lr${learning_rate}_T${temperature}"
 
 
 use_tpu=True
-
-export TPU_NAME='prj-selfsup-tpu'
+# export TPU_NAME='prj-selfsup-tpu'
+export TPU_NAME='l-v3-8-5'
 export STORAGE_BUCKET='gs://serrelab/prj-selfsup'
 DATA_DIR=gs://imagenet_data/train/
 MODEL_DIR=$STORAGE_BUCKET/$experiment_name

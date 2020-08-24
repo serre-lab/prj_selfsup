@@ -292,7 +292,6 @@ flags.DEFINE_float(
     'bu_loss_weight', 1,
     'bottom up loss weight.')
 
-
 flags.DEFINE_boolean(
     'use_neptune', True,
     'Logging with neptune.')
