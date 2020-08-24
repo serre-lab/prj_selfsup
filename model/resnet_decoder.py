@@ -84,8 +84,8 @@ def metric_model_builder(data_format, model_desc):
         for var in variables:
           tf.add_to_collection(collection, var)
 
-    trainable_variables = {}
-    filter_trainable_variables(trainable_variables, after_block=6)
+    # trainable_variables = {}
+    # filter_trainable_variables(trainable_variables, after_block=6)
     # Build model:
     for layer in model_desc:
       op, vals = list(layer.items())[0]
@@ -115,8 +115,8 @@ def metric_model_builder(data_format, model_desc):
           inputs = tf.reduce_mean(inputs, [2, 3])
       else:
         raise NotImplementedError(op)
-    filter_trainable_variables(trainable_variables, after_block=7)
-    add_to_collection(trainable_variables, 'trainable_variables_learned_metric_')
+    # filter_trainable_variables(trainable_variables, after_block=7)
+    # add_to_collection(trainable_variables, 'trainable_variables_learned_metric_')
     return inputs
   return model
 
