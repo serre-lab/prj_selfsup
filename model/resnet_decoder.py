@@ -116,7 +116,7 @@ def metric_model_builder(data_format, model_desc):
     filter_trainable_variables(trainable_variables, after_block=6)
     add_to_collection(trainable_variables, 'trainable_variables_learned_metric_')
     return inputs
-
+  return model
 
 class BatchNormalization(tf.layers.BatchNormalization):
   """Batch Normalization layer that supports cross replica computation on TPU.

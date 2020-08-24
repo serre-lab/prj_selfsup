@@ -38,13 +38,13 @@ BATCH_NORM_EPSILON = 1e-5
 
 
 def resnet_autoencoder_v1_generator(encoder, decoder, metric, data_format='channels_last'):
-
   def model(inputs, target_images, is_training):
     """Creation of the model graph."""
     # if isinstance(inputs, tuple):
     if FLAGS.use_td_loss and isinstance(inputs, tuple):
       # print('#'*80)
       # print(inputs)
+      assert metric is not None, "Metric function is None"
       inputs, augs = inputs
       with tf.variable_scope('encoder'): # variable_scope name_scope
         features = encoder(inputs, is_training=is_training)
