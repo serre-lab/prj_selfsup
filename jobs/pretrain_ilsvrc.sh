@@ -2,7 +2,7 @@
 
 train_mode=pretrain
 
-train_batch_size=4096 # 4096 
+train_batch_size=1024  # 4096 # 4096 
 train_epochs=300 
 temperature=0.1
 
@@ -18,7 +18,7 @@ resnet_depth=50
 
 train_summary_steps=0
 
-use_td_loss=False
+use_td_loss=True
 use_bu_loss=True
 
 td_loss=attractive_repulsive #'attractive_repulsive'
@@ -29,13 +29,12 @@ bu_loss_weight=1.0
 
 num_parallel_calls=8
 
-use_neptune=True
+use_neptune=False
 experiment_name="BU_ATT_REP_${train_mode}_R${resnet_depth}_lr${learning_rate}_T${temperature}"
 
 
 use_tpu=True
-# export TPU_NAME='prj-selfsup-tpu'
-export TPU_NAME='l-v3-8-5'
+export TPU_NAME='prj-selfsup-tpu'
 export STORAGE_BUCKET='gs://serrelab/prj-selfsup'
 DATA_DIR=gs://imagenet_data/train/
 MODEL_DIR=$STORAGE_BUCKET/$experiment_name
