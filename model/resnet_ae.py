@@ -30,7 +30,7 @@ import tensorflow.compat.v1 as tf
 from tensorflow.python.tpu import tpu_function  # pylint: disable=g-direct-tensorflow-import
 
 from model.resnet_encoder import resnet_encoder_v1
-from model.resnet_decoder import resnet_decoder_v1
+from model.resnet_decoder import resnet_decoder_v1, learned_metric
 
 FLAGS = flags.FLAGS
 BATCH_NORM_EPSILON = 1e-5
@@ -108,6 +108,8 @@ def resnet_autoencoder_v1(resnet_depth, width_multiplier,
                               data_format=data_format,
                               dropblock_keep_probs=dropblock_keep_probs, 
                               dropblock_size=dropblock_size)
+
+  metric = learned_metric(data_format=data_format) 
   
   return resnet_autoencoder_v1_generator(encoder, decoder, data_format=data_format)
 
