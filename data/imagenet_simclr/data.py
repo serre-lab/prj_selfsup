@@ -360,8 +360,8 @@ class ImageNetInput(ImageNetTFExampleInput):
 
 
     ########## this line is commented because it creates errors during eval
-    # if self.is_training and not self.cache:
-    dataset = dataset.repeat()
+    if self.is_training and not self.cache:
+      dataset = dataset.repeat()
     ######################################################################
 
     def fetch_dataset(filename):
