@@ -101,36 +101,26 @@ def build_model_fn(model, num_classes, num_train_examples):
       tpu_context = params['context'] if 'context' in params else None
       
       if FLAGS.use_td_loss and isinstance(outputs, tuple):
-        hiddens, reconstruction, metric_hidden = outputs
+        hiddens, reconstruction, metric_hidden_r, metric_hidden_t = outputs
       else:
         hiddens = outputs
         # reconstruction = tf.zeros_like(target_images)
       if FLAGS.use_td_loss:
         with tf.name_scope('td_loss'):
           if FLAGS.td_loss=='attractive':
-            
-            # reconstruction = tf.tanh(reconstruction)
-            # target_images = target_images*2-1
-
-            td_loss = obj_lib.add_td_attractive_loss(
-              reconstruction,
-              target_images,
+            td_loss = obj_lib.add_dot_product_td_attractive_loss(
+              metric_hidden_r,
               power=FLAGS.rec_loss_exponent)
             logits_td_con = tf.zeros([params['batch_size'], params['batch_size']])
             labels_td_con = tf.zeros([params['batch_size'], params['batch_size']])
 
           elif FLAGS.td_loss=='attractive_repulsive':
-
-            reconstruction = tf.tanh(reconstruction)
-            target_images = target_images*2-1
-
-            td_loss, logits_td_con, labels_td_con = obj_lib.add_light_td_attractive_repulsive_loss(
-              reconstruction,
-              target_images,
+            td_loss, logits_td_con, labels_td_con = obj_lib.add_dot_product_td_attractive_repulsive_loss(
+              metric_hidden_r,
+              metric_hidden_t,
               power=FLAGS.rec_loss_exponent,
               temperature=FLAGS.temperature,
               tpu_context=tpu_context if is_training else None)
-            
           else:
             raise 'Unknown loss'
       else:

@@ -50,6 +50,7 @@ neptune.init(project_qualified_name='Serre-Lab/self-sup')
 neptune_tb.integrate_with_tensorflow()
 
 # from tensorflow.python import debug as tf_debug
+tf.compat.v1.disable_eager_execution()
 
 FLAGS = flags.FLAGS
 

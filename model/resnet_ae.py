@@ -89,16 +89,24 @@ def resnet_autoencoder_v1_generator(encoder, decoder, metric, data_format='chann
         elif Bt * 2 == Br:
           # Attractive-only loss
           target_images = tf.concat([target_images, target_images], 0)
+
+        # Correspondence finding. First recon vs. target
         both_images = tf.concat([recon_images, target_images], -1)  # B H W 6
-        metric_hidden = metric(both_images, is_training=is_training)
-        B = metric_hidden.get_shape().as_list()[0]
-        metric_hidden = tf.reshape(metric_hidden, [B, -1])
+        metric_hidden_r = metric(both_images, is_training=is_training)
+        B = metric_hidden_r.get_shape().as_list()[0]
+        metric_hidden_r = tf.reshape(metric_hidden_r, [B, -1])
+
+        # Then target vs. target
+        both_images = tf.concat([target_images, target_images], -1)  # B H W 6
+        metric_hidden_t = metric(both_images, is_training=False)  # No gradient
+        metric_hidden_t = tf.reshape(metric_hidden_t, [B, -1])
+
         # Prep recon_images for visualization
         recon_images = (recon_images + 1) / 2
       print("Embedding output: ")
-      print(metric_hidden)
+      print(metric_hidden_t)
       print("---")
-      return outputs, recon_images, metric_hidden
+      return outputs, recon_images, metric_hidden_r, metric_hidden_t
 
     else:
       # augs = None

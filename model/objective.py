@@ -418,12 +418,12 @@ def add_dot_product_td_attractive_repulsive_loss(reconstruction,
       masks = tf.one_hot(tf.range(batch_size), batch_size)
 
     # target = tf.reshape(target, [batch_size, -1])
-    reconstruction1 = tf.reshape(reconstruction1, [batch_size, -1])
-    reconstruction2 = tf.reshape(reconstruction2, [batch_size, -1])
+    # reconstruction1 = tf.reshape(reconstruction1, [batch_size, -1])
+    # reconstruction2 = tf.reshape(reconstruction2, [batch_size, -1])
     
-    target_large = tf.reshape(target_large, [enlarged_batch_size, -1])
-    reconstruction1_large = tf.reshape(reconstruction1_large, [enlarged_batch_size, -1])
-    reconstruction2_large = tf.reshape(reconstruction2_large, [enlarged_batch_size, -1])
+    # target_large = tf.reshape(target_large, [enlarged_batch_size, -1])
+    # reconstruction1_large = tf.reshape(reconstruction1_large, [enlarged_batch_size, -1])
+    # reconstruction2_large = tf.reshape(reconstruction2_large, [enlarged_batch_size, -1])
 
     logits_at = tf.matmul(reconstruction1, target_large, transpose_b=True) / temperature
     logits_bt = tf.matmul(reconstruction2, target_large, transpose_b=True) / temperature
