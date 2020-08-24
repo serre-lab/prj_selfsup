@@ -350,6 +350,7 @@ class ImageNetInput(ImageNetTFExampleInput):
     # if self.is_training and not self.cache:
     dataset = dataset.repeat()
     ######################################################################
+
     
     def fetch_dataset(filename):
       buffer_size = 8 * 1024 * 1024  # 8 MiB per file
