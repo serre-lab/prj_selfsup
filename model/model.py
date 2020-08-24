@@ -92,14 +92,14 @@ def build_model_fn(model, num_classes, num_train_examples):
         # Pretrain or finetune anything else will update BN stats.
         model_train_mode = is_training
 
-      outputs = model(features, is_training=model_train_mode)
+      outputs = model(features, target_images, is_training=model_train_mode)
     
     # Add head and loss.
     if FLAGS.train_mode == 'pretrain':
       tpu_context = params['context'] if 'context' in params else None
       
       if FLAGS.use_td_loss and isinstance(outputs, tuple):
-        hiddens, reconstruction = outputs
+        hiddens, reconstruction, metric_hidden = outputs
       else:
         hiddens = outputs
         # reconstruction = tf.zeros_like(target_images)
@@ -107,8 +107,8 @@ def build_model_fn(model, num_classes, num_train_examples):
         with tf.name_scope('td_loss'):
           if FLAGS.td_loss=='attractive':
             
-            reconstruction = tf.tanh(reconstruction)
-            target_images = target_images*2-1
+            # reconstruction = tf.tanh(reconstruction)
+            # target_images = target_images*2-1
 
             td_loss = obj_lib.add_td_attractive_loss(
               reconstruction,
