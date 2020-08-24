@@ -1,5 +1,6 @@
 
-mode=train_then_eval
+# mode=train_then_eval
+mode=eval
 train_mode=finetune
 
 zero_init_logits_layer=True
@@ -26,15 +27,17 @@ resnet_depth=18
 
 train_summary_steps=0
 
-use_neptune=True
+use_neptune=False
 experiment_name="${train_mode}_R${resnet_depth}_lr${learning_rate}"
+
+experiment_name="baseline_finetune_R50_lr0.005"
 
 use_tpu=True
 
 export TPU_NAME='prj-selfsup-tpu'
 export STORAGE_BUCKET='gs://serrelab/prj-selfsup'
 DATA_DIR=gs://imagenet_data/train/
-MODEL_DIR=$STORAGE_BUCKET/model_test_ft
+MODEL_DIR=$STORAGE_BUCKET/$experiment_name
 CHKPT_DIR=$STORAGE_BUCKET/model_test
 
 python3 run_old_imagenet.py \
