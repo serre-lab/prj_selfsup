@@ -86,7 +86,7 @@ def metric_model_builder(data_format, model_desc):
 
     # Build model:
     for layer in model_desc:
-      op, vals = layer.items()
+      op, vals = list(layer.items())[0]
       kernel, stride, fan_in, fan_out = vals
       if op == "conv":
         inputs = conv2d_fixed_padding(
