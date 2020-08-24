@@ -18,7 +18,7 @@ resnet_depth=50
 
 train_summary_steps=0
 
-use_td_loss=True #False
+use_td_loss=True
 use_bu_loss=True
 
 td_loss=attractive_repulsive #'attractive_repulsive'
@@ -27,7 +27,7 @@ bu_loss=attractive_repulsive #'attractive_repulsive'
 td_loss_weight=1.0
 bu_loss_weight=1.0
 
-num_parallel_calls=0  # 8
+num_parallel_calls=8
 
 use_neptune=True
 experiment_name="BU_ATT_REP_${train_mode}_R${resnet_depth}_lr${learning_rate}_T${temperature}"

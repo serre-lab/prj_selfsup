@@ -64,6 +64,8 @@ def build_model_fn(model, num_classes, num_train_examples):
       thetas_list = tf.split(
         labels['thetas'], num_or_size_splits=num_transforms, axis=-1)
       thetas = tf.concat(thetas_list[:-1], 0)
+    else:
+      target_images = features_list
     
 
     if FLAGS.use_blur and is_training and FLAGS.train_mode == 'pretrain':
