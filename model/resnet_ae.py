@@ -81,6 +81,14 @@ def resnet_autoencoder_v1_generator(encoder, decoder, metric, data_format='chann
         # Squash both recon and target images
         recon_images = tf.tanh(recon_images)
         target_images = (target_images * 2) - 1
+        Bt = target_images.get_shape().as_list()[0]
+        Br = recon_images.get_shape().as_list()[0]
+        if Bt == Br:
+          # Attractive + repulsive loss
+          pass
+        elif Bt * 2 == Br:
+          # Attractive-only loss
+          target_images = tf.concat([target_images, target_images], 0)
         both_images = tf.concat([recon_images, target_images], -1)  # B H W 6
         metric_hidden = metric(images, is_training=is_training)
         B = metric_hidden.get_shape().as_list()[0]
