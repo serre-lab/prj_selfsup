@@ -44,15 +44,15 @@ BATCH_NORM_DECAY = 0.9
 SK_RATIO = 0.0
 SE_RATIO = 0.0
 DEFAULT_METRIC_MODEL = [
-  {'conv', ['conv1_1', 3, 1, 3, 64]},  # noqa name, kernel, stride, in, out
-  {'conv', ['conv1_2', 3, 1, 64, 128]},  # noqa name, kernel, stride, in, out
-  {'pool', ['pool1', 2, 2, 128, 128]},  # noqa name, kernel, stride, in, out
-  {'conv', ['conv2_2', 3, 1, 128, 128]},  # noqa name, kernel, stride, in, out
-  {'conv', ['conv2_2', 3, 1, 128, 256]},  # noqa name, kernel, stride, in, out
-  {'pool', ['pool2', 2, 2, 256, 256]},  # noqa name, kernel, stride, in, out
-  {'conv', ['conv3_1', 3, 1, 256, 256]},  # noqa name, kernel, stride, in, out
-  {'conv', ['conv3_2', 3, 1, 256, 128]},  # noqa name, kernel, stride, in, out
-  {'global_mean', ['gap', 3, 1, 128, 128]},  # noqa name, kernel, stride, in, out
+        {'conv': ['conv1_1', 3, 1, 3, 64]},  # noqa name, kernel, stride, in, out
+        {'conv': ['conv1_2', 3, 1, 64, 128]},  # noqa name, kernel, stride, in, out
+        {'pool': ['pool1', 2, 2, 128, 128]},  # noqa name, kernel, stride, in, out
+        {'conv': ['conv2_2', 3, 1, 128, 128]},  # noqa name, kernel, stride, in, out
+        {'conv': ['conv2_2', 3, 1, 128, 256]},  # noqa name, kernel, stride, in, out
+        {'pool': ['pool2', 2, 2, 256, 256]},  # noqa name, kernel, stride, in, out
+        {'conv': ['conv3_1', 3, 1, 256, 256]},  # noqa name, kernel, stride, in, out
+        {'conv': ['conv3_2', 3, 1, 256, 128]},  # noqa name, kernel, stride, in, out
+        # {'global_mean': ['gap', 3, 1, 128, 128]},  # noqa name, kernel, stride, in, out
 ]
 
 
@@ -60,6 +60,7 @@ def learned_metric(
     inputs,
     data_format,
     is_training,
+    trainable_variables,
     model=DEFAULT_METRIC_MODEL):
   """Learn the metric with a network."""
   for layer in model:
@@ -90,6 +91,8 @@ def learned_metric(
         inputs = tf.reduce_mean(inputs, [2, 3])
     else:
       raise NotImplementedError(op)
+  filter_trainable_variables(trainable_variables, after_block=6)
+  add_to_collection(trainable_variables, 'trainable_variables_learned_metric_')
   return inputs
 
 
@@ -797,7 +800,6 @@ def resnet_v1_generator_decoder(block_fn, layers, width_multiplier,
     filter_trainable_variables(trainable_variables, after_block=5)
     add_to_collection(trainable_variables, 'trainable_variables_inblock_')
     
-
     return inputs
 
   return model
