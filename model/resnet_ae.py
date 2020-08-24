@@ -30,7 +30,7 @@ import tensorflow.compat.v1 as tf
 from tensorflow.python.tpu import tpu_function  # pylint: disable=g-direct-tensorflow-import
 
 from model.resnet_encoder import resnet_encoder_v1
-from model.resnet_decoder import resnet_decoder_v1, learned_metric
+from model.resnet_decoder import resnet_decoder_v1, learned_metric_v1
 
 FLAGS = flags.FLAGS
 BATCH_NORM_EPSILON = 1e-5
