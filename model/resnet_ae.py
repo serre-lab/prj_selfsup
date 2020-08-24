@@ -96,7 +96,7 @@ def resnet_autoencoder_v1_generator(encoder, decoder, metric, data_format='chann
         # Prep recon_images for visualization
         recon_images = (recon_images + 1) / 2
       print("Embedding output: ")
-      print(metric_images)
+      print(metric_hidden)
       print("---")
       return outputs, recon_images, metric_hidden
 
