@@ -43,56 +43,78 @@ GLOBAL_BN = True
 BATCH_NORM_DECAY = 0.9
 SK_RATIO = 0.0
 SE_RATIO = 0.0
-DEFAULT_METRIC_MODEL = [
-        {'conv': ['conv1_1', 3, 1, 3, 64]},  # noqa name, kernel, stride, in, out
-        {'conv': ['conv1_2', 3, 1, 64, 128]},  # noqa name, kernel, stride, in, out
-        {'pool': ['pool1', 2, 2, 128, 128]},  # noqa name, kernel, stride, in, out
-        {'conv': ['conv2_2', 3, 1, 128, 128]},  # noqa name, kernel, stride, in, out
-        {'conv': ['conv2_2', 3, 1, 128, 256]},  # noqa name, kernel, stride, in, out
-        {'pool': ['pool2', 2, 2, 256, 256]},  # noqa name, kernel, stride, in, out
-        {'conv': ['conv3_1', 3, 1, 256, 256]},  # noqa name, kernel, stride, in, out
-        {'conv': ['conv3_2', 3, 1, 256, 128]},  # noqa name, kernel, stride, in, out
-        # {'global_mean': ['gap', 3, 1, 128, 128]},  # noqa name, kernel, stride, in, out
-]
 
 
-def learned_metric(
-    inputs,
-    data_format,
-    is_training,
-    trainable_variables,
-    model=DEFAULT_METRIC_MODEL):
-  """Learn the metric with a network."""
-  for layer in model:
-    op, vals = layer.items()
-    kernel, stride, fan_in, fan_out = vals
-    if op == "conv":
-      inputs = conv2d_fixed_padding(
-        inputs=inputs,
-        filters=fan_out,
-        kernel_size=kernel,
-        strides=stride,
-        data_format=data_format)
-      inputs = batch_norm_relu(
-        inputs,
-        is_training,
-        data_format=data_format)
-    elif op == "pool":
-      inputs = tf.layers.max_pooling2d(
-        inputs=inputs,
-        pool_size=kernel,
-        strides=stride,
-        padding='SAME',
-        data_format=data_format)
-    elif op == "global_mean":
-      if data_format == 'channels_last':  # noqa
-        inputs = tf.reduce_mean(inputs, [1, 2])
-      else:  # noqa
-        inputs = tf.reduce_mean(inputs, [2, 3])
-    else:
-      raise NotImplementedError(op)
-  filter_trainable_variables(trainable_variables, after_block=6)
-  add_to_collection(trainable_variables, 'trainable_variables_learned_metric_')
+def metric_model_builder(data_format, model_desc):
+  """Learn a correspondence-finding metric, which smooths
+  over pixels, making the differences between offset
+  features smoothly differentiable.
+
+  Args:
+    model_desc: model, which is a list of dicts describing layers.
+    data_format: `str` either "channels_first" for `[batch, channels, height,
+        width]` or "channels_last for `[batch, height, width, channels]`.
+
+  Returns:
+    Model `function` that takes in `inputs` and `is_training` and returns the
+    output `Tensor` of the ResNet model.
+
+  """
+  def model(inputs, is_training):
+    """Learn the metric with a network."""
+    def filter_trainable_variables(trainable_variables, after_block):
+      """Add new trainable variables for the immediate precedent block."""
+      if after_block == 0:
+        trainable_variables[after_block] = tf.trainable_variables()
+      else:
+        trainable_variables[after_block] = []
+        for var in tf.trainable_variables():
+          to_keep = True
+          for j in range(after_block):
+            if var in trainable_variables[j]:
+              to_keep = False
+              break
+          if to_keep:
+            trainable_variables[after_block].append(var)
+
+    def add_to_collection(trainable_variables, prefix):
+      """Put variables into graph collection."""
+      for after_block, variables in trainable_variables.items():
+        collection = prefix + str(after_block)
+        for var in variables:
+          tf.add_to_collection(collection, var)
+
+    # Build model:
+    for layer in model_desc:
+      op, vals = layer.items()
+      kernel, stride, fan_in, fan_out = vals
+      if op == "conv":
+        inputs = conv2d_fixed_padding(
+          inputs=inputs,
+          filters=fan_out,
+          kernel_size=kernel,
+          strides=stride,
+          data_format=data_format)
+        inputs = batch_norm_relu(
+          inputs,
+          is_training,
+          data_format=data_format)
+      elif op == "pool":
+        inputs = tf.layers.max_pooling2d(
+          inputs=inputs,
+          pool_size=kernel,
+          strides=stride,
+          padding='SAME',
+          data_format=data_format)
+      elif op == "global_mean":
+        if data_format == 'channels_last':  # noqa
+          inputs = tf.reduce_mean(inputs, [1, 2])
+        else:  # noqa
+          inputs = tf.reduce_mean(inputs, [2, 3])
+      else:
+        raise NotImplementedError(op)
+    filter_trainable_variables(trainable_variables, after_block=6)
+    add_to_collection(trainable_variables, 'trainable_variables_learned_metric_')
   return inputs
 
 
@@ -830,6 +852,22 @@ def resnet_decoder_v1(resnet_depth, width_multiplier,
       data_format=data_format)
 
 
+def learned_metric_v1(data_format='channels_last'):
+  """Returns the learned metric for a given data format."""
+  DEFAULT_METRIC_MODEL = [
+    {'conv': ['conv1_1', 3, 1, 3, 64]},  # noqa name, kernel, stride, in, out
+    {'conv': ['conv1_2', 3, 1, 64, 128]},  # noqa name, kernel, stride, in, out
+    {'pool': ['pool1', 2, 2, 128, 128]},  # noqa name, kernel, stride, in, out
+    {'conv': ['conv2_2', 3, 1, 128, 128]},  # noqa name, kernel, stride, in, out
+    {'conv': ['conv2_2', 3, 1, 128, 256]},  # noqa name, kernel, stride, in, out
+    {'pool': ['pool2', 2, 2, 256, 256]},  # noqa name, kernel, stride, in, out
+    {'conv': ['conv3_1', 3, 1, 256, 256]},  # noqa name, kernel, stride, in, out
+    {'conv': ['conv3_2', 3, 1, 256, 128]},  # noqa name, kernel, stride, in, out
+    # {'global_mean': ['gap', 3, 1, 128, 128]},  # noqa name, kernel, stride, in, out
+  ]
+  return metric_model_builder(
+    data_format=data_format,
+    model_desc=DEFAULT_METRIC_MODEL)
 
 # image = tf.zeros([2,224,224,3])
 

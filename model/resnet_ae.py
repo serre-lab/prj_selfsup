@@ -37,7 +37,7 @@ BATCH_NORM_EPSILON = 1e-5
 
 
 
-def resnet_autoencoder_v1_generator(encoder, decoder, data_format='channels_last'):
+def resnet_autoencoder_v1_generator(encoder, decoder, metric, data_format='channels_last'):
 
   def model(inputs, is_training):
     """Creation of the model graph."""
@@ -45,11 +45,12 @@ def resnet_autoencoder_v1_generator(encoder, decoder, data_format='channels_last
     if FLAGS.use_td_loss and isinstance(inputs, tuple):
       # print('#'*80)
       # print(inputs)
+      import pdb;pdb.set_trace()
       inputs, augs = inputs
       with tf.variable_scope('encoder'): # variable_scope name_scope
-        features = encoder(inputs, is_training)
+        features = encoder(inputs, is_training=is_training)
       
-      # B 7 7 2048
+      # Global average pool of B 7 7 2048 -> B 2048
       if data_format == 'channels_last':
         outputs = tf.reduce_mean(features, [1, 2])
       else:
@@ -66,8 +67,10 @@ def resnet_autoencoder_v1_generator(encoder, decoder, data_format='channels_last
       features = tf.concat([features, augs], axis=-1)
     
       with tf.variable_scope('decoder'):
-        images = decoder(features, is_training)
-      
+        images = decoder(features, is_training=is_training)
+
+      with tf.variable_scope('metric'):
+        images = metric(images, is_training=is_training)
       return outputs, images
 
     else:
@@ -109,7 +112,11 @@ def resnet_autoencoder_v1(resnet_depth, width_multiplier,
                               dropblock_keep_probs=dropblock_keep_probs, 
                               dropblock_size=dropblock_size)
 
-  metric = learned_metric(data_format=data_format) 
+  metric = learned_metric_v1(data_format=data_format) 
   
-  return resnet_autoencoder_v1_generator(encoder, decoder, data_format=data_format)
+  return resnet_autoencoder_v1_generator(
+    encoder=encoder,
+    decoder=decoder,
+    metric=metric,
+    data_format=data_format)
 
