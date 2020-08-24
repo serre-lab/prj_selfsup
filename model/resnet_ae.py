@@ -90,7 +90,7 @@ def resnet_autoencoder_v1_generator(encoder, decoder, metric, data_format='chann
           # Attractive-only loss
           target_images = tf.concat([target_images, target_images], 0)
         both_images = tf.concat([recon_images, target_images], -1)  # B H W 6
-        metric_hidden = metric(images, is_training=is_training)
+        metric_hidden = metric(both_images, is_training=is_training)
         B = metric_hidden.get_shape().as_list()[0]
         metric_hidden = tf.reshape(metric_hidden, [B, -1])
         # Prep recon_images for visualization

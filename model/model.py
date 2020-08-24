@@ -58,9 +58,7 @@ def build_model_fn(model, num_classes, num_train_examples):
         features, num_or_size_splits=num_transforms, axis=-1)
     
     if FLAGS.use_td_loss:
-      print("Original target image shape:")
       target_images = features_list[-1]
-      print(target_images)
       features_list = features_list[:-1]
       # transforms
       thetas_list = tf.split(
