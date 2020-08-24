@@ -73,8 +73,9 @@ def resnet_autoencoder_v1_generator(encoder, decoder, metric, data_format='chann
     
       with tf.variable_scope('decoder'):
         recon_images = decoder(features, is_training=is_training)
-      print("Reconstructed-images: ")
+      print("Reconstructed images and target images: ")
       print(recon_images)
+      print(target_images)
       print("---")
       with tf.variable_scope('metric'):
         # Squash both recon and target images
@@ -86,8 +87,7 @@ def resnet_autoencoder_v1_generator(encoder, decoder, metric, data_format='chann
         metric_hidden = tf.reshape(metric_hidden, [B, -1])
         # Prep recon_images for visualization
         recon_images = (recon_images + 1) / 2
-      print("Transformed and target metrics: ")
-      print(metric_images)
+      print("Embedding output: ")
       print(metric_images)
       print("---")
       return outputs, recon_images, metric_hidden
