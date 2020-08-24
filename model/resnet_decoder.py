@@ -797,8 +797,9 @@ def resnet_v1_generator_decoder(block_fn, layers, width_multiplier,
           strides=1, data_format=data_format)
 
       # 224 224 3
-    filter_trainable_variables(trainable_variables, after_block=5)
-    add_to_collection(trainable_variables, 'trainable_variables_inblock_')
+      
+    # filter_trainable_variables(trainable_variables, after_block=5)
+    # add_to_collection(trainable_variables, 'trainable_variables_inblock_')
     
     return inputs
 
