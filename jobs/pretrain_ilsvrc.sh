@@ -29,7 +29,7 @@ bu_loss_weight=1.0
 
 num_parallel_calls=8
 
-use_neptune=True
+use_neptune=False
 experiment_name="BU_{bu_loss}_TD_{td_loss}_R${resnet_depth}_lr${learning_rate}_T${temperature}"
 gsutil  rm -r gs://serrelab/prj-selfsup/${experiment_name}
 sudo rm -rf /tmp/*
