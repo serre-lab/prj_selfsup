@@ -16,7 +16,7 @@ image_size=224
 eval_split=validation
 resnet_depth=50 
 
-train_summary_steps=500
+train_summary_steps=1
 
 use_td_loss=True
 use_bu_loss=True
