@@ -89,8 +89,11 @@ def build_model_fn(model, num_classes, num_train_examples):
           model_train_mode = False
       else:
         if FLAGS.use_td_loss:
+          viz_features = features
           features = (features, thetas)
-        
+        else:
+          viz_features = features
+
         # Pretrain or finetune anything else will update BN stats.
         model_train_mode = is_training
 
@@ -266,15 +269,15 @@ def build_model_fn(model, num_classes, num_train_examples):
               # Images
               tf2.summary.image(
                   'Images',
-                  target_images,
+                  tf.cast(target_images, tf.float32),
                   step=tf.train.get_global_step())
-              # tf2.summary.image(
-              #     'Transformed images',
-              #     features,
-              #     step=tf.train.get_global_step())
+              tf2.summary.image(
+                  'Transformed images',
+                  tf.cast(viz_features, tf.float32),
+                  step=tf.train.get_global_step())
               tf2.summary.image(
                   'Reconstructed images',
-                  reconstruction,
+                  tf.cast(reconstruction, tf.float32),
                   step=tf.train.get_global_step())
 
       optimizer = model_util.get_optimizer(learning_rate)
