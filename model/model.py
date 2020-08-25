@@ -270,7 +270,7 @@ def build_model_fn(model, num_classes, num_train_examples):
               print("Images")
               print(target_images)
               print("Features")
-              print(features)
+              print(viz_features)
               print("Reconstruction")
               print(reconstruction)
               tf2.summary.image(
