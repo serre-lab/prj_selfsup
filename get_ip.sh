@@ -1,1 +1,1 @@
-wget -i icanhazip.com
+curl -i icanhazip.com

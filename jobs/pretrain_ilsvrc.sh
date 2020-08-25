@@ -31,9 +31,10 @@ num_parallel_calls=8
 
 use_neptune=False
 experiment_name="BU_{bu_loss}_TD_{td_loss}_R${resnet_depth}_lr${learning_rate}_T${temperature}"
+echo "Deleting gs://serrelab/prj-selfsup/${experiment_name} and tmp files"
+echo $experiment_name > current_job.txt
 gsutil  rm -r gs://serrelab/prj-selfsup/${experiment_name}
 sudo rm -rf /tmp/*
-echo "Deleting gs://serrelab/prj-selfsup/${experiment_name}"
 
 use_tpu=True
 export TPU_NAME='prj-selfsup-tpu'
