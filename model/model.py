@@ -264,13 +264,17 @@ def build_model_fn(model, num_classes, num_train_examples):
                   step=tf.train.get_global_step())
 
               # Images
+              b, n, h, w, c = target_images.get_shape().as_list()
+              viz_target_images = tf.reshape(target_images, [b * n, h, w, c])
               tf2.summary.image(
                   'Images',
-                  target_images,
+                  viz_target_images,
                   step=tf.train.get_global_step())
+              b, n, h, w, c = features_list.get_shape().as_list()
+              viz_features_list = tf.reshape(features_list, [b * n, h, w, c])
               tf2.summary.image(
                   'Transformed images',
-                  features_list,
+                  viz_features_list,
                   step=tf.train.get_global_step())
               tf2.summary.image(
                   'Reconstructed images',
