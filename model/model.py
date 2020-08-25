@@ -229,42 +229,42 @@ def build_model_fn(model, num_classes, num_train_examples):
               label_acc = tf.equal(
                   tf.argmax(labels['labels'], 1), tf.argmax(logits_sup, axis=1))
               label_acc = tf.reduce_mean(tf.cast(label_acc, tf.float32))
-              
+              step = tf.train.get_or_create_global_step()
               tf2.summary.scalar(
                   'train_bottomup_loss',
                   bu_loss,
-                  step=tf.train.get_global_step())
+                  step=step)
               tf2.summary.scalar(
                   'train_topdown_loss',
                   td_loss,
-                  step=tf.train.get_global_step())
+                  step=step)
               
               tf2.summary.scalar(
                   'train_bottomup_acc',
                   contrast_bu_acc,
-                  step=tf.train.get_global_step())
+                  step=step)
               tf2.summary.scalar(
                   'train_topdown_acc',
                   contrast_td_acc,
-                  step=tf.train.get_global_step())
+                  step=step)
               
               tf2.summary.scalar(
                   'train_label_accuracy',
                   label_acc,
-                  step=tf.train.get_global_step())
+                  step=step)
               
               tf2.summary.scalar(
                   'contrast_bu_entropy',
                   entropy_bu_con,
-                  step=tf.train.get_global_step())
+                  step=step)
               tf2.summary.scalar(
                   'contrast_td_entropy',
                   entropy_td_con,
-                  step=tf.train.get_global_step())
+                  step=step)
               
               tf2.summary.scalar(
                   'learning_rate', learning_rate,
-                  step=tf.train.get_global_step())
+                  step=step)
 
               # Images
               print("Images")
@@ -276,15 +276,15 @@ def build_model_fn(model, num_classes, num_train_examples):
               tf2.summary.image(
                   'Images',
                   tf.cast(target_images, tf.float32),
-                  step=tf.train.get_global_step())
+                  step=step)
               tf2.summary.image(
                   'Transformed images',
                   tf.cast(viz_features, tf.float32),
-                  step=tf.train.get_global_step())
+                  step=step)
               tf2.summary.image(
                   'Reconstructed images',
                   tf.cast(reconstruction, tf.float32),
-                  step=tf.train.get_global_step())
+                  step=step)
 
       optimizer = model_util.get_optimizer(learning_rate)
       control_deps = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
