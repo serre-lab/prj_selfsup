@@ -1,5 +1,6 @@
 __pycache__/
 
+current_job.txt
 logs/
 *.swp
 *.pyc
