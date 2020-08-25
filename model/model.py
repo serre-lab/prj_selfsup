@@ -304,8 +304,7 @@ def build_model_fn(model, num_classes, num_train_examples):
           mode=mode, train_op=train_op, loss=loss, scaffold_fn=scaffold_fn)
     else:
 
-      def metric_fn(logits_sup, labels_sup, logits_bu_con, labels_bu_con, 
-                    logits_td_con, labels_td_con, mask,
+      def metric_fn(logits_sup, labels_sup, logits_con, labels_con, mask,
                     **kws):
         """Inner metric function."""
         metrics = {k: tf.metrics.mean(v, weights=mask)
@@ -315,30 +314,20 @@ def build_model_fn(model, num_classes, num_train_examples):
             weights=mask)
         metrics['label_top_5_accuracy'] = tf.metrics.recall_at_k(
             tf.argmax(labels_sup, 1), logits_sup, k=5, weights=mask)
-        
-        metrics['bottomup_top_1_accuracy'] = tf.metrics.accuracy(
-            tf.argmax(labels_bu_con, 1), tf.argmax(logits_bu_con, axis=1),
+        metrics['contrastive_top_1_accuracy'] = tf.metrics.accuracy(
+            tf.argmax(labels_con, 1), tf.argmax(logits_con, axis=1),
             weights=mask)
-        metrics['bottomup_top_5_accuracy'] = tf.metrics.recall_at_k(
-            tf.argmax(labels_bu_con, 1), logits_bu_con, k=5, weights=mask)
-
-        metrics['topdown_top_1_accuracy'] = tf.metrics.accuracy(
-            tf.argmax(labels_td_con, 1), tf.argmax(logits_td_con, axis=1),
-            weights=mask)
-        metrics['topdown_top_5_accuracy'] = tf.metrics.recall_at_k(
-            tf.argmax(labels_td_con, 1), logits_td_con, k=5, weights=mask)
+        metrics['contrastive_top_5_accuracy'] = tf.metrics.recall_at_k(
+            tf.argmax(labels_con, 1), logits_con, k=5, weights=mask)
         return metrics
 
       metrics = {
           'logits_sup': logits_sup,
           'labels_sup': labels['labels'],
-          'logits_bu_con': logits_bu_con,
-          'logits_td_con': logits_td_con,
-          'labels_bu_con': labels_bu_con,
-          'labels_td_con': labels_td_con,
+          'logits_con': logits_bu_con,
+          'labels_con': labels_bu_con,
           'mask': labels['mask'],
-          'td_loss': tf.fill((params['batch_size'],), bu_loss),
-          'bu_loss': tf.fill((params['batch_size'],), td_loss),
+          'contrast_loss': tf.fill((params['batch_size'],), bu_loss),
           'regularization_loss': tf.fill((params['batch_size'],),
                                          tf.losses.get_regularization_loss()),
       }
