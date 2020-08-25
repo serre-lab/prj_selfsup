@@ -241,25 +241,25 @@ def build_model_fn(model, num_classes, num_train_examples):
                   'learning_rate', learning_rate,
                   step=tf.train.get_global_step())
 
-              # Images
-              print("Images")
-              print(target_images)
-              print("Features")
-              print(viz_features)
-              print("Reconstruction")
-              print(reconstruction)
-              tf2.summary.image(
-                  'Images',
-                  tf.cast(target_images, tf.float32),
-                  step=tf.train.get_global_step())
-              tf2.summary.image(
-                  'Transformed images',
-                  tf.cast(viz_features, tf.float32),
-                  step=tf.train.get_global_step())
-              tf2.summary.image(
-                  'Reconstructed images',
-                  tf.cast(reconstruction, tf.float32),
-                  step=tf.train.get_global_step())
+              # # Images
+              # print("Images")
+              # print(target_images)
+              # print("Features")
+              # print(viz_features)
+              # print("Reconstruction")
+              # print(reconstruction)
+              # tf2.summary.image(
+              #     'Images',
+              #     tf.cast(target_images, tf.float32),
+              #     step=tf.train.get_global_step())
+              # tf2.summary.image(
+              #     'Transformed images',
+              #     tf.cast(viz_features, tf.float32),
+              #     step=tf.train.get_global_step())
+              # tf2.summary.image(
+              #     'Reconstructed images',
+              #     tf.cast(reconstruction, tf.float32),
+              #     step=tf.train.get_global_step())
 
       optimizer = model_util.get_optimizer(learning_rate)
       control_deps = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
