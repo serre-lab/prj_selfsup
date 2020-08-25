@@ -524,72 +524,32 @@ def main(argv):
     train_batch_size=FLAGS.train_batch_size,
     eval_batch_size=FLAGS.eval_batch_size,
     use_tpu=FLAGS.use_tpu)
-  if FLAGS.use_neptune:
-    with neptune.create_experiment(name=FLAGS.experiment_name, params=argv_to_dict()):
-  
-      if FLAGS.mode == 'eval':
-        for ckpt in tf.train.checkpoints_iterator(
-            run_config.model_dir, min_interval_secs=15):
-          try:
-            result = perform_evaluation(
-                estimator=estimator,
-                # input_fn=data_lib.build_input_fn(builder, False),
-                input_fn=imagenet_eval.input_fn,
-                eval_steps=eval_steps,
-                model=model,
-                num_classes=num_classes,
-                checkpoint_path=ckpt)
-          except tf.errors.NotFoundError:
-            continue
-          if result['global_step'] >= train_steps:
-            return
-      else:
-        # hooks = [tf_debug.LocalCLIDebugHook(ui_type="readline")]
-    
-        estimator.train(
-            # data_lib.build_input_fn(builder, True), 
-            imagenet_train.input_fn,
-            max_steps=train_steps) #, hooks=hooks
-        if FLAGS.mode == 'train_then_eval':
-          perform_evaluation(
-              estimator=estimator,
-            #   input_fn=data_lib.build_input_fn(builder, False),
-              input_fn=imagenet_eval.input_fn,
-              eval_steps=eval_steps,
-              model=model,
-              num_classes=num_classes)
-  else:
-    if FLAGS.mode == 'eval':
-      for ckpt in tf.train.checkpoints_iterator(
-          run_config.model_dir, min_interval_secs=15):
-        try:
-          result = perform_evaluation(
-              estimator=estimator,
-              # input_fn=data_lib.build_input_fn(builder, False),
-              input_fn=imagenet_eval.input_fn,
-              eval_steps=eval_steps,
-              model=model,
-              num_classes=num_classes,
-              checkpoint_path=ckpt)
-        except tf.errors.NotFoundError:
-          continue
-        if result['global_step'] >= train_steps:
-          return
-    else:
-    # hooks = [tf_debug.LocalCLIDebugHook(ui_type="readline")]
-
-      estimator.train(
-        # data_lib.build_input_fn(builder, True), 
-        imagenet_train.input_fn,
-        max_steps=train_steps) #, hooks=hooks
-    if FLAGS.mode == 'train_then_eval':
-      perform_evaluation(
+  if FLAGS.mode == 'eval':
+    for ckpt in tf.train.checkpoints_iterator(
+        run_config.model_dir, min_interval_secs=15):
+      try:
+        result = perform_evaluation(
             estimator=estimator,
-        #   input_fn=data_lib.build_input_fn(builder, False),
-            input_fn=imagenet_eval.input_fn,
+            input_fn=data_lib.build_input_fn(builder, False),
             eval_steps=eval_steps,
             model=model,
-            num_classes=num_classes)
+            num_classes=num_classes,
+            checkpoint_path=ckpt)
+      except tf.errors.NotFoundError:
+        continue
+      if result['global_step'] >= train_steps:
+        return
+  else:
+    estimator.train(
+        data_lib.build_input_fn(builder, True), max_steps=train_steps)
+    if FLAGS.mode == 'train_then_eval':
+      perform_evaluation(
+          estimator=estimator,
+          input_fn=data_lib.build_input_fn(builder, False),
+          eval_steps=eval_steps,
+          model=model,
+          num_classes=num_classes)
+
 
 
 if __name__ == '__main__':
