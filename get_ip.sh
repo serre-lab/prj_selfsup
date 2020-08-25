@@ -1,0 +1,1 @@
+wget -i icanhazip.com
