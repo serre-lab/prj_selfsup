@@ -200,16 +200,12 @@ def build_model_fn(model, num_classes, num_train_examples):
 
     learning_rate = model_util.learning_rate_schedule(
         FLAGS.learning_rate, num_train_examples)
-
     if is_training:
       if FLAGS.train_summary_steps > 0:
         # Compute stats for the summary.
-        prob_bu_con = tf.nn.softmax(logits_bu_con)
-        entropy_bu_con = - tf.reduce_mean(
-            tf.reduce_sum(prob_bu_con * tf.math.log(prob_bu_con + 1e-8), -1))
-        prob_td_con = tf.nn.softmax(logits_td_con)
-        entropy_td_con = - tf.reduce_mean(
-            tf.reduce_sum(prob_td_con * tf.math.log(prob_td_con + 1e-8), -1))
+        prob_con = tf.nn.softmax(logits_bu_con)
+        entropy_con = - tf.reduce_mean(
+            tf.reduce_sum(prob_con * tf.math.log(prob_con + 1e-8), -1))
 
         summary_writer = tf2.summary.create_file_writer(FLAGS.model_dir)
         # TODO(iamtingchen): remove this control_dependencies in the future.
@@ -219,71 +215,30 @@ def build_model_fn(model, num_classes, num_train_examples):
                 tf.math.floormod(tf.train.get_global_step(),
                                  FLAGS.train_summary_steps), 0)
             with tf2.summary.record_if(should_record):
-              contrast_bu_acc = tf.equal(
-                  tf.argmax(labels_bu_con, 1), tf.argmax(logits_bu_con, axis=1))
-              contrast_bu_acc = tf.reduce_mean(tf.cast(contrast_bu_acc, tf.float32))
-              contrast_td_acc = tf.equal(
-                  tf.argmax(labels_td_con, 1), tf.argmax(logits_td_con, axis=1))
-              contrast_td_acc = tf.reduce_mean(tf.cast(contrast_td_acc, tf.float32))
-              
+              contrast_acc = tf.equal(
+                  tf.argmax(labels_con, 1), tf.argmax(logits_con, axis=1))
+              contrast_acc = tf.reduce_mean(tf.cast(contrast_acc, tf.float32))
               label_acc = tf.equal(
                   tf.argmax(labels['labels'], 1), tf.argmax(logits_sup, axis=1))
               label_acc = tf.reduce_mean(tf.cast(label_acc, tf.float32))
-              
               tf2.summary.scalar(
-                  'train_bottomup_loss',
+                  'bottom_up_train_contrast_loss',
                   bu_loss,
                   step=tf.train.get_global_step())
               tf2.summary.scalar(
-                  'train_topdown_loss',
-                  td_loss,
+                  'train_contrast_acc',
+                  contrast_acc,
                   step=tf.train.get_global_step())
-              
-              tf2.summary.scalar(
-                  'train_bottomup_acc',
-                  contrast_bu_acc,
-                  step=tf.train.get_global_step())
-              tf2.summary.scalar(
-                  'train_topdown_acc',
-                  contrast_td_acc,
-                  step=tf.train.get_global_step())
-              
               tf2.summary.scalar(
                   'train_label_accuracy',
                   label_acc,
                   step=tf.train.get_global_step())
-              
               tf2.summary.scalar(
-                  'contrast_bu_entropy',
-                  entropy_bu_con,
+                  'contrast_entropy',
+                  entropy_con,
                   step=tf.train.get_global_step())
-              tf2.summary.scalar(
-                  'contrast_td_entropy',
-                  entropy_td_con,
-                  step=tf.train.get_global_step())
-              
               tf2.summary.scalar(
                   'learning_rate', learning_rate,
-                  step=tf.train.get_global_step())
-
-              # Images
-              print("Images")
-              print(target_images)
-              print("Features")
-              print(viz_features)
-              print("Reconstruction")
-              print(reconstruction)
-              tf2.summary.image(
-                  'Images',
-                  tf.cast(target_images, tf.float32),
-                  step=tf.train.get_global_step())
-              tf2.summary.image(
-                  'Transformed images',
-                  tf.cast(viz_features, tf.float32),
-                  step=tf.train.get_global_step())
-              tf2.summary.image(
-                  'Reconstructed images',
-                  tf.cast(reconstruction, tf.float32),
                   step=tf.train.get_global_step())
 
       optimizer = model_util.get_optimizer(learning_rate)
