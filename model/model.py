@@ -268,10 +268,10 @@ def build_model_fn(model, num_classes, num_train_examples):
                   'Images',
                   target_images,
                   step=tf.train.get_global_step())
-              tf2.summary.image(
-                  'Transformed images',
-                  features,
-                  step=tf.train.get_global_step())
+              # tf2.summary.image(
+              #     'Transformed images',
+              #     features,
+              #     step=tf.train.get_global_step())
               tf2.summary.image(
                   'Reconstructed images',
                   reconstruction,
