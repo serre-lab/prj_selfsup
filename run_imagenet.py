@@ -594,5 +594,4 @@ def main(argv):
 
 if __name__ == '__main__':
   tf.disable_v2_behavior()  # Disable eager mode when running with TF2.
-  tf.disable_eager_execution()
   app.run(main)

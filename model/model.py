@@ -33,6 +33,7 @@ FLAGS = flags.FLAGS
 
 def build_model_fn(model, num_classes, num_train_examples):
   """Build model function."""
+  tf2.disable_eager_execution()
   def model_fn(features, labels, mode, params=None):
     """Build model and optimizer."""
     is_training = mode == tf.estimator.ModeKeys.TRAIN
