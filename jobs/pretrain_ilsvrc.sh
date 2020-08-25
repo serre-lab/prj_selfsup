@@ -1,8 +1,9 @@
 
 
+gsutil  rm -r gs://serrelab/prj-selfsup/BU_ATT_REP_pretrain_R50_lr0.1_T0.1
 train_mode=pretrain
 
-train_batch_size=1024  # 4096 # 4096 
+train_batch_size=512  # 4096 # 4096 
 train_epochs=300 
 temperature=0.1
 

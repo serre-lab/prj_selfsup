@@ -375,7 +375,7 @@ def add_dot_product_td_attractive_repulsive_loss(reconstruction,
                                       power=2,
                                       temperature=1.0,
                                       tpu_context=None,
-                                      weights=1.0):
+                                      weights=0.5):
   """Compute top down attractive and repulsive loss base on pixel-wise error.
 
   Args:
