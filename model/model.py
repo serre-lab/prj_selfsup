@@ -233,38 +233,38 @@ def build_model_fn(model, num_classes, num_train_examples):
               tf2.summary.scalar(
                   'train_bottomup_loss',
                   bu_loss,
-                  )  # step=step)
+                  step=step)
               tf2.summary.scalar(
                   'train_topdown_loss',
                   td_loss,
-                  )  # step=step)
+                  step=step)
               
               tf2.summary.scalar(
                   'train_bottomup_acc',
                   contrast_bu_acc,
-                  )  # step=step)
+                  step=step)
               tf2.summary.scalar(
                   'train_topdown_acc',
                   contrast_td_acc,
-                  )  # step=step)
+                  step=step)
               
               tf2.summary.scalar(
                   'train_label_accuracy',
                   label_acc,
-                  )  # step=step)
+                  step=step)
               
               tf2.summary.scalar(
                   'contrast_bu_entropy',
                   entropy_bu_con,
-                  )  # step=step)
+                  step=step)
               tf2.summary.scalar(
                   'contrast_td_entropy',
                   entropy_td_con,
-                  )  # step=step)
+                  step=step)
               
               tf2.summary.scalar(
                   'learning_rate', learning_rate,
-                  )  # step=step)
+                  step=step)
 
               # Images
               print("Images")
@@ -278,11 +278,11 @@ def build_model_fn(model, num_classes, num_train_examples):
                   tf.cast(target_images, tf.float32),
                   step=step)
               tf2.summary.image(
-                  'Transformed images',
+                  'Transformed_images',
                   tf.cast(viz_features, tf.float32),
                   step=step)
               tf2.summary.image(
-                  'Reconstructed images',
+                  'Reconstructed_images',
                   tf.cast(reconstruction, tf.float32),
                   step=step)
 
