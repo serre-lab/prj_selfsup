@@ -453,10 +453,10 @@ def main(argv):
 
   # Enable training summary.
   if FLAGS.train_summary_steps > 0:
-    tf.config.set_soft_device_placement(False)
+    tf.config.set_soft_device_placement(True)
   
-  if FLAGS.train_mode == 'finetune':
-    FLAGS.use_td_loss = False
+  # if FLAGS.train_mode == 'finetune':
+  #   FLAGS.use_td_loss = False
 
   if FLAGS.data_dir == FAKE_DATA_DIR:
     tf.logging.info('Using fake dataset.')

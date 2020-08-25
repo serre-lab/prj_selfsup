@@ -16,7 +16,7 @@ image_size=224
 eval_split=validation
 resnet_depth=50 
 
-train_summary_steps=1
+train_summary_steps=500
 
 use_td_loss=True
 use_bu_loss=True
@@ -29,7 +29,7 @@ bu_loss_weight=1.0
 
 num_parallel_calls=8
 
-use_neptune=False
+use_neptune=True
 experiment_name="BU_ATT_REP_${train_mode}_R${resnet_depth}_lr${learning_rate}_T${temperature}"
 gsutil  rm -r gs://serrelab/prj-selfsup/${experiment_name}
 echo "Deleting gs://serrelab/prj-selfsup/${experiment_name}"
