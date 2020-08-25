@@ -530,7 +530,8 @@ def main(argv):
       try:
         result = perform_evaluation(
             estimator=estimator,
-            input_fn=data_lib.build_input_fn(builder, False),
+            # input_fn=data_lib.build_input_fn(builder, False),
+            input_fn=imagenet_eval.input_fn,
             eval_steps=eval_steps,
             model=model,
             num_classes=num_classes,
@@ -545,11 +546,11 @@ def main(argv):
     if FLAGS.mode == 'train_then_eval':
       perform_evaluation(
           estimator=estimator,
-          input_fn=data_lib.build_input_fn(builder, False),
+          # input_fn=data_lib.build_input_fn(builder, False),
+          input_fn=imagenet_train.input_fn,
           eval_steps=eval_steps,
           model=model,
           num_classes=num_classes)
-
 
 
 if __name__ == '__main__':
