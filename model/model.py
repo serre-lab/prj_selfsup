@@ -267,6 +267,12 @@ def build_model_fn(model, num_classes, num_train_examples):
                   step=tf.train.get_global_step())
 
               # Images
+              print("Images")
+              print(target_images)
+              print("Features")
+              print(features)
+              print("Reconstruction")
+              print(reconstruction)
               tf2.summary.image(
                   'Images',
                   tf.cast(target_images, tf.float32),
