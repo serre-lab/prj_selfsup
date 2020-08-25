@@ -273,18 +273,18 @@ def build_model_fn(model, num_classes, num_train_examples):
               print(viz_features)
               print("Reconstruction")
               print(reconstruction)
-              tf.summary.image(
-                  'Images',
-                  tf.cast(target_images, tf.float32),
-                  )  # step=step)
-              tf.summary.image(
-                  'Transformed images',
-                  tf.cast(viz_features, tf.float32),
-                  )  # step=step)
-              tf.summary.image(
-                  'Reconstructed images',
-                  tf.cast(reconstruction, tf.float32),
-                  )  # step=step)
+              # tf.summary.image(
+              #     'Images',
+              #     tf.cast(target_images, tf.float32),
+              #     )  # step=step)
+              # tf.summary.image(
+              #     'Transformed_images',
+              #     tf.cast(viz_features, tf.float32),
+              #     )  # step=step)
+              # tf.summary.image(
+              #     'Reconstructed_images',
+              #     tf.cast(reconstruction, tf.float32),
+              #     )  # step=step)
 
       optimizer = model_util.get_optimizer(learning_rate)
       control_deps = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
