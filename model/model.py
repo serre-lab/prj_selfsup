@@ -216,7 +216,7 @@ def build_model_fn(model, num_classes, num_train_examples):
                                  FLAGS.train_summary_steps), 0)
             with tf2.summary.record_if(should_record):
               contrast_acc = tf.equal(
-                  tf.argmax(labels_con, 1), tf.argmax(logits_con, axis=1))
+                  tf.argmax(labels_bu_con, 1), tf.argmax(logits_bu_con, axis=1))
               contrast_acc = tf.reduce_mean(tf.cast(contrast_acc, tf.float32))
               label_acc = tf.equal(
                   tf.argmax(labels['labels'], 1), tf.argmax(logits_sup, axis=1))
@@ -239,6 +239,26 @@ def build_model_fn(model, num_classes, num_train_examples):
                   step=tf.train.get_global_step())
               tf2.summary.scalar(
                   'learning_rate', learning_rate,
+                  step=tf.train.get_global_step())
+
+              # Images
+              print("Images")
+              print(target_images)
+              print("Features")
+              print(viz_features)
+              print("Reconstruction")
+              print(reconstruction)
+              tf2.summary.image(
+                  'Images',
+                  tf.cast(target_images, tf.float32),
+                  step=tf.train.get_global_step())
+              tf2.summary.image(
+                  'Transformed images',
+                  tf.cast(viz_features, tf.float32),
+                  step=tf.train.get_global_step())
+              tf2.summary.image(
+                  'Reconstructed images',
+                  tf.cast(reconstruction, tf.float32),
                   step=tf.train.get_global_step())
 
       optimizer = model_util.get_optimizer(learning_rate)
