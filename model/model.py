@@ -233,38 +233,38 @@ def build_model_fn(model, num_classes, num_train_examples):
               tf.summary.scalar(
                   'train_bottomup_loss',
                   bu_loss,
-                  step=step)
+                  )  # step=step)
               tf.summary.scalar(
                   'train_topdown_loss',
                   td_loss,
-                  step=step)
+                  )  # step=step)
               
               tf.summary.scalar(
                   'train_bottomup_acc',
                   contrast_bu_acc,
-                  step=step)
+                  )  # step=step)
               tf.summary.scalar(
                   'train_topdown_acc',
                   contrast_td_acc,
-                  step=step)
+                  )  # step=step)
               
               tf.summary.scalar(
                   'train_label_accuracy',
                   label_acc,
-                  step=step)
+                  )  # step=step)
               
               tf.summary.scalar(
                   'contrast_bu_entropy',
                   entropy_bu_con,
-                  step=step)
+                  )  # step=step)
               tf.summary.scalar(
                   'contrast_td_entropy',
                   entropy_td_con,
-                  step=step)
+                  )  # step=step)
               
               tf.summary.scalar(
                   'learning_rate', learning_rate,
-                  step=step)
+                  )  # step=step)
 
               # Images
               print("Images")
@@ -276,15 +276,15 @@ def build_model_fn(model, num_classes, num_train_examples):
               tf.summary.image(
                   'Images',
                   tf.cast(target_images, tf.float32),
-                  step=step)
+                  )  # step=step)
               tf.summary.image(
                   'Transformed images',
                   tf.cast(viz_features, tf.float32),
-                  step=step)
+                  )  # step=step)
               tf.summary.image(
                   'Reconstructed images',
                   tf.cast(reconstruction, tf.float32),
-                  step=step)
+                  )  # step=step)
 
       optimizer = model_util.get_optimizer(learning_rate)
       control_deps = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
