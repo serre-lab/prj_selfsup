@@ -98,7 +98,7 @@ def resnet_autoencoder_v1_generator(encoder, decoder, metric, data_format='chann
 
         # Then target vs. target
         both_images = tf.concat([target_images, target_images], -1)  # B H W 6
-        metric_hidden_t = metric(both_images, is_training=False)  # No gradient
+        metric_hidden_t = metric(both_images, is_training=is_training)  # No gradient
         metric_hidden_t = tf.reshape(metric_hidden_t, [B, -1])
 
         # Prep recon_images for visualization

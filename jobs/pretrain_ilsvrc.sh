@@ -1,6 +1,5 @@
 
 
-gsutil  rm -r gs://serrelab/prj-selfsup/BU_ATT_REP_pretrain_R50_lr0.1_T0.1
 train_mode=pretrain
 
 train_batch_size=512  # 4096 # 4096 
@@ -17,7 +16,7 @@ image_size=224
 eval_split=validation
 resnet_depth=50 
 
-train_summary_steps=0
+train_summary_steps=500
 
 use_td_loss=True
 use_bu_loss=True
@@ -32,7 +31,8 @@ num_parallel_calls=8
 
 use_neptune=False
 experiment_name="BU_ATT_REP_${train_mode}_R${resnet_depth}_lr${learning_rate}_T${temperature}"
-
+gsutil  rm -r gs://serrelab/prj-selfsup/${experiment_name}
+echo "Deleting gs://serrelab/prj-selfsup/${experiment_name}"
 
 use_tpu=True
 export TPU_NAME='prj-selfsup-tpu'
@@ -52,4 +52,3 @@ python3 run_imagenet.py \
   --td_loss_weight=$td_loss_weight --bu_loss_weight=$bu_loss_weight \
   --use_tpu=$use_tpu --tpu_name=$TPU_NAME --train_summary_steps=$train_summary_steps \
   --experiment_name=$experiment_name --use_neptune=$use_neptune
-
