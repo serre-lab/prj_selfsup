@@ -43,11 +43,11 @@ import tensorflow.compat.v1 as tf
 import tensorflow_datasets as tfds
 import tensorflow_hub as hub
 
-import neptune
-import neptune_tensorboard as neptune_tb
+# import neptune
+# import neptune_tensorboard as neptune_tb
 
-neptune.init(project_qualified_name='Serre-Lab/self-sup')
-neptune_tb.integrate_with_tensorflow()
+# neptune.init(project_qualified_name='Serre-Lab/self-sup')
+# neptune_tb.integrate_with_tensorflow()
 
 # from tensorflow.python import debug as tf_debug
 
