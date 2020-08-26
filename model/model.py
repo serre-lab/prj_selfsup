@@ -248,7 +248,7 @@ def build_model_fn(model, num_classes, num_train_examples):
           # to storage once per loop.
           with tf2.summary.create_file_writer(
               FLAGS.model_dir,
-              max_queue=params['iterations_per_loop']).as_default():
+              max_queue=FLAGS.train_summary_steps * 10):
             with tf2.summary.record_if(True):
 
               tf2.summary.scalar(
