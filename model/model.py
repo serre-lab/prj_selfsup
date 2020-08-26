@@ -213,7 +213,7 @@ def build_model_fn(model, num_classes, num_train_examples):
         entropy_td_con = - tf.reduce_mean(
             tf.reduce_sum(prob_td_con * tf.math.log(prob_td_con + 1e-8), -1))
 
-        summary_writer = tf2.summary.create_file_writer(FLAGS.model_dir)
+        summary_writer = tf.summary.create_file_writer(FLAGS.model_dir)
         # TODO(iamtingchen): remove this control_dependencies in the future.
         with tf.control_dependencies([summary_writer.init()]):
           with summary_writer.as_default():
@@ -232,41 +232,41 @@ def build_model_fn(model, num_classes, num_train_examples):
                   tf.argmax(labels['labels'], 1), tf.argmax(logits_sup, axis=1))
               label_acc = tf.reduce_mean(tf.cast(label_acc, tf.float32))
               step = tf.train.get_or_create_global_step()
-              tf2.summary.scalar(
+              tf.summary.scalar(
                   'train_bottomup_loss',
                   bu_loss,
-                  step=step)
-              tf2.summary.scalar(
+                  )  # step=step)
+              tf.summary.scalar(
                   'train_topdown_loss',
                   td_loss,
-                  step=step)
+                  )  # step=step)
               
-              tf2.summary.scalar(
+              tf.summary.scalar(
                   'train_bottomup_acc',
                   contrast_bu_acc,
-                  step=step)
-              tf2.summary.scalar(
+                  )  # step=step)
+              tf.summary.scalar(
                   'train_topdown_acc',
                   contrast_td_acc,
-                  step=step)
+                  )  # step=step)
               
-              tf2.summary.scalar(
+              tf.summary.scalar(
                   'train_label_accuracy',
                   label_acc,
-                  step=step)
+                  )  # step=step)
               
-              tf2.summary.scalar(
+              tf.summary.scalar(
                   'contrast_bu_entropy',
                   entropy_bu_con,
-                  step=step)
-              tf2.summary.scalar(
+                  )  # step=step)
+              tf.summary.scalar(
                   'contrast_td_entropy',
                   entropy_td_con,
-                  step=step)
+                  )  # step=step)
               
-              tf2.summary.scalar(
+              tf.summary.scalar(
                   'learning_rate', learning_rate,
-                  step=step)
+                  )  # step=step)
 
               # # Images
               # print("Images")
