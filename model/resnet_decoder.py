@@ -830,7 +830,7 @@ def resnet_v1_generator_decoder(block_fn, layers, width_multiplier,
   return model
 
 
-def resnet_decoder_v1(resnet_depth, width_multiplier,
+def resnet_decoder_v1(decoder_depth, encoder_depth, width_multiplier,
               cifar_stem=False, data_format='channels_last',
               dropblock_keep_probs=None, dropblock_size=None):
   """Returns the ResNet model for a given size and number of output classes."""
@@ -843,10 +843,13 @@ def resnet_decoder_v1(resnet_depth, width_multiplier,
       200: {'block': bottleneck_block, 'layers': [3, 24, 36, 3]}
   }
 
-  if resnet_depth not in model_params:
-    raise ValueError('Not a valid resnet_depth:', resnet_depth)
+  if decoder_depth not in model_params:
+    raise ValueError('decoder_depth a valid resnet_depth:', decoder_depth)
+  if encoder_depth not in model_params:
+    raise ValueError('encoder_depth a valid resnet_depth:', decoder_depth)
 
-  params = model_params[resnet_depth]
+  params = model_params[decoder_depth]
+  enc_params = model_params[encoder_depth]
   return resnet_v1_generator_decoder(
       params['block'], params['layers'], width_multiplier,
       cifar_stem=cifar_stem,

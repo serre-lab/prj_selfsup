@@ -240,8 +240,12 @@ flags.DEFINE_integer(
     'Multiplier to change width of network.')
 
 flags.DEFINE_integer(
-    'resnet_depth', 50,
-    'Depth of ResNet.')
+    'encoder_depth', 50,
+    'Depth of ResNet Encoder.')
+
+flags.DEFINE_integer(
+    'encoder_depth', 50,
+    'Depth of ResNet Decoder.')
 
 flags.DEFINE_float(
     'sk_ratio', 0.,
@@ -488,7 +492,8 @@ def main(argv):
   resnet_decoder.BATCH_NORM_DECAY = FLAGS.batch_norm_decay
 
   model = resnet_ae.resnet_autoencoder_v1(
-        resnet_depth=FLAGS.resnet_depth,
+        encoder_depth=FLAGS.encoder_depth,
+        decoder_depth=FLAGS.decoder_depth,
         width_multiplier=FLAGS.width_multiplier,
         cifar_stem=False)
 
