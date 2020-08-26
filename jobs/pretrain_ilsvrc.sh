@@ -2,7 +2,7 @@
 
 train_mode=pretrain
 
-train_batch_size=4096  # 4096 # 4096 
+train_batch_size=1024
 train_epochs=300 
 temperature=0.1
 
@@ -38,6 +38,7 @@ sudo rm -rf /tmp/*
 
 use_tpu=True
 export TPU_NAME='prj-selfsup-tpu'
+# export TPU_NAME='prj-selfsup-tpu-preempt0'
 export STORAGE_BUCKET='gs://serrelab/prj-selfsup'
 DATA_DIR=gs://imagenet_data/train/
 MODEL_DIR=$STORAGE_BUCKET/$experiment_name
