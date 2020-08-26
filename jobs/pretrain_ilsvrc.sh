@@ -16,6 +16,7 @@ image_size=224
 eval_split=validation
 encoder_depth=50
 decoder_depth=18
+metric_channels=3
 
 train_summary_steps=0  # 2502
 
@@ -48,6 +49,7 @@ MODEL_DIR=$STORAGE_BUCKET/$experiment_name
 python3 run_imagenet.py \
   --encoder_depth=$encoder_depth \
   --decoder_depth=$decoder_depth \
+  --metric_channels=$metric_channels \
   --train_mode=$train_mode \
   --train_batch_size=$train_batch_size \
   --train_epochs=$train_epochs \

@@ -858,7 +858,7 @@ def resnet_decoder_v1(decoder_depth, encoder_depth, width_multiplier,
       data_format=data_format)
 
 
-def learned_metric_v1(data_format='channels_last'):
+def learned_metric_v1(metric_channels, data_format='channels_last'):
   """Returns the learned metric for a given data format.
   Model expects concatenated [recon, target] images as input (6D)
   """
@@ -870,7 +870,7 @@ def learned_metric_v1(data_format='channels_last'):
     {'conv': ['conv2_2', 3, 1, 128, 256]},  # noqa name, kernel, stride, in, out
     {'pool': ['pool2', 2, 2, 256, 256]},  # noqa name, kernel, stride, in, out
     {'conv': ['conv3_1', 3, 1, 256, 256]},  # noqa name, kernel, stride, in, out
-    {'conv': ['conv3_2', 3, 1, 256, 16]},  # noqa name, kernel, stride, in, out
+    {'conv': ['conv3_2', 3, 1, 256, metric_channels]},  # noqa name, kernel, stride, in, out
     # {'global_mean': ['gap', 3, 1, 128, 128]},  # noqa name, kernel, stride, in, out
   ]
   return metric_model_builder(

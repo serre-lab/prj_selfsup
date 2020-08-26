@@ -240,6 +240,10 @@ flags.DEFINE_integer(
     'Multiplier to change width of network.')
 
 flags.DEFINE_integer(
+    'metric_channels', 3,
+    'Number of channels in the metric output.')
+
+flags.DEFINE_integer(
     'encoder_depth', 50,
     'Depth of ResNet Encoder.')
 

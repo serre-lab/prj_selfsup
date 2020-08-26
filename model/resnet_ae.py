@@ -128,7 +128,7 @@ def resnet_autoencoder_v1_generator(encoder, decoder, metric, data_format='chann
   return model
 
 
-def resnet_autoencoder_v1(encoder_depth, decoder_depth, width_multiplier,
+def resnet_autoencoder_v1(encoder_depth, decoder_depth, width_multiplier, metric_channels,  # noqa
               cifar_stem=False, data_format='channels_last',
               dropblock_keep_probs=None, dropblock_size=None):
   """Returns the ResNet model for a given size and number of output classes."""
@@ -148,7 +148,7 @@ def resnet_autoencoder_v1(encoder_depth, decoder_depth, width_multiplier,
                               dropblock_keep_probs=dropblock_keep_probs, 
                               dropblock_size=dropblock_size)
 
-  metric = learned_metric_v1(data_format=data_format) 
+  metric = learned_metric_v1(data_format=data_format, output_channels=metric_channels) 
   
   return resnet_autoencoder_v1_generator(
     encoder=encoder,
