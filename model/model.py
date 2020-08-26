@@ -306,7 +306,7 @@ def build_model_fn(model, num_classes, num_train_examples):
               #     'Reconstructed_images',
               #     tf.cast(reconstruction, tf.float32),
               #     step=step)
-            return tf.summary.all_v2_summary_ops()
+            return tf2.summary.all_v2_summary_ops()
 
         # To log the loss, current learning rate, and epoch for Tensorboard, the
         # summary op needs to be run on the host CPU via host_call. host_call
