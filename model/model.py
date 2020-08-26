@@ -334,27 +334,27 @@ def build_model_fn(model, num_classes, num_train_examples):
         step = tf.train.get_or_create_global_step()
 
         gs_t = tf.reshape(step, [1])
-        bu_loss_t = tf.reshape(bu_loss_t, [1])
-        td_loss_t = tf.reshape(td_loss_t, [1])
-        contrast_bu_acc_t = tf.reshape(contrast_bu_acc_t, [1])
-        contrast_td_acc_t = tf.reshape(contrast_td_acc_t, [1])
-        label_acc_t = tf.reshape(label_acc_t, [1])
-        entropy_bu_con_t = tf.reshape(entropy_bu_con_t, [1])
-        entropy_td_con_t = tf.reshape(entropy_td_con_t, [1])
-        learning_rate_t = tf.reshape(learning_rate_t, [1])
+        bu_loss_t = tf.reshape(bu_loss, [1])
+        td_loss_t = tf.reshape(td_loss, [1])
+        contrast_bu_acc_t = tf.reshape(contrast_bu_acc, [1])
+        contrast_td_acc_t = tf.reshape(contrast_td_acc, [1])
+        label_acc_t = tf.reshape(label_acc, [1])
+        entropy_bu_con_t = tf.reshape(entropy_bu_con, [1])
+        entropy_td_con_t = tf.reshape(entropy_td_con, [1])
+        learning_rate_t = tf.reshape(learning_rate, [1])
 
         host_call = (
           host_call_fn,
           [
             gs_t,
-            bu_loss,
-            td_loss,
-            contrast_bu_acc,
-            contrast_td_acc,
-            label_acc,
-            entropy_bu_con,
-            entropy_td_con,
-            learning_rate])
+            bu_loss_t,
+            td_loss_t,
+            contrast_bu_acc_t,
+            contrast_td_acc_t,
+            label_acc_t,
+            entropy_bu_con_t,
+            entropy_td_con_t,
+            learning_rate_t])
       
       if FLAGS.checkpoint:
         def scaffold_fn():
