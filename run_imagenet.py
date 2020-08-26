@@ -499,6 +499,7 @@ def main(argv):
         encoder_depth=FLAGS.encoder_depth,
         decoder_depth=FLAGS.decoder_depth,
         width_multiplier=FLAGS.width_multiplier,
+        metric_channel=FLAGS.metric_channels,
         cifar_stem=False)
 
   checkpoint_steps = (
