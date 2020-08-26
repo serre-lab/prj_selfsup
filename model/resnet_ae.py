@@ -148,7 +148,7 @@ def resnet_autoencoder_v1(encoder_depth, decoder_depth, width_multiplier, metric
                               dropblock_keep_probs=dropblock_keep_probs, 
                               dropblock_size=dropblock_size)
 
-  metric = learned_metric_v1(data_format=data_format, output_channels=metric_channels) 
+  metric = learned_metric_v1(data_format=data_format, metric_channels=metric_channels) 
   
   return resnet_autoencoder_v1_generator(
     encoder=encoder,
