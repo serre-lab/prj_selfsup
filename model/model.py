@@ -204,69 +204,86 @@ def build_model_fn(model, num_classes, num_train_examples):
         FLAGS.learning_rate, num_train_examples)
 
     if is_training:
+      optimizer = model_util.get_optimizer(learning_rate)
+      control_deps = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+      if FLAGS.train_summary_steps > 0:
+        control_deps.extend(tf.summary.all_v2_summary_ops())
+      with tf.control_dependencies(control_deps):
+        train_op = optimizer.minimize(
+            loss, global_step=tf.train.get_or_create_global_step(),
+            var_list=variables_to_train)
+
       if FLAGS.train_summary_steps > 0:
         # Compute stats for the summary.
-        prob_bu_con = tf.nn.softmax(logits_bu_con)
-        entropy_bu_con = - tf.reduce_mean(
-            tf.reduce_sum(prob_bu_con * tf.math.log(prob_bu_con + 1e-8), -1))
-        prob_td_con = tf.nn.softmax(logits_td_con)
-        entropy_td_con = - tf.reduce_mean(
-            tf.reduce_sum(prob_td_con * tf.math.log(prob_td_con + 1e-8), -1))
+        def host_call_fn(
+            gs,
+            prob_bu_con_t,
+            entropy_bu_con_t,
+            prob_td_con_t,
+            entropy_td_con_t,
+            contrast_bu_acc_t,
+            contrast_td_acc_t):
+          """Training host call. Creates scalar summaries for training metrics.
+          This function is executed on the CPU and should not directly reference
+          any Tensors in the rest of the `model_fn`. To pass Tensors from the
+          model to the `metric_fn`, provide as part of the `host_call`. See
+          https://www.tensorflow.org/api_docs/python/tf/estimator/tpu/TPUEstimatorSpec
+          for more information.
+          Arguments should match the list of `Tensor` objects passed as the second
+          element in the tuple passed to `host_call`.
+          Args:
+            gs: `Tensor with shape `[batch]` for the global_step
+            loss: `Tensor` with shape `[batch]` for the training loss.
+            lr: `Tensor` with shape `[batch]` for the learning_rate.
+            ce: `Tensor` with shape `[batch]` for the current_epoch.
+          Returns:
+            List of summary ops to run on the CPU host.
+          """
+          gs = gs[0]
+          # Host call fns are executed params['iterations_per_loop'] times after
+          # one TPU loop is finished, setting max_queue value to the same as
+          # number of iterations will make the summary writer only flush the data
+          # to storage once per loop.
+          with tf2.summary.create_file_writer(
+              FLAGS.model_dir,
+              max_queue=params['iterations_per_loop']).as_default():
+            with tf2.summary.record_if(True):
 
-        summary_writer = tf.summary.create_file_writer(FLAGS.model_dir)
-        # TODO(iamtingchen): remove this control_dependencies in the future.
-        with tf.control_dependencies([summary_writer.init()]):
-          with summary_writer.as_default():
-            should_record = tf.math.equal(
-                tf.math.floormod(tf.train.get_global_step(),
-                                 FLAGS.train_summary_steps), 0)
-            with tf2.summary.record_if(should_record):
-              contrast_bu_acc = tf.equal(
-                  tf.argmax(labels_bu_con, 1), tf.argmax(logits_bu_con, axis=1))
-              contrast_bu_acc = tf.reduce_mean(tf.cast(contrast_bu_acc, tf.float32))
-              contrast_td_acc = tf.equal(
-                  tf.argmax(labels_td_con, 1), tf.argmax(logits_td_con, axis=1))
-              contrast_td_acc = tf.reduce_mean(tf.cast(contrast_td_acc, tf.float32))
-              
-              label_acc = tf.equal(
-                  tf.argmax(labels['labels'], 1), tf.argmax(logits_sup, axis=1))
-              label_acc = tf.reduce_mean(tf.cast(label_acc, tf.float32))
-              step = tf.train.get_or_create_global_step()
-              tf.summary.scalar(
+              tf2.summary.scalar(
                   'train_bottomup_loss',
-                  bu_loss,
-                  )  # step=step)
-              tf.summary.scalar(
+                  bu_loss[0],
+                  step=gs)
+              tf2.summary.scalar(
                   'train_topdown_loss',
-                  td_loss,
-                  )  # step=step)
+                  td_loss[0],
+                  step=gs)
               
-              tf.summary.scalar(
+              tf2.summary.scalar(
                   'train_bottomup_acc',
-                  contrast_bu_acc,
-                  )  # step=step)
-              tf.summary.scalar(
+                  contrast_bu_acc[0],
+                  step=gs)
+              tf2.summary.scalar(
                   'train_topdown_acc',
-                  contrast_td_acc,
-                  )  # step=step)
+                  contrast_td_acc[0],
+                  step=gs)
               
-              tf.summary.scalar(
+              tf2.summary.scalar(
                   'train_label_accuracy',
-                  label_acc,
-                  )  # step=step)
+                  label_acc[0],
+                  step=gs)
               
-              tf.summary.scalar(
+              tf2.summary.scalar(
                   'contrast_bu_entropy',
-                  entropy_bu_con,
-                  )  # step=step)
-              tf.summary.scalar(
+                  entropy_bu_con[0],
+                  step=gs)
+              tf2.summary.scalar(
                   'contrast_td_entropy',
-                  entropy_td_con,
-                  )  # step=step)
+                  entropy_td_con[0],
+                  step=gs)
               
-              tf.summary.scalar(
-                  'learning_rate', learning_rate,
-                  )  # step=step)
+              tf2.summary.scalar(
+                  'learning_rate', learning_rate[0],
+                  step=gs)
 
               # # Images
               # print("Images")
@@ -287,16 +304,51 @@ def build_model_fn(model, num_classes, num_train_examples):
               #     'Reconstructed_images',
               #     tf.cast(reconstruction, tf.float32),
               #     step=step)
+            return tf.summary.all_v2_summary_ops()
 
-      optimizer = model_util.get_optimizer(learning_rate)
-      control_deps = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-      if FLAGS.train_summary_steps > 0:
-        control_deps.extend(tf.summary.all_v2_summary_ops())
-      with tf.control_dependencies(control_deps):
-        train_op = optimizer.minimize(
-            loss, global_step=tf.train.get_or_create_global_step(),
-            var_list=variables_to_train)
-      
+        # To log the loss, current learning rate, and epoch for Tensorboard, the
+        # summary op needs to be run on the host CPU via host_call. host_call
+        # expects [batch_size, ...] Tensors, thus reshape to introduce a batch
+        # dimension. These Tensors are implicitly concatenated to
+        # [params['batch_size']].
+        prob_bu_con = tf.nn.softmax(logits_bu_con)
+        entropy_bu_con = - tf.reduce_mean(
+            tf.reduce_sum(prob_bu_con * tf.math.log(prob_bu_con + 1e-8), -1))
+        prob_td_con = tf.nn.softmax(logits_td_con)
+        entropy_td_con = - tf.reduce_mean(
+            tf.reduce_sum(prob_td_con * tf.math.log(prob_td_con + 1e-8), -1))
+        contrast_bu_acc = tf.equal(
+            tf.argmax(labels_bu_con, 1), tf.argmax(logits_bu_con, axis=1))
+        contrast_bu_acc = tf.reduce_mean(tf.cast(contrast_bu_acc, tf.float32))
+        contrast_td_acc = tf.equal(
+            tf.argmax(labels_td_con, 1), tf.argmax(logits_td_con, axis=1))
+        contrast_td_acc = tf.reduce_mean(tf.cast(contrast_td_acc, tf.float32))
+
+        summary_writer = tf2.summary.create_file_writer(FLAGS.model_dir)
+
+        label_acc = tf.equal(
+            tf.argmax(labels['labels'], 1), tf.argmax(logits_sup, axis=1))
+        label_acc = tf.reduce_mean(tf.cast(label_acc, tf.float32))
+        step = tf.train.get_or_create_global_step()
+
+        gs_t = tf.reshape(step, [1])
+        prob_bu_con_t = tf.reshape(prob_bu_con, [1])
+        entropy_bu_con_t = tf.reshape(entropy_bu_con, [1])
+        prob_td_con_t = tf.reshape(prob_td_con, [1])
+        entropy_td_con_t = tf.reshape(entropy_td_con, [1])
+        contrast_bu_acc_t = tf.reshape(contrast_bu_acc, [1])
+        contrast_td_acc_t = tf.reshape(contrast_td_acc, [1])
+
+        host_call = (
+          host_call_fn,
+          [
+            gs_t,
+            prob_bu_con_t,
+            entropy_bu_con_t,
+            prob_td_con_t,
+            entropy_td_con_t,
+            contrast_bu_acc_t,
+            contrast_td_acc_t,])
       
       if FLAGS.checkpoint:
         def scaffold_fn():
@@ -328,7 +380,11 @@ def build_model_fn(model, num_classes, num_train_examples):
         scaffold_fn = None
 
       return tf.estimator.tpu.TPUEstimatorSpec(
-          mode=mode, train_op=train_op, loss=loss, scaffold_fn=scaffold_fn)
+          mode=mode,
+          train_op=train_op,
+          loss=loss,
+          host_call=host_call,
+          scaffold_fn=scaffold_fn)
     else:
 
       def metric_fn(logits_sup, labels_sup, logits_bu_con, labels_bu_con, 
