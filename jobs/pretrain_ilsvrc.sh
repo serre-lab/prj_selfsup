@@ -2,7 +2,7 @@
 
 train_mode=pretrain
 
-train_batch_size=512  # 4096 # 4096 
+train_batch_size=4096  # 4096 # 4096 
 train_epochs=300 
 temperature=0.1
 
@@ -16,7 +16,7 @@ image_size=224
 eval_split=validation
 resnet_depth=50 
 
-train_summary_steps=2502
+train_summary_steps=0  # 2502
 
 use_td_loss=True
 use_bu_loss=True
@@ -27,7 +27,7 @@ bu_loss=attractive_repulsive #'attractive_repulsive'
 td_loss_weight=1.0
 bu_loss_weight=1.0
 
-num_parallel_calls=0
+num_parallel_calls=8
 
 use_neptune=False
 experiment_name="BU_{bu_loss}_TD_{td_loss}_R${resnet_depth}_lr${learning_rate}_T${temperature}"
