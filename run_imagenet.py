@@ -244,7 +244,7 @@ flags.DEFINE_integer(
     'Depth of ResNet Encoder.')
 
 flags.DEFINE_integer(
-    'encoder_depth', 50,
+    'decoder_depth', 50,
     'Depth of ResNet Decoder.')
 
 flags.DEFINE_float(
