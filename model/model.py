@@ -217,7 +217,7 @@ def build_model_fn(model, num_classes, num_train_examples):
         # Compute stats for the summary.
         def host_call_fn(
             gs,
-            bu_loss
+            bu_loss,
             td_loss,
             contrast_bu_acc,
             contrast_td_acc,
