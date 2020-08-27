@@ -92,14 +92,11 @@ def resnet_autoencoder_v1_generator(encoder, decoder, metric, data_format='chann
 
         # Differentiable perceptual metric. First reconstruction.
         # both_images = tf.concat([recon_images, target_images], -1)  # B H W 6
-        metric_hidden_r = metric(recon_images, is_training=is_training)
-        B = metric_hidden_r.get_shape().as_list()[0]
-        metric_hidden_r = tf.reshape(metric_hidden_r, [B, -1])
-
-        # Then target.
-        # both_images = tf.concat([target_images, target_images], -1)  # B H W 6
-        metric_hidden_t = metric(target_images, is_training=is_training)
-        metric_hidden_t = tf.reshape(metric_hidden_t, [B, -1])
+        all_images = tf.concat([recon_images, target_images], 0)  # Stack these in batch dim
+        metric_all_images = metric(all_images, is_training=is_training)
+        B = metric_all_images.get_shape().as_list()[0]
+        metric_all_images = tf.reshape(metric_all_images, [B, -1])
+        metric_hidden_r, metric_hidden_t = tf.split(metric_all_images, 2, 0)  # Split these in batch dim
 
         # Prep recon_images for visualization
         recon_images = (recon_images + 1) / 2

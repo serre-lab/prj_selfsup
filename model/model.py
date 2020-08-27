@@ -105,23 +105,22 @@ def build_model_fn(model, num_classes, num_train_examples):
       
       if FLAGS.use_td_loss and isinstance(outputs, tuple):
         hiddens, reconstruction, metric_hidden_r, metric_hidden_t = outputs
-        metric_hidden = tf.concat([metric_hidden_r, metric_hidden_t], 0)
       else:
         hiddens = outputs
-        # reconstruction = tf.zeros_like(target_images)
       if FLAGS.use_td_loss:
         with tf.name_scope('td_loss'):
           if FLAGS.td_loss=='attractive':
-            td_loss = obj_lib.attractive_loss(
-              metric_hidden_r)
-              # power=FLAGS.rec_loss_exponent)
+            td_loss = obj_lib.td_attractive_loss(
+              reconstruction=metric_hidden_r,
+              target=metric_hidden_t,
+              temperature=FLAGS.temperature,
+              tpu_context=tpu_context if is_training else None)
             logits_td_con = tf.zeros([params['batch_size'], params['batch_size']])
             labels_td_con = tf.zeros([params['batch_size'], params['batch_size']])
-
           elif FLAGS.td_loss=='attractive_repulsive':
-            td_loss, logits_td_con, labels_td_con = obj_lib.attractive_repulsive_loss(
-              metric_hidden,
-              # power=FLAGS.rec_loss_exponent,
+            td_loss, logits_td_con, labels_td_con = obj_lib.td_attractive_repulsive_loss(
+              reconstruction=metric_hidden_r,
+              target=metric_hidden_t,
               temperature=FLAGS.temperature,
               tpu_context=tpu_context if is_training else None)
           else:
