@@ -16,7 +16,7 @@ image_size=224
 eval_split=validation
 encoder_depth=50
 decoder_depth=18
-metric_channels=128
+metric_channels=16
 
 train_summary_steps=0  # 2502
 
