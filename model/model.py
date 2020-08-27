@@ -111,14 +111,14 @@ def build_model_fn(model, num_classes, num_train_examples):
       if FLAGS.use_td_loss:
         with tf.name_scope('td_loss'):
           if FLAGS.td_loss=='attractive':
-            td_loss = obj_lib.add_dot_product_td_attractive_loss(
+            td_loss = obj_lib.attractive_loss(
               metric_hidden_r,
               power=FLAGS.rec_loss_exponent)
             logits_td_con = tf.zeros([params['batch_size'], params['batch_size']])
             labels_td_con = tf.zeros([params['batch_size'], params['batch_size']])
 
           elif FLAGS.td_loss=='attractive_repulsive':
-            td_loss, logits_td_con, labels_td_con = obj_lib.add_dot_product_td_attractive_repulsive_loss(
+            td_loss, logits_td_con, labels_td_con = obj_lib.attractive_repulsive_loss(
               metric_hidden_r,
               metric_hidden_t,
               power=FLAGS.rec_loss_exponent,
@@ -135,14 +135,14 @@ def build_model_fn(model, num_classes, num_train_examples):
       if FLAGS.use_bu_loss:
         with tf.name_scope('bu_loss'):
           if FLAGS.bu_loss=='attractive':
-            bu_loss = obj_lib.add_bu_attractive_loss(
+            bu_loss = obj_lib.attractive_loss(
               hiddens_proj,
               hidden_norm=FLAGS.hidden_norm)
             logits_bu_con = tf.zeros([params['batch_size'], params['batch_size']])
             labels_bu_con = tf.zeros([params['batch_size'], params['batch_size']])
 
           elif FLAGS.bu_loss=='attractive_repulsive':
-            bu_loss, logits_bu_con, labels_bu_con = obj_lib.add_bu_attractive_repulsive_loss(
+            bu_loss, logits_bu_con, labels_bu_con = obj_lib.attractive_repulsive_loss(
               hiddens_proj,
               hidden_norm=FLAGS.hidden_norm,
               temperature=FLAGS.temperature,
