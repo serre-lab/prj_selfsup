@@ -863,7 +863,7 @@ def learned_metric_v1(metric_channels, data_format='channels_last'):
   Model expects concatenated [recon, target] images as input (6D)
   """
   DEFAULT_METRIC_MODEL = [
-    {'conv': ['conv1_1', 3, 1, 6, 64]},  # noqa name, kernel, stride, in, out
+    {'conv': ['conv1_1', 3, 1, 3, 64]},  # noqa name, kernel, stride, in, out
     {'conv': ['conv1_2', 3, 1, 64, 128]},  # noqa name, kernel, stride, in, out
     {'pool': ['pool1', 2, 2, 128, 128]},  # noqa name, kernel, stride, in, out
     {'conv': ['conv2_2', 3, 1, 128, 128]},  # noqa name, kernel, stride, in, out

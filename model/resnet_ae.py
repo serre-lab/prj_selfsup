@@ -90,15 +90,15 @@ def resnet_autoencoder_v1_generator(encoder, decoder, metric, data_format='chann
           # Attractive-only loss
           target_images = tf.concat([target_images, target_images], 0)
 
-        # Correspondence finding. First recon vs. target
-        both_images = tf.concat([recon_images, target_images], -1)  # B H W 6
-        metric_hidden_r = metric(both_images, is_training=is_training)
+        # Differentiable perceptual metric. First reconstruction.
+        # both_images = tf.concat([recon_images, target_images], -1)  # B H W 6
+        metric_hidden_r = metric(recon_images, is_training=is_training)
         B = metric_hidden_r.get_shape().as_list()[0]
         metric_hidden_r = tf.reshape(metric_hidden_r, [B, -1])
 
-        # Then target vs. target
-        both_images = tf.concat([target_images, target_images], -1)  # B H W 6
-        metric_hidden_t = metric(both_images, is_training=is_training)  # No gradient
+        # Then target.
+        # both_images = tf.concat([target_images, target_images], -1)  # B H W 6
+        metric_hidden_t = metric(target_images, is_training=is_training)
         metric_hidden_t = tf.reshape(metric_hidden_t, [B, -1])
 
         # Prep recon_images for visualization
