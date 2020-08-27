@@ -25,6 +25,10 @@ import tensorflow.compat.v1 as tf
 
 from tensorflow.compiler.tf2xla.python import xla  # pylint: disable=g-direct-tensorflow-import
 
+from model.resnet_decoder import learned_metric_v1
+import numpy as np
+
+
 FLAGS = flags.FLAGS
 
 LARGE_NUM = 1e9
@@ -527,6 +531,89 @@ def add_light_dot_product_td_attractive_repulsive_loss(reconstruction,
   
   else:
     
+    labels = tf.one_hot(tf.range(batch_size), batch_size)
+
+    reconstruction = tf.reshape(reconstruction, [batch_size, -1])
+    target = tf.reshape(target, [batch_size, -1])
+
+    logits_at = tf.matmul(reconstruction, target, transpose_b=True) / temperature
+    
+    loss = tf.losses.softmax_cross_entropy(
+        labels, logits_at, weights=weights)
+
+  return loss, logits_at, labels
+
+
+def learned_td_attractive(
+    reconstruction,
+    target_images,
+    power):
+  """Use a learned metric in the attractive loss."""
+  raise NotImplementedError
+
+
+def learned_td_attractive_repulsive(reconstruction,
+                                      target_images,
+                                      is_training,
+                                      metric_dims=128,
+                                      power=2,
+                                      temperature=1.0,
+                                      tpu_context=None,
+                                      weights=1.0):
+  """Compute a light version of the top down attractive and repulsive loss base on pixel-wise error.
+      This version uses a lot less negative examples
+  Args:
+    hidden: hidden vector (`Tensor`) of shape (bsz, dim).
+    hidden_norm: whether or not to use normalization on the hidden vector.
+    temperature: a `floating` number for temperature scaling.
+    tpu_context: context information for tpu.
+    weights: a weighting number or vector.
+
+  Returns:
+    A loss scalar.
+    The logits for contrastive prediction task.
+    The labels for contrastive prediction task.
+  """
+
+  # Get (normalized) hidden1 and hidden2.
+  batch_size = target_images.get_shape().as_list()[0]
+  rec_size, he, wi, ch = reconstruction.get_shape().as_list()
+  
+  if batch_size != rec_size:
+
+    reconstruction1, reconstruction2 = tf.split(reconstruction, 2, 0)
+    
+    labels = tf.one_hot(tf.range(batch_size), batch_size)
+    
+    reconstruction1 = tf.reshape(reconstruction1, [batch_size, -1])
+    reconstruction2 = tf.reshape(reconstruction2, [batch_size, -1])
+    target = tf.reshape(target, [batch_size, -1])
+
+
+    reconstruction = tf.reshape(reconstruction, [batch_size, -1])
+    target = tf.reshape(target, [batch_size, -1])
+
+    logits_at = tf.matmul(reconstruction1, target, transpose_b=True) / temperature
+    logits_bt = tf.matmul(reconstruction2, target, transpose_b=True) / temperature
+
+    loss_a = tf.losses.softmax_cross_entropy(
+        labels, logits_at, weights=weights)
+    loss_b = tf.losses.softmax_cross_entropy(
+        labels, logits_bt, weights=weights)
+
+    loss = loss_a + loss_b
+  
+  else:
+
+    # Reshape so that target, reconstruction are in dim=1
+    # All combos of target and reconstruction
+    metric = learned_metric_v1(data_format=data_format, metric_channels=metric_dims)
+    logits_at = tf.zeros((batch_size, metric_dims), dtype=reconstruction.dtype)
+    inds = np.tril_indices(batch_size)
+    for h, w in inds
+        cat_vec = tf.concat([recon_images[h], target_images[w]], -1)
+        logit = metric(cat_vec, is_training=is_training)
+        logits_at[bs, rs] = logit
     labels = tf.one_hot(tf.range(batch_size), batch_size)
 
     reconstruction = tf.reshape(reconstruction, [batch_size, -1])

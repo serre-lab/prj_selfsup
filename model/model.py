@@ -104,28 +104,39 @@ def build_model_fn(model, num_classes, num_train_examples):
       tpu_context = params['context'] if 'context' in params else None
       
       if FLAGS.use_td_loss and isinstance(outputs, tuple):
-        hiddens, reconstruction, metric_hidden_r, metric_hidden_t = outputs
+        hiddens, reconstruction = outputs
+        # hiddens, reconstruction, metric_hidden_r, metric_hidden_t = outputs
       else:
         hiddens = outputs
         # reconstruction = tf.zeros_like(target_images)
       if FLAGS.use_td_loss:
         with tf.name_scope('td_loss'):
           if FLAGS.td_loss=='attractive':
-            td_loss = obj_lib.add_dot_product_td_attractive_loss(
-              metric_hidden_r,
+            # td_loss = obj_lib.add_dot_product_td_attractive_loss(
+            #   metric_hidden_r,
+            #   power=FLAGS.rec_loss_exponent)
+            td_loss = obj_lib.learned_td_attractive(
+              reconstruction=reconstruction,
+              target_images=target_images,
               power=FLAGS.rec_loss_exponent)
             logits_td_con = tf.zeros([params['batch_size'], params['batch_size']])
             labels_td_con = tf.zeros([params['batch_size'], params['batch_size']])
-
           elif FLAGS.td_loss=='attractive_repulsive':
-            td_loss, logits_td_con, labels_td_con = obj_lib.add_dot_product_td_attractive_repulsive_loss(
-              metric_hidden_r,
-              metric_hidden_t,
+            # td_loss, logits_td_con, labels_td_con = obj_lib.add_dot_product_td_attractive_repulsive_loss(
+            #   metric_hidden_r,
+            #   metric_hidden_t,
+            #   power=FLAGS.rec_loss_exponent,
+            #   temperature=FLAGS.temperature,
+            #   tpu_context=tpu_context if is_training else None)
+            td_loss = obj_lib.learned_td_attractive_repulsive(
+              is_training=is_training,
+              reconstruction=reconstruction,
+              target_images=target_images,
               power=FLAGS.rec_loss_exponent,
               temperature=FLAGS.temperature,
               tpu_context=tpu_context if is_training else None)
           else:
-            raise 'Unknown loss'
+            raise NotImplementedError(FLAGS.td_loss)
       else:
         logits_td_con = tf.zeros([params['batch_size'], params['batch_size']])
         labels_td_con = tf.zeros([params['batch_size'], params['batch_size']])
@@ -148,7 +159,7 @@ def build_model_fn(model, num_classes, num_train_examples):
               temperature=FLAGS.temperature,
               tpu_context=tpu_context if is_training else None)  
           else:
-            raise 'Unknown loss'
+            raise NotImplementedError(FLAGS.bu_loss)
       else:
         logits_bu_con = tf.zeros([params['batch_size'], params['batch_size']])
         labels_bu_con = tf.zeros([params['batch_size'], params['batch_size']])
@@ -179,9 +190,9 @@ def build_model_fn(model, num_classes, num_train_examples):
 
     
     if FLAGS.train_mode == 'pretrain':
-      loss =  tf.add_n([td_loss * FLAGS.td_loss_weight, bu_loss * FLAGS.bu_loss_weight] + tf.losses.get_regularization_losses())
+      loss = tf.add_n([td_loss * FLAGS.td_loss_weight, bu_loss * FLAGS.bu_loss_weight] + tf.losses.get_regularization_losses())
     else:
-      loss =  tf.add_n([sup_loss] + tf.losses.get_regularization_losses())
+      loss = tf.add_n([sup_loss] + tf.losses.get_regularization_losses())
            
     # loss = tf.losses.get_total_loss()
 

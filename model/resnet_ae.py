@@ -37,7 +37,7 @@ BATCH_NORM_EPSILON = 1e-5
 
 
 
-def resnet_autoencoder_v1_generator(encoder, decoder, metric, data_format='channels_last'):
+def resnet_autoencoder_v1_generator(encoder, decoder, data_format='channels_last'):
   def model(inputs, target_images, is_training):
     """Creation of the model graph."""
     # if isinstance(inputs, tuple):
@@ -77,36 +77,7 @@ def resnet_autoencoder_v1_generator(encoder, decoder, metric, data_format='chann
       print(recon_images)
       print(target_images)
       print("---")
-      with tf.variable_scope('metric'):
-        # Squash both recon and target images
-        recon_images = tf.tanh(recon_images)
-        target_images = (target_images * 2) - 1
-        Bt = target_images.get_shape().as_list()[0]
-        Br = recon_images.get_shape().as_list()[0]
-        if Bt == Br:
-          # Attractive + repulsive loss
-          pass
-        elif Bt * 2 == Br:
-          # Attractive-only loss
-          target_images = tf.concat([target_images, target_images], 0)
-
-        # Correspondence finding. First recon vs. target
-        both_images = tf.concat([recon_images, target_images], -1)  # B H W 6
-        metric_hidden_r = metric(both_images, is_training=is_training)
-        B = metric_hidden_r.get_shape().as_list()[0]
-        metric_hidden_r = tf.reshape(metric_hidden_r, [B, -1])
-
-        # Then target vs. target
-        both_images = tf.concat([target_images, target_images], -1)  # B H W 6
-        metric_hidden_t = metric(both_images, is_training=is_training)  # No gradient
-        metric_hidden_t = tf.reshape(metric_hidden_t, [B, -1])
-
-        # Prep recon_images for visualization
-        recon_images = (recon_images + 1) / 2
-      print("Embedding output: ")
-      print(metric_hidden_t)
-      print("---")
-      return outputs, recon_images, metric_hidden_r, metric_hidden_t
+      return outputs, recon_images
 
     else:
       # augs = None
@@ -148,11 +119,11 @@ def resnet_autoencoder_v1(encoder_depth, decoder_depth, width_multiplier, metric
                               dropblock_keep_probs=dropblock_keep_probs, 
                               dropblock_size=dropblock_size)
 
-  metric = learned_metric_v1(data_format=data_format, metric_channels=metric_channels) 
+  # metric = learned_metric_v1(data_format=data_format, metric_channels=metric_channels) 
   
   return resnet_autoencoder_v1_generator(
     encoder=encoder,
     decoder=decoder,
-    metric=metric,
+    # metric=metric,
     data_format=data_format)
 

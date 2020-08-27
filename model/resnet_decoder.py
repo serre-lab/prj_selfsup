@@ -871,7 +871,7 @@ def learned_metric_v1(metric_channels, data_format='channels_last'):
     {'pool': ['pool2', 2, 2, 256, 256]},  # noqa name, kernel, stride, in, out
     {'conv': ['conv3_1', 3, 1, 256, 256]},  # noqa name, kernel, stride, in, out
     {'conv': ['conv3_2', 3, 1, 256, metric_channels]},  # noqa name, kernel, stride, in, out
-    # {'global_mean': ['gap', 3, 1, 128, 128]},  # noqa name, kernel, stride, in, out
+    {'global_mean': ['gap', 3, 1, metric_channels, metric_channels]},  # noqa name, kernel, stride, in, out
   ]
   return metric_model_builder(
     data_format=data_format,
