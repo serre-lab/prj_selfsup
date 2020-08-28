@@ -1,5 +1,8 @@
 
 
+# metric_channels use_td_loss use_bu_loss TPU_NAME
+# bash pretrain_ilsrc.sh 16 True True prj-selfsup-v2-22
+
 train_mode=pretrain
 
 train_batch_size=4096
@@ -16,12 +19,12 @@ image_size=224
 eval_split=validation
 encoder_depth=50
 decoder_depth=18
-metric_channels=16
+metric_channels=$1  # 16
 
 train_summary_steps=0  # 2502
 
-use_td_loss=True
-use_bu_loss=True
+use_td_loss=$2  # True
+use_bu_loss=$3  # True
 
 td_loss=attractive_repulsive #'attractive_repulsive'
 bu_loss=attractive_repulsive #'attractive_repulsive'
@@ -32,8 +35,8 @@ bu_loss_weight=1.0
 num_parallel_calls=8
 
 use_neptune=False
-experiment_name="BU_{bu_loss}_TD_{td_loss}_R${encoder_depth}_lr${learning_rate}_T${temperature}"
-echo "Deleting gs://serrelab/prj-selfsup/${experiment_name} and tmp files"
+experiment_name="AR-BU-${2}_TD-${3}_R${encoder_depth}_lr${learning_rate}_T${temperature}_TPU$4"
+# echo "Deleting gs://serrelab/prj-selfsup/${experiment_name} and tmp files"
 echo gs://serrelab/prj-selfsup/${experiment_name} > current_job.txt
 
 # gsutil  rm -r gs://serrelab/prj-selfsup/${experiment_name}
@@ -42,7 +45,7 @@ echo gs://serrelab/prj-selfsup/${experiment_name} > current_job.txt
 use_tpu=True
 # export TPU_NAME='prj-selfsup-tpu'
 # export TPU_NAME='prj-selfsup-tpu-preempt0'
-export TPU_NAME='prj-selfsup-v2-22'
+export TPU_NAME='$4'  # 'prj-selfsup-v2-22'
 export STORAGE_BUCKET='gs://serrelab/prj-selfsup'
 DATA_DIR=gs://imagenet_data/train/
 MODEL_DIR=$STORAGE_BUCKET/$experiment_name

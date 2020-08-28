@@ -1,5 +1,25 @@
 # SimCLR - A Simple Framework for Contrastive Learning of Visual Representations
 
+# Create a kubernetes cluster
+bash create_cluster.sh
+
+# Delete the cluster
+bash delete_cluster.sh
+
+# Run a single job
+kubectl create -f kube_job.yaml
+
+# Push all jobs to the cluster
+python <script_that_reads_a_yaml_with_experiments_and_creates_a_kube_job_per_experiment,_then_launches_kubectl_for_each>
+
+# Train a model on ILSVRC12 on the vm
+bash pretrain_ilsrc.sh 16 True True prj-selfsup-v2-22
+
+# Create a tensorboard
+tensorboard --logdir=$(cat current_job.txt) &
+bash get_ip.sh  # navigate to <ip>:6006 in your web browser
+
+### 
 <div align="center">
   <img width="50%" alt="SimCLR Illustration" src="https://1.bp.blogspot.com/--vH4PKpE9Yo/Xo4a2BYervI/AAAAAAAAFpM/vaFDwPXOyAokAC8Xh852DzOgEs22NhbXwCLcBGAsYHQ/s1600/image4.gif">
 </div>

@@ -1,0 +1,32 @@
+apiVersion: selsup/v0
+kind: Job
+metadata:
+  name: selfsup-tpu
+spec:
+  template:
+    metadata:
+      annotations:
+        # The Cloud TPUs that will be created for this Job will support
+        # TensorFlow 2.2. This version MUST match the
+        # TensorFlow version that your model is built on.
+        tf-version.cloud-tpus.google.com: "1.15.2"
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: resnet-tpu
+        # The official TensorFlow 1.15.2 image.
+        # https://hub.docker.com/r/tensorflow/tensorflow
+        image: tensorflow/tensorflow:1.15.2
+        command:
+        - bash
+        - -c
+        - |
+          sudo pip3 install -U tpunicorn
+          git clone https://github.com/serre-lab/prj_selfsup.git
+          pu babysit $(KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS) 'bash pretrain_ilsvrc.sh 32 True True $(KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS)'
+        resources:
+          limits:
+            # Request a single Preemptible v2-8 Cloud TPU device to train the
+            # model. A single v2-8 Cloud TPU device consists of 4 chips, each of
+            # which has 2 cores, so there are 8 cores in total.
+            cloud-tpus.google.com/preemptible-v3: 256
