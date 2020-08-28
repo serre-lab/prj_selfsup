@@ -224,7 +224,8 @@ def build_model_fn(model, num_classes, num_train_examples):
         
 
         # def host_call_fn(bu_l, td_l, c_bu_a, c_td_a, l_a, c_e_bu, c_e_td, lr, tar_im, viz_f, rec_im):
-        def host_call_fn(bu_l, td_l, c_bu_a, c_td_a, l_a, c_e_bu, c_e_td, lr):
+        def host_call_fn(gs, bu_l, td_l, c_bu_a, c_td_a, l_a, c_e_bu, c_e_td, lr):
+          gs = gs[0]
           with tf2.summary.create_file_writer(
               FLAGS.model_dir,
               max_queue=FLAGS.checkpoint_steps).as_default():
@@ -232,38 +233,38 @@ def build_model_fn(model, num_classes, num_train_examples):
               tf2.summary.scalar(
                   'train_bottomup_loss',
                   bu_l[0],
-                  step=tf.train.get_global_step())
+                  step=gs)
               tf2.summary.scalar(
                   'train_topdown_loss',
                   td_l[0],
-                  step=tf.train.get_global_step())
+                  step=gs)
               
               tf2.summary.scalar(
                   'train_bottomup_acc',
                   c_bu_a[0],
-                  step=tf.train.get_global_step())
+                  step=gs)
               tf2.summary.scalar(
                   'train_topdown_acc',
                   c_td_a[0],
-                  step=tf.train.get_global_step())
+                  step=gs)
               
               tf2.summary.scalar(
                   'train_label_accuracy',
                   l_a[0],
-                  step=tf.train.get_global_step())
+                  step=gs)
               
               tf2.summary.scalar(
                   'contrast_bu_entropy',
                   c_e_bu[0],
-                  step=tf.train.get_global_step())
+                  step=gs)
               tf2.summary.scalar(
                   'contrast_td_entropy',
                   c_e_td[0],
-                  step=tf.train.get_global_step())
+                  step=gs)
               
               tf2.summary.scalar(
                   'learning_rate', lr[0],
-                  step=tf.train.get_global_step())
+                  step=gs)
 
               # Images
               # print("Images")
@@ -275,15 +276,15 @@ def build_model_fn(model, num_classes, num_train_examples):
               # tf2.summary.image(
               #     'Images',
               #     tar_im[0],
-              #     step=tf.train.get_global_step())
+              #     step=gs)
               # tf2.summary.image(
               #     'Transformed images',
               #     viz_f[0],
-              #     step=tf.train.get_global_step())
+              #     step=gs)
               # tf2.summary.image(
               #     'Reconstructed images',
               #     rec_im[0],
-              #     step=tf.train.get_global_step())
+              #     step=gs)
 
             return tf.summary.all_v2_summary_ops()
 
@@ -293,6 +294,7 @@ def build_model_fn(model, num_classes, num_train_examples):
         # tar_im = tf.reshape(tf.cast(target_images[:n_images], tf.float32), [1, n_images] + image_shape[1:])
         # viz_f = tf.reshape(tf.cast(viz_features[:n_images], tf.float32), [1, n_images] + image_shape[1:])
         # rec_im = tf.reshape(tf.cast(reconstruction[:n_images], tf.float32), [1, n_images] + image_shape[1:])
+        gs = tf.reshape(tf.train.get_global_step())
         
         bu_l = tf.reshape(bu_loss, [1])
         td_l = tf.reshape(bu_loss, [1])
@@ -307,7 +309,7 @@ def build_model_fn(model, num_classes, num_train_examples):
         lr = tf.reshape(learning_rate, [1])
         
         # host_call = (host_call_fn, [bu_l, td_l, c_bu_a, c_td_a, l_a, c_e_bu, c_e_td, lr, tar_im, viz_f, rec_im])
-        host_call = (host_call_fn, [bu_l, td_l, c_bu_a, c_td_a, l_a, c_e_bu, c_e_td, lr])
+        host_call = (host_call_fn, [gs, bu_l, td_l, c_bu_a, c_td_a, l_a, c_e_bu, c_e_td, lr])
 
       else:
         host_call=None
@@ -354,8 +356,6 @@ def build_model_fn(model, num_classes, num_train_examples):
       return tf.estimator.tpu.TPUEstimatorSpec(
           mode=mode, train_op=train_op, loss=loss, scaffold_fn=scaffold_fn, host_call=host_call)
 
-      return tf.estimator.tpu.TPUEstimatorSpec(
-          mode=mode, train_op=train_op, loss=loss, scaffold_fn=scaffold_fn, host_call=host_call)
     else:
 
       def metric_fn(logits_sup, labels_sup, logits_bu_con, labels_bu_con, 
