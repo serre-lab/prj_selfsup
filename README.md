@@ -2,7 +2,7 @@
 
 
 # Train a model on ILSVRC12 on the vm
-bash pretrain_ilsrc.sh 16 ar ar prj-selfsup-v2-22
+bash jobs/pretrain_ilsrc.sh 16 ar ar prj-selfsup-v2-22
 
 # Create a tensorboard
 tensorboard --logdir=$(cat current_job.txt) &

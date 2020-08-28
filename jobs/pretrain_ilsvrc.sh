@@ -33,6 +33,7 @@ num_parallel_calls=8
 
 use_neptune=False
 experiment_name="AR-BU-${2}_TD-${3}_R${encoder_depth}_lr${learning_rate}_T${temperature}_TPU$4"
+# experiment_name=BU_{bu_loss}_TD_{td_loss}_R50_lr0.1_T0.1
 # echo "Deleting gs://serrelab/prj-selfsup/${experiment_name} and tmp files"
 echo gs://serrelab/prj-selfsup/${experiment_name} > current_job.txt
 
