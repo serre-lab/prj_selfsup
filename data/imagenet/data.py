@@ -375,7 +375,7 @@ class ImageNetInput(ImageNetTFExampleInput):
       dataset = dataset.cache().apply(
           tf.data.experimental.shuffle_and_repeat(1024 * 16))
     else:
-      dataset = dataset.shuffle(1024)
+      dataset = dataset.shuffle(1024, reshuffle_each_iteration=True)
     return dataset
 
 

@@ -360,8 +360,8 @@ class ImageNetInput(ImageNetTFExampleInput):
 
 
     ########## this line is commented because it creates errors during eval
-    # if self.is_training and not self.cache:
-    dataset = dataset.repeat()
+    if self.is_training and not self.cache:
+      dataset = dataset.repeat()
     ######################################################################
 
     def fetch_dataset(filename):
@@ -387,7 +387,7 @@ class ImageNetInput(ImageNetTFExampleInput):
       dataset = dataset.cache().apply(
           tf.data.experimental.shuffle_and_repeat(1024 * 16))
     else:
-      dataset = dataset.shuffle(1024)
+      dataset = dataset.shuffle(1024, reshuffle_each_iteration=True)
     return dataset
 
 
