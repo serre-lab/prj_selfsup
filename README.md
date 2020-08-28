@@ -14,6 +14,9 @@ python prepare_experiments.py  --exp=experiments/bu_td_attractive_repulsive.yaml
 bash run_kube_exps.sh
 bash delete_cluster.sh
 
+# Check kube status
+kubectl get pods -w
+
 # Run a single kube job
 kubectl create -f kube_job.yaml
 
