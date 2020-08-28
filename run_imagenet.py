@@ -460,8 +460,8 @@ def main(argv):
     raise app.UsageError('Too many command-line arguments.')
 
   # Enable training summary.
-  if FLAGS.train_summary_steps > 0:
-    tf.config.set_soft_device_placement(True)
+#   if FLAGS.train_summary_steps > 0:
+#     tf.config.set_soft_device_placement(True)
   
   # if FLAGS.train_mode == 'finetune':
   #   FLAGS.use_td_loss = False
