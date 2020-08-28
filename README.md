@@ -1,23 +1,5 @@
 # SimCLR - A Simple Framework for Contrastive Learning of Visual Representations
 
-# Create a kubernetes cluster
-bash create_cluster.sh
-
-# Delete the cluster
-bash delete_cluster.sh
-
-# Run a single job
-kubectl create -f kube_job.yaml
-
-# Run tensorboard on the cluster
-kubectl run tensorboard \
-  --image tensorflow/tensorflow:1.15.2 \
-  --port 6006 \
-  -- bash -c "pip install tensorboard-plugin-profile==1.15.2 cloud-tpu-client && tensorboard --logdir=gs://serrelab/prj-selfsup"
-kubectl port-forward pod/tensorboard 6006  # Access the TB at http://localhost:6006
-
-# Push all jobs to the cluster
-python <script_that_reads_a_yaml_with_experiments_and_creates_a_kube_job_per_experiment,_then_launches_kubectl_for_each>
 
 # Train a model on ILSVRC12 on the vm
 bash pretrain_ilsrc.sh 16 ar ar prj-selfsup-v2-22
@@ -25,6 +7,26 @@ bash pretrain_ilsrc.sh 16 ar ar prj-selfsup-v2-22
 # Create a tensorboard
 tensorboard --logdir=$(cat current_job.txt) &
 bash get_ip.sh  # navigate to <ip>:6006 in your web browser
+
+# Create a kubernetes cluster
+bash create_cluster.sh
+
+# Delete the cluster
+bash delete_cluster.sh
+
+# Run a single kube job
+kubectl create -f kube_job.yaml
+
+# Push all jobs to the cluster
+python prepare_experiments.py
+bash run_kube_exps.sh
+
+# Run tensorboard on the cluster
+kubectl run tensorboard \
+  --image tensorflow/tensorflow:1.15.2 \
+  --port 6006 \
+  -- bash -c "pip install tensorboard-plugin-profile==1.15.2 cloud-tpu-client && tensorboard --logdir=gs://serrelab/prj-selfsup"
+kubectl port-forward pod/tensorboard 6006  # Access the TB at http://localhost:6006
 
 ### 
 <div align="center">
