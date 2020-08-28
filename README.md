@@ -8,18 +8,14 @@ bash pretrain_ilsrc.sh 16 ar ar prj-selfsup-v2-22
 tensorboard --logdir=$(cat current_job.txt) &
 bash get_ip.sh  # navigate to <ip>:6006 in your web browser
 
-# Create a kubernetes cluster
+# Create a cluster, generate and run experiments, then delete cluster
 bash create_cluster.sh
-
-# Delete the cluster
+python prepare_experiments.py  --exp=experiments/bu_td_attractive_repulsive.yaml
+bash run_kube_exps.sh
 bash delete_cluster.sh
 
 # Run a single kube job
 kubectl create -f kube_job.yaml
-
-# Push all jobs to the cluster
-python prepare_experiments.py
-bash run_kube_exps.sh
 
 # Run tensorboard on the cluster
 kubectl run tensorboard \

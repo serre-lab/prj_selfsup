@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+
 kubectl create -f kube_files/a_a_16.yaml
 kubectl create -f kube_files/a_a_32.yaml
 kubectl create -f kube_files/a_a_64.yaml
