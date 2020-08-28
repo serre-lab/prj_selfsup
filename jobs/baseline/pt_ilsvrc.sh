@@ -25,12 +25,14 @@ experiment_name="baseline_${train_mode}_R${resnet_depth}_lr${learning_rate}_T${t
 use_tpu=True
 
 export TPU_NAME='prj-selfsup-tpu'
-export STORAGE_BUCKET='gs://serrelab/prj-selfsup'
-DATA_DIR=gs://imagenet_data/train/
-MODEL_DIR=$STORAGE_BUCKET/$experiment_name
+export STORAGE_BUCKET='gs://serrelab'
+
+DATA_DIR="gs://serrelab/imagenet_dataset/"
+# DATA_DIR=gs://imagenet_data/train/
+MODEL_DIR=$STORAGE_BUCKET/prj-selfsup/$experiment_name
 
 
-python3 run_old_imagenet.py \
+python3 run_old.py \
   --train_mode=$train_mode \
   --train_batch_size=$train_batch_size --train_epochs=$train_epochs --temperature=$temperature \
   --learning_rate=$learning_rate --learning_rate_scaling=$learning_rate_scaling --weight_decay=$weight_decay \
