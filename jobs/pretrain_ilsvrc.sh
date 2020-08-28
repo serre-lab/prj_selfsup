@@ -2,7 +2,7 @@
 
 train_mode=pretrain
 
-train_batch_size=4096
+train_batch_size=256
 train_epochs=300 
 temperature=0.1
 
@@ -32,7 +32,7 @@ bu_loss_weight=1.0
 num_parallel_calls=8
 
 use_neptune=False
-experiment_name="BU_{bu_loss}_TD_{td_loss}_R${encoder_depth}_lr${learning_rate}_T${temperature}"
+experiment_name="pretrain_BU_TD_R${encoder_depth}_lr${learning_rate}_T${temperature}"
 echo "Deleting gs://serrelab/prj-selfsup/${experiment_name} and tmp files"
 echo gs://serrelab/prj-selfsup/${experiment_name} > current_job.txt
 
@@ -40,9 +40,9 @@ echo gs://serrelab/prj-selfsup/${experiment_name} > current_job.txt
 # sudo rm -rf /tmp/*
 
 use_tpu=True
-# export TPU_NAME='prj-selfsup-tpu'
+export TPU_NAME='prj-selfsup-tpu'
 # export TPU_NAME='prj-selfsup-tpu-preempt0'
-export TPU_NAME='prj-selfsup-v2-22'
+# export TPU_NAME='prj-selfsup-v2-22'
 export STORAGE_BUCKET='gs://serrelab/prj-selfsup'
 DATA_DIR=gs://imagenet_data/train/
 MODEL_DIR=$STORAGE_BUCKET/$experiment_name
