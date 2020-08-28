@@ -26,14 +26,17 @@ def main(
 
         # Create a kube file per experiment
         out_files = ["#!/usr/bin/env bash\n\n\n"]
-        for e in exps:
+        for idx, e in enumerate(exps):
             with open(template_kube) as f:
                 template = yaml.load(f, Loader=yaml.FullLoader)
             cmd = template["spec"]['template']['spec']['containers'][0]['command'][2]  # noqa
             cmd = cmd.replace("BU_LOSS=ar", "BU_LOSS={}".format(e[0]))  # noqa Hardcoded for ow
             cmd = cmd.replace("TD_LOSS=ar", "TD_LOSS={}".format(e[1]))
             cmd = cmd.replace("CHANNELS=32", "CHANNELS={}".format(e[2]))
-            template["spec"]['template']['spec']['containers'][0]['command'][2] = cmd  # noqa
+            template["spec"]["template"]["spec"]["containers"][0]["command"][2] = cmd  # noqa
+            template["metadata"]["name"] = "{}-experiment-{}".format(
+                template["metadata"]["name"],
+                idx)
             output_name = os.path.join(out_dir, "{}.yaml".format("_".join([str(i) for i in e])))  # noqa
             with open(output_name, "w") as f:
                 # Write the new kube
