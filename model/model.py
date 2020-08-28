@@ -222,10 +222,9 @@ def build_model_fn(model, num_classes, num_train_examples):
             tf.argmax(labels['labels'], 1), tf.argmax(logits_sup, axis=1))
         label_acc = tf.reduce_mean(tf.cast(label_acc, tf.float32))
         
-        n_images = 5
-        image_shape = target_images.get_shape().as_list()
 
-        def host_call_fn(bu_l, td_l, c_bu_a, c_td_a, l_a, c_e_bu, c_e_td, lr, tar_im, viz_f, rec_im):
+        # def host_call_fn(bu_l, td_l, c_bu_a, c_td_a, l_a, c_e_bu, c_e_td, lr, tar_im, viz_f, rec_im):
+        def host_call_fn(bu_l, td_l, c_bu_a, c_td_a, l_a, c_e_bu, c_e_td, lr):
           with tf2.summary.create_file_writer(
               FLAGS.model_dir,
               max_queue=FLAGS.checkpoint_steps).as_default():
@@ -267,30 +266,33 @@ def build_model_fn(model, num_classes, num_train_examples):
                   step=tf.train.get_global_step())
 
               # Images
-              print("Images")
-              print(target_images)
-              print("Features")
-              print(viz_features)
-              print("Reconstruction")
-              print(reconstruction)
-              tf2.summary.image(
-                  'Images',
-                  tar_im[0],
-                  step=tf.train.get_global_step())
-              tf2.summary.image(
-                  'Transformed images',
-                  viz_f[0],
-                  step=tf.train.get_global_step())
-              tf2.summary.image(
-                  'Reconstructed images',
-                  rec_im[0],
-                  step=tf.train.get_global_step())
+              # print("Images")
+              # print(target_images)
+              # print("Features")
+              # print(viz_features)
+              # print("Reconstruction")
+              # print(reconstruction)
+              # tf2.summary.image(
+              #     'Images',
+              #     tar_im[0],
+              #     step=tf.train.get_global_step())
+              # tf2.summary.image(
+              #     'Transformed images',
+              #     viz_f[0],
+              #     step=tf.train.get_global_step())
+              # tf2.summary.image(
+              #     'Reconstructed images',
+              #     rec_im[0],
+              #     step=tf.train.get_global_step())
 
             return tf.summary.all_v2_summary_ops()
 
-        tar_im = tf.reshape(tf.cast(target_images[:n_images], tf.float32), [1, n_images] + image_shape[1:])
-        viz_f = tf.reshape(tf.cast(viz_features[:n_images], tf.float32), [1, n_images] + image_shape[1:])
-        rec_im = tf.reshape(tf.cast(reconstruction[:n_images], tf.float32), [1, n_images] + image_shape[1:])
+        # n_images = 5
+        # image_shape = target_images.get_shape().as_list()
+
+        # tar_im = tf.reshape(tf.cast(target_images[:n_images], tf.float32), [1, n_images] + image_shape[1:])
+        # viz_f = tf.reshape(tf.cast(viz_features[:n_images], tf.float32), [1, n_images] + image_shape[1:])
+        # rec_im = tf.reshape(tf.cast(reconstruction[:n_images], tf.float32), [1, n_images] + image_shape[1:])
         
         bu_l = tf.reshape(bu_loss, [1])
         td_l = tf.reshape(bu_loss, [1])
@@ -304,7 +306,8 @@ def build_model_fn(model, num_classes, num_train_examples):
         
         lr = tf.reshape(learning_rate, [1])
         
-        host_call = (host_call_fn, [bu_l, td_l, c_bu_a, c_td_a, l_a, c_e_bu, c_e_td, lr, tar_im, viz_f, rec_im])
+        # host_call = (host_call_fn, [bu_l, td_l, c_bu_a, c_td_a, l_a, c_e_bu, c_e_td, lr, tar_im, viz_f, rec_im])
+        host_call = (host_call_fn, [bu_l, td_l, c_bu_a, c_td_a, l_a, c_e_bu, c_e_td, lr])
 
         # # Compute stats for the summary.
         # prob_bu_con = tf.nn.softmax(logits_bu_con)
