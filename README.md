@@ -17,6 +17,9 @@ bash delete_cluster.sh
 # Check kube status
 kubectl get pods -w
 
+# Monitor your kube
+`https://console.cloud.google.com/monitoring`
+
 # Run a single kube job
 kubectl create -f kube_job.yaml
 

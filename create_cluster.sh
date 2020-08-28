@@ -1,6 +1,6 @@
 # Create kubernetes cluster with 4 nodes for self-sup experiments
 CLUSTER_NAME=self-sup
-NUM_NODES=4
+NUM_NODES=1
 
 gcloud beta container --project "beyond-dl-1503610372419" \
 clusters create "$CLUSTER_NAME" \

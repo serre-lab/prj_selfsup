@@ -272,13 +272,13 @@ flags.DEFINE_boolean(
     'Whether or not to use Gaussian blur for augmentation during pretraining.')
 
 
-# flags.DEFINE_boolean(
-#     'use_td_loss', True,
-#     'Use topdown loss.')
+flags.DEFINE_boolean(
+    'use_td_loss', True,
+    'Use topdown loss.')
 
-# flags.DEFINE_boolean(
-#     'use_bu_loss', True,
-#     'Use bottomup loss.')
+flags.DEFINE_boolean(
+    'use_bu_loss', True,
+    'Use bottomup loss.')
 
 flags.DEFINE_string(
     'td_loss', 'a', # 'attractive_repulsive'
@@ -476,9 +476,9 @@ def main(argv):
   if FLAGS.bu_loss == "False":
     FLAGS.use_bu_loss = False
 
-  # Enable training summary.
-  if FLAGS.train_summary_steps > 0:
-    tf.config.set_soft_device_placement(True)
+  # # Enable training summary.
+  # if FLAGS.train_summary_steps > 0:
+  #   tf.config.set_soft_device_placement(True)
   
   if FLAGS.train_mode == 'finetune':
     FLAGS.use_td_loss = False

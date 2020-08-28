@@ -107,6 +107,8 @@ def build_model_fn(model, num_classes, num_train_examples):
         hiddens, reconstruction, metric_hidden_r, metric_hidden_t = outputs
       else:
         hiddens = outputs
+        reconstruction = features
+
       if FLAGS.use_td_loss:
         with tf.name_scope('td_loss'):
           if FLAGS.td_loss=='attractive':
@@ -201,6 +203,7 @@ def build_model_fn(model, num_classes, num_train_examples):
         FLAGS.learning_rate, num_train_examples)
 
     if is_training:
+      
       if FLAGS.train_summary_steps > 0:
         # Compute stats for the summary.
         prob_bu_con = tf.nn.softmax(logits_bu_con)
@@ -210,85 +213,120 @@ def build_model_fn(model, num_classes, num_train_examples):
         entropy_td_con = - tf.reduce_mean(
             tf.reduce_sum(prob_td_con * tf.math.log(prob_td_con + 1e-8), -1))
 
-        summary_writer = tf2.summary.create_file_writer(FLAGS.model_dir)
-        # TODO(iamtingchen): remove this control_dependencies in the future.
-        with tf.control_dependencies([summary_writer.init()]):
-          with summary_writer.as_default():
-            should_record = tf.math.equal(
-                tf.math.floormod(tf.train.get_global_step(),
-                                 FLAGS.train_summary_steps), 0)
-            with tf2.summary.record_if(should_record):
-              contrast_bu_acc = tf.equal(
-                  tf.argmax(labels_bu_con, 1), tf.argmax(logits_bu_con, axis=1))
-              contrast_bu_acc = tf.reduce_mean(tf.cast(contrast_bu_acc, tf.float32))
-              contrast_td_acc = tf.equal(
-                  tf.argmax(labels_td_con, 1), tf.argmax(logits_td_con, axis=1))
-              contrast_td_acc = tf.reduce_mean(tf.cast(contrast_td_acc, tf.float32))
-              
-              label_acc = tf.equal(
-                  tf.argmax(labels['labels'], 1), tf.argmax(logits_sup, axis=1))
-              label_acc = tf.reduce_mean(tf.cast(label_acc, tf.float32))
-              
+        contrast_bu_acc = tf.equal(
+            tf.argmax(labels_bu_con, 1), tf.argmax(logits_bu_con, axis=1))
+        contrast_bu_acc = tf.reduce_mean(tf.cast(contrast_bu_acc, tf.float32))
+        contrast_td_acc = tf.equal(
+            tf.argmax(labels_td_con, 1), tf.argmax(logits_td_con, axis=1))
+        contrast_td_acc = tf.reduce_mean(tf.cast(contrast_td_acc, tf.float32))
+        
+        label_acc = tf.equal(
+            tf.argmax(labels['labels'], 1), tf.argmax(logits_sup, axis=1))
+        label_acc = tf.reduce_mean(tf.cast(label_acc, tf.float32))
+        
+
+        def host_call_fn(gs, g_l, bu_l, td_l, c_bu_a, c_td_a, l_a, c_e_bu, c_e_td, lr, tar_im, viz_f, rec_im):
+          gs = gs[0]
+          with tf2.summary.create_file_writer(
+              FLAGS.model_dir,
+              max_queue=FLAGS.checkpoint_steps).as_default():
+            with tf2.summary.record_if(True):
+              tf2.summary.scalar(
+                  'total_loss',
+                  g_l[0],
+                  step=gs)
+                  
               tf2.summary.scalar(
                   'train_bottomup_loss',
-                  bu_loss,
-                  step=tf.train.get_global_step())
+                  bu_l[0],
+                  step=gs)
+
               tf2.summary.scalar(
                   'train_topdown_loss',
-                  td_loss,
-                  step=tf.train.get_global_step())
+                  td_l[0],
+                  step=gs)
               
               tf2.summary.scalar(
                   'train_bottomup_acc',
-                  contrast_bu_acc,
-                  step=tf.train.get_global_step())
+                  c_bu_a[0],
+                  step=gs)
               tf2.summary.scalar(
                   'train_topdown_acc',
-                  contrast_td_acc,
-                  step=tf.train.get_global_step())
+                  c_td_a[0],
+                  step=gs)
               
               tf2.summary.scalar(
                   'train_label_accuracy',
-                  label_acc,
-                  step=tf.train.get_global_step())
+                  l_a[0],
+                  step=gs)
               
               tf2.summary.scalar(
                   'contrast_bu_entropy',
-                  entropy_bu_con,
-                  step=tf.train.get_global_step())
+                  c_e_bu[0],
+                  step=gs)
               tf2.summary.scalar(
                   'contrast_td_entropy',
-                  entropy_td_con,
-                  step=tf.train.get_global_step())
+                  c_e_td[0],
+                  step=gs)
               
               tf2.summary.scalar(
-                  'learning_rate', learning_rate,
-                  step=tf.train.get_global_step())
+                  'learning_rate', lr[0],
+                  step=gs)
 
-              # Images
-              print("Images")
-              print(target_images)
-              print("Features")
-              print(viz_features)
-              print("Reconstruction")
-              print(reconstruction)
+              # print("Images")
+              # print(target_images)
+              # print("Features")
+              # print(viz_features)
+              # print("Reconstruction")
+              # print(reconstruction)
               tf2.summary.image(
                   'Images',
-                  tf.cast(target_images, tf.float32),
-                  step=tf.train.get_global_step())
+                  tar_im[0],
+                  step=gs)
               tf2.summary.image(
                   'Transformed images',
-                  tf.cast(viz_features, tf.float32),
-                  step=tf.train.get_global_step())
+                  viz_f[0],
+                  step=gs)
               tf2.summary.image(
                   'Reconstructed images',
-                  tf.cast(reconstruction, tf.float32),
-                  step=tf.train.get_global_step())
+                  rec_im[0],
+                  step=gs)
+
+            return tf.summary.all_v2_summary_ops()
+
+
+        n_images = 5
+        image_shape = target_images.get_shape().as_list()
+
+        tar_im = tf.reshape(tf.cast(target_images[:n_images], tf.float32), [1, n_images] + image_shape[1:])
+        viz_f = tf.reshape(tf.cast(viz_features[:n_images], tf.float32), [1, n_images] + image_shape[1:])
+        rec_im = tf.reshape(tf.cast(reconstruction[:n_images], tf.float32), [1, n_images] + image_shape[1:])
+        
+        gs = tf.reshape(tf.train.get_global_step(), [1])
+        
+        g_l = tf.reshape(loss, [1])
+
+        bu_l = tf.reshape(bu_loss, [1])
+        td_l = tf.reshape(td_loss, [1])
+
+        c_bu_a = tf.reshape(contrast_bu_acc, [1])
+        c_td_a = tf.reshape(contrast_td_acc, [1])
+        
+        l_a = tf.reshape(label_acc, [1])
+        c_e_bu = tf.reshape(entropy_bu_con, [1])
+        c_e_td = tf.reshape(entropy_td_con, [1])
+        
+        lr = tf.reshape(learning_rate, [1])
+        
+        host_call = (host_call_fn, [gs, g_l, bu_l, td_l, c_bu_a, c_td_a, l_a, c_e_bu, c_e_td, lr, tar_im, viz_f, rec_im])
+        
+      else:
+        host_call=None
 
       optimizer = model_util.get_optimizer(learning_rate)
       control_deps = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-      if FLAGS.train_summary_steps > 0:
-        control_deps.extend(tf.summary.all_v2_summary_ops())
+      # if FLAGS.train_summary_steps > 0:
+      #   control_deps.extend(tf.summary.all_v2_summary_ops())
       with tf.control_dependencies(control_deps):
         train_op = optimizer.minimize(
             loss, global_step=tf.train.get_or_create_global_step(),
@@ -325,7 +363,13 @@ def build_model_fn(model, num_classes, num_train_examples):
         scaffold_fn = None
 
       return tf.estimator.tpu.TPUEstimatorSpec(
-          mode=mode, train_op=train_op, loss=loss, scaffold_fn=scaffold_fn)
+          mode=mode, 
+          train_op=train_op, 
+          loss=loss, 
+          scaffold_fn=scaffold_fn, 
+          host_call=host_call
+          )
+
     else:
 
       def metric_fn(logits_sup, labels_sup, logits_bu_con, labels_bu_con, 
@@ -371,6 +415,7 @@ def build_model_fn(model, num_classes, num_train_examples):
           mode=mode,
           loss=loss,
           eval_metrics=(metric_fn, metrics),
+          host_call=None,
           scaffold_fn=None)
 
   return model_fn
