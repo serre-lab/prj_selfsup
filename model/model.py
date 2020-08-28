@@ -296,7 +296,7 @@ def build_model_fn(model, num_classes, num_train_examples):
         viz_f = tf.reshape(tf.cast(viz_features[:n_images], tf.float32), [1, n_images] + image_shape[1:])
         rec_im = tf.reshape(tf.cast(reconstruction[:n_images], tf.float32), [1, n_images] + image_shape[1:])
         
-        gs = tf.reshape(tf.train.get_global_step())
+        gs = tf.reshape(tf.train.get_global_step(), [1])
         
         bu_l = tf.reshape(bu_loss, [1])
         td_l = tf.reshape(bu_loss, [1])
