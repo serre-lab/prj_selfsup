@@ -266,35 +266,36 @@ def build_model_fn(model, num_classes, num_train_examples):
                   'learning_rate', lr[0],
                   step=gs)
 
-              # Images
-              # print("Images")
-              # print(target_images)
-              # print("Features")
-              # print(viz_features)
-              # print("Reconstruction")
-              # print(reconstruction)
-              # tf2.summary.image(
-              #     'Images',
-              #     tar_im[0],
-              #     step=gs)
-              # tf2.summary.image(
-              #     'Transformed images',
-              #     viz_f[0],
-              #     step=gs)
-              # tf2.summary.image(
-              #     'Reconstructed images',
-              #     rec_im[0],
-              #     step=gs)
+              Images
+              print("Images")
+              print(target_images)
+              print("Features")
+              print(viz_features)
+              print("Reconstruction")
+              print(reconstruction)
+              tf2.summary.image(
+                  'Images',
+                  tar_im[0],
+                  step=gs)
+              tf2.summary.image(
+                  'Transformed images',
+                  viz_f[0],
+                  step=gs)
+              tf2.summary.image(
+                  'Reconstructed images',
+                  rec_im[0],
+                  step=gs)
 
             return tf.summary.all_v2_summary_ops()
 
 
-        # n_images = 5
-        # image_shape = target_images.get_shape().as_list()
+        n_images = 5
+        image_shape = target_images.get_shape().as_list()
 
-        # tar_im = tf.reshape(tf.cast(target_images[:n_images], tf.float32), [1, n_images] + image_shape[1:])
-        # viz_f = tf.reshape(tf.cast(viz_features[:n_images], tf.float32), [1, n_images] + image_shape[1:])
-        # rec_im = tf.reshape(tf.cast(reconstruction[:n_images], tf.float32), [1, n_images] + image_shape[1:])
+        tar_im = tf.reshape(tf.cast(target_images[:n_images], tf.float32), [1, n_images] + image_shape[1:])
+        viz_f = tf.reshape(tf.cast(viz_features[:n_images], tf.float32), [1, n_images] + image_shape[1:])
+        rec_im = tf.reshape(tf.cast(reconstruction[:n_images], tf.float32), [1, n_images] + image_shape[1:])
+        
         gs = tf.reshape(tf.train.get_global_step())
         
         bu_l = tf.reshape(bu_loss, [1])
@@ -309,8 +310,8 @@ def build_model_fn(model, num_classes, num_train_examples):
         
         lr = tf.reshape(learning_rate, [1])
         
-        # host_call = (host_call_fn, [bu_l, td_l, c_bu_a, c_td_a, l_a, c_e_bu, c_e_td, lr, tar_im, viz_f, rec_im])
-        host_call = (host_call_fn, [gs, bu_l, td_l, c_bu_a, c_td_a, l_a, c_e_bu, c_e_td, lr])
+        host_call = (host_call_fn, [bu_l, td_l, c_bu_a, c_td_a, l_a, c_e_bu, c_e_td, lr, tar_im, viz_f, rec_im])
+        # host_call = (host_call_fn, [gs, bu_l, td_l, c_bu_a, c_td_a, l_a, c_e_bu, c_e_td, lr])
 
       else:
         host_call=None
