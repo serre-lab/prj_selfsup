@@ -23,8 +23,8 @@ metric_channels=$1  # 16
 
 train_summary_steps=0  # 2502
 
-td_loss='$2'  #'ar'
-bu_loss='$3'  #'ar'
+td_loss=$2  #'ar'
+bu_loss=$3  #'ar'
 
 td_loss_weight=1.0
 bu_loss_weight=1.0
@@ -42,7 +42,7 @@ echo gs://serrelab/prj-selfsup/${experiment_name} > current_job.txt
 use_tpu=True
 # export TPU_NAME='prj-selfsup-tpu'
 # export TPU_NAME='prj-selfsup-tpu-preempt0'
-export TPU_NAME='$4'  # 'prj-selfsup-v2-22'
+export TPU_NAME=$4  # 'prj-selfsup-v2-22'
 export STORAGE_BUCKET='gs://serrelab/prj-selfsup'
 DATA_DIR=gs://imagenet_data/train/
 MODEL_DIR=$STORAGE_BUCKET/$experiment_name
