@@ -223,8 +223,8 @@ def build_model_fn(model, num_classes, num_train_examples):
         label_acc = tf.reduce_mean(tf.cast(label_acc, tf.float32))
         
 
-        # def host_call_fn(bu_l, td_l, c_bu_a, c_td_a, l_a, c_e_bu, c_e_td, lr, tar_im, viz_f, rec_im):
-        def host_call_fn(gs, bu_l, td_l, c_bu_a, c_td_a, l_a, c_e_bu, c_e_td, lr):
+        def host_call_fn(bu_l, td_l, c_bu_a, c_td_a, l_a, c_e_bu, c_e_td, lr, tar_im, viz_f, rec_im):
+        # def host_call_fn(gs, bu_l, td_l, c_bu_a, c_td_a, l_a, c_e_bu, c_e_td, lr):
           gs = gs[0]
           with tf2.summary.create_file_writer(
               FLAGS.model_dir,
