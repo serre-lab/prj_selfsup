@@ -2,4 +2,4 @@
 
 CLUSTER_NAME=self-sup
 
-gcloud container clusters delete $CLUSTER_NAME
+gcloud container clusters delete $CLUSTER_NAME --project=beyond-dl-1503610372419

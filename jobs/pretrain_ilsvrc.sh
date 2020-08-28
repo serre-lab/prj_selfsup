@@ -1,7 +1,7 @@
 
 
-# metric_channels use_td_loss use_bu_loss TPU_NAME
-# bash pretrain_ilsrc.sh 16 True True prj-selfsup-v2-22
+# metric_channels td_loss bu_loss TPU_NAME
+# bash pretrain_ilsrc.sh 16 ar ar prj-selfsup-v2-22
 
 train_mode=pretrain
 
@@ -23,11 +23,8 @@ metric_channels=$1  # 16
 
 train_summary_steps=0  # 2502
 
-use_td_loss=$2  # True
-use_bu_loss=$3  # True
-
-td_loss=attractive_repulsive #'attractive_repulsive'
-bu_loss=attractive_repulsive #'attractive_repulsive'
+td_loss='$2'  #'ar'
+bu_loss='$3'  #'ar'
 
 td_loss_weight=1.0
 bu_loss_weight=1.0
@@ -68,8 +65,6 @@ python3 run_imagenet.py \
   --num_parallel_calls=$num_parallel_calls \
   --data_dir=$DATA_DIR \
   --model_dir=$MODEL_DIR \
-  --use_td_loss=$use_td_loss \
-  --use_bu_loss=$use_bu_loss \
   --td_loss=$td_loss \
   --bu_loss=$bu_loss \
   --td_loss_weight=$td_loss_weight \

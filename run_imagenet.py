@@ -272,20 +272,20 @@ flags.DEFINE_boolean(
     'Whether or not to use Gaussian blur for augmentation during pretraining.')
 
 
-flags.DEFINE_boolean(
-    'use_td_loss', True,
-    'Use topdown loss.')
+# flags.DEFINE_boolean(
+#     'use_td_loss', True,
+#     'Use topdown loss.')
 
-flags.DEFINE_boolean(
-    'use_bu_loss', True,
-    'Use bottomup loss.')
-
-flags.DEFINE_string(
-    'td_loss', 'attractive', # 'attractive_repulsive'
-    'Use topdown loss.')
+# flags.DEFINE_boolean(
+#     'use_bu_loss', True,
+#     'Use bottomup loss.')
 
 flags.DEFINE_string(
-    'bu_loss', 'attractive', # 'attractive_repulsive'
+    'td_loss', 'a', # 'attractive_repulsive'
+    'Use topdown loss.')
+
+flags.DEFINE_string(
+    'bu_loss', 'a', # 'attractive_repulsive'
     'Use bottomup loss.')
 
 flags.DEFINE_integer(
@@ -459,12 +459,29 @@ def main(argv):
   if len(argv) > 1:
     raise app.UsageError('Too many command-line arguments.')
 
+  # Interpret losses
+  if FLAGS.td_loss == "a":
+    FLAGS.td_loss = "attractive"
+  elif FLAGS.td_loss == "ar":
+    FLAGS.td_loss = "attractive_repulsive"
+  if FLAGS.bu_loss == "a":
+    FLAGS.bu_loss = "attractive"
+  elif FLAGS.bu_loss == "ar":
+    FLAGS.bu_loss = "attractive_repulsive"
+
+  FLAGS.use_td_loss = True
+  if FLAGS.td_loss == "False":
+    FLAGS.use_td_loss = False
+  FLAGS.use_bu_loss = True
+  if FLAGS.bu_loss == "False":
+    FLAGS.use_bu_loss = False
+
   # Enable training summary.
   if FLAGS.train_summary_steps > 0:
     tf.config.set_soft_device_placement(True)
   
-  # if FLAGS.train_mode == 'finetune':
-  #   FLAGS.use_td_loss = False
+  if FLAGS.train_mode == 'finetune':
+    FLAGS.use_td_loss = False
 
   if FLAGS.data_dir == FAKE_DATA_DIR:
     tf.logging.info('Using fake dataset.')
