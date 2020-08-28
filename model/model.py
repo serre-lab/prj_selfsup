@@ -355,7 +355,12 @@ def build_model_fn(model, num_classes, num_train_examples):
         scaffold_fn = None
 
       return tf.estimator.tpu.TPUEstimatorSpec(
-          mode=mode, train_op=train_op, loss=loss, scaffold_fn=scaffold_fn, host_call=host_call)
+          mode=mode, 
+          train_op=train_op, 
+          loss=loss, 
+          scaffold_fn=scaffold_fn, 
+          host_call=host_call
+          )
 
     else:
 
