@@ -288,6 +288,7 @@ def build_model_fn(model, num_classes, num_train_examples):
 
             return tf.summary.all_v2_summary_ops()
 
+
         # n_images = 5
         # image_shape = target_images.get_shape().as_list()
 
