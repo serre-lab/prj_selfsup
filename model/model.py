@@ -107,6 +107,8 @@ def build_model_fn(model, num_classes, num_train_examples):
         hiddens, reconstruction, metric_hidden_r, metric_hidden_t = outputs
       else:
         hiddens = outputs
+        reconstruction = features
+
       if FLAGS.use_td_loss:
         with tf.name_scope('td_loss'):
           if FLAGS.td_loss=='attractive':
@@ -223,17 +225,22 @@ def build_model_fn(model, num_classes, num_train_examples):
         label_acc = tf.reduce_mean(tf.cast(label_acc, tf.float32))
         
 
-        def host_call_fn(bu_l, td_l, c_bu_a, c_td_a, l_a, c_e_bu, c_e_td, lr, tar_im, viz_f, rec_im):
-        # def host_call_fn(gs, bu_l, td_l, c_bu_a, c_td_a, l_a, c_e_bu, c_e_td, lr):
+        def host_call_fn(gs, g_l, bu_l, td_l, c_bu_a, c_td_a, l_a, c_e_bu, c_e_td, lr, tar_im, viz_f, rec_im):
           gs = gs[0]
           with tf2.summary.create_file_writer(
               FLAGS.model_dir,
               max_queue=FLAGS.checkpoint_steps).as_default():
             with tf2.summary.record_if(True):
               tf2.summary.scalar(
+                  'total_loss',
+                  g_l[0],
+                  step=gs)
+                  
+              tf2.summary.scalar(
                   'train_bottomup_loss',
                   bu_l[0],
                   step=gs)
+
               tf2.summary.scalar(
                   'train_topdown_loss',
                   td_l[0],
@@ -266,13 +273,12 @@ def build_model_fn(model, num_classes, num_train_examples):
                   'learning_rate', lr[0],
                   step=gs)
 
-              Images
-              print("Images")
-              print(target_images)
-              print("Features")
-              print(viz_features)
-              print("Reconstruction")
-              print(reconstruction)
+              # print("Images")
+              # print(target_images)
+              # print("Features")
+              # print(viz_features)
+              # print("Reconstruction")
+              # print(reconstruction)
               tf2.summary.image(
                   'Images',
                   tar_im[0],
@@ -298,8 +304,10 @@ def build_model_fn(model, num_classes, num_train_examples):
         
         gs = tf.reshape(tf.train.get_global_step(), [1])
         
+        g_l = tf.reshape(loss, [1])
+
         bu_l = tf.reshape(bu_loss, [1])
-        td_l = tf.reshape(bu_loss, [1])
+        td_l = tf.reshape(td_loss, [1])
 
         c_bu_a = tf.reshape(contrast_bu_acc, [1])
         c_td_a = tf.reshape(contrast_td_acc, [1])
@@ -310,9 +318,8 @@ def build_model_fn(model, num_classes, num_train_examples):
         
         lr = tf.reshape(learning_rate, [1])
         
-        host_call = (host_call_fn, [bu_l, td_l, c_bu_a, c_td_a, l_a, c_e_bu, c_e_td, lr, tar_im, viz_f, rec_im])
-        # host_call = (host_call_fn, [gs, bu_l, td_l, c_bu_a, c_td_a, l_a, c_e_bu, c_e_td, lr])
-
+        host_call = (host_call_fn, [gs, g_l, bu_l, td_l, c_bu_a, c_td_a, l_a, c_e_bu, c_e_td, lr, tar_im, viz_f, rec_im])
+        
       else:
         host_call=None
 
