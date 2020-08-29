@@ -482,7 +482,8 @@ def main(argv):
           iterations_per_loop=checkpoint_steps,
           eval_training_input_configuration=sliced_eval_mode
           if FLAGS.use_tpu else default_eval_mode,
-          experimental_host_call_every_n_steps=10),
+          experimental_host_call_every_n_steps=FLAGS.train_summary_steps 
+          if FLAGS.train_summary_steps else 1),
       model_dir=FLAGS.model_dir,
       save_summary_steps=checkpoint_steps,
       save_checkpoints_steps=checkpoint_steps,
