@@ -443,7 +443,7 @@ def main(argv):
   #   FLAGS.use_td_loss = False
 
   builder = tfds.builder(FLAGS.dataset, data_dir=FLAGS.data_dir)
-  builder.download_and_prepare()
+  # builder.download_and_prepare()
   num_train_examples = builder.info.splits[FLAGS.train_split].num_examples
   num_eval_examples = builder.info.splits[FLAGS.eval_split].num_examples
   num_classes = builder.info.features['label'].num_classes

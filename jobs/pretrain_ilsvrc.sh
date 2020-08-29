@@ -29,7 +29,6 @@ bu_loss=$3  #'ar'
 td_loss_weight=1.0
 bu_loss_weight=1.0
 
-use_neptune=False
 experiment_name="pretrain-BU-${2}_TD-${3}_R${encoder_depth}_lr${learning_rate}_T${temperature}_TPU$4"
 # experiment_name=BU_{bu_loss}_TD_{td_loss}_R50_lr0.1_T0.1
 # echo "Deleting gs://serrelab/prj-selfsup/${experiment_name} and tmp files"
@@ -38,17 +37,28 @@ echo gs://serrelab/prj-selfsup/${experiment_name} > current_job.txt
 # gsutil  rm -r gs://serrelab/prj-selfsup/${experiment_name}
 # sudo rm -rf /tmp/*
 
+# use_tpu=True
+# # export TPU_NAME='prj-selfsup-tpu'
+# # export TPU_NAME='prj-selfsup-tpu-preempt0'
+# export TPU_NAME=$4  # 'prj-selfsup-v2-22'
+# export STORAGE_BUCKET='gs://serrelab/prj-selfsup'
+# # DATA_DIR=gs://imagenet_data/train/
+# DATA_DIR=gs://serrelab/imagenet_dataset/
+# MODEL_DIR=$STORAGE_BUCKET/$experiment_name
+
 use_tpu=True
-# export TPU_NAME='prj-selfsup-tpu'
-# export TPU_NAME='prj-selfsup-tpu-preempt0'
 export TPU_NAME=$4  # 'prj-selfsup-v2-22'
-export STORAGE_BUCKET='gs://serrelab/prj-selfsup'
+# export TPU_NAME='prj-selfsup-tpu-preempt0'
+# export TPU_NAME='prj-selfsup-v2-22'
+export STORAGE_BUCKET='gs://serrelab'
 # DATA_DIR=gs://imagenet_data/train/
-DATA_DIR=gs://serrelab/imagenet_dataset/
-MODEL_DIR=$STORAGE_BUCKET/$experiment_name
+
+DATA_DIR=$STORAGE_BUCKET/imagenet_dataset/
+MODEL_DIR=$STORAGE_BUCKET/prj-selfsup/$experiment_name
 
 
-python3 run_imagenet.py \
+# python3 run_imagenet.py \
+python3 run.py \
   --encoder_depth=$encoder_depth \
   --decoder_depth=$decoder_depth \
   --metric_channels=$metric_channels \
@@ -72,4 +82,3 @@ python3 run_imagenet.py \
   --tpu_name=$TPU_NAME \
   --train_summary_steps=$train_summary_steps \
   --experiment_name=$experiment_name \
-  --use_neptune=$use_neptune
