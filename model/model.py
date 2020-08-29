@@ -306,8 +306,8 @@ def build_model_fn(model, num_classes, num_train_examples):
                 tf.math.floormod(gs,
                                  checkpoint_steps), 0) #FLAGS.train_summary_steps
           return tf.cond(should_record, 
-                        summary(gs, g_l, bu_l, td_l, c_bu_a, c_td_a, l_a, c_e_bu, c_e_td, lr, tar_im, viz_f, rec_im),
-                        tf.math.add(1, 1)
+                        lambda: summary(gs, g_l, bu_l, td_l, c_bu_a, c_td_a, l_a, c_e_bu, c_e_td, lr, tar_im, viz_f, rec_im),
+                        lambda: tf.math.add(1, 1)
                         )
 
         n_images = 5
