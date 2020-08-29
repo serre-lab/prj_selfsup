@@ -79,7 +79,8 @@ def build_model_fn(model, num_classes, num_train_examples):
       if FLAGS.use_td_loss:
         # sigmas = tf.zeros_like(thetas[:,0])
         sigmas = tf.zeros([target_images.get_shape().as_list()[0], 11])  # noqa hardcoded
-        thetas = tf.concat([thetas, sigmas[:,None]], 1) 
+        thetas = tf.zeros_like(sigmas)
+        thetas = tf.concat([thetas, sigmas[:, None]], 1) 
     
     features = tf.concat(features_list, 0)  # (num_transforms * bsz, h, w, c)
     
