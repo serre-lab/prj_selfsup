@@ -30,7 +30,7 @@ use_tpu=True
 
 checkpoint_name="model.ckpt-93836"
 # experiment_name="finetune_${checkpoint_name}"
-experiment_name=BU_{bu_loss}_TD_{td_loss}_R50_lr0.1_T0.1
+experiment_name=finetune_BU_{bu_loss}_TD_{td_loss}_R50_lr0.1_T0.1
 
 export TPU_NAME='prj-selfsup-tpu'
 
@@ -39,7 +39,7 @@ export STORAGE_BUCKET='gs://serrelab'
 
 DATA_DIR=$STORAGE_BUCKET/imagenet_dataset/
 MODEL_DIR=$STORAGE_BUCKET/prj-selfsup/$experiment_name
-CHKPT_DIR=$STORAGE_BUCKET/prj-selfsup/model_test
+CHKPT_DIR=$STORAGE_BUCKET/prj-selfsup/BU_{bu_loss}_TD_{td_loss}_R50_lr0.1_T0.1/$checkpoint_name
 
 
 python3 run.py \
