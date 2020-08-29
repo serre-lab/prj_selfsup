@@ -225,92 +225,83 @@ def build_model_fn(model, num_classes, num_train_examples):
         label_acc = tf.reduce_mean(tf.cast(label_acc, tf.float32))
         
         
-        epoch_steps = int(round(num_train_examples / FLAGS.train_batch_size))
-        checkpoint_steps = (
-          FLAGS.checkpoint_steps or (FLAGS.checkpoint_epochs * epoch_steps))
+        # epoch_steps = int(round(num_train_examples / FLAGS.train_batch_size))
+        # checkpoint_steps = (
+        #   FLAGS.checkpoint_steps or (FLAGS.checkpoint_epochs * epoch_steps))
 
         def host_call_fn(gs, g_l, bu_l, td_l, c_bu_a, c_td_a, l_a, c_e_bu, c_e_td, lr, tar_im, viz_f, rec_im):
-          
-          def summary(gs, g_l, bu_l, td_l, c_bu_a, c_td_a, l_a, c_e_bu, c_e_td, lr, tar_im, viz_f, rec_im):                
-            
-            with tf2.summary.create_file_writer(
-                FLAGS.model_dir,
-                max_queue=checkpoint_steps).as_default():
-              
-              with tf2.summary.record_if(True):
-                tf2.summary.scalar(
-                    'total_loss',
-                    g_l[0],
-                    step=gs)
-                    
-                tf2.summary.scalar(
-                    'train_bottomup_loss',
-                    bu_l[0],
-                    step=gs)
-
-                tf2.summary.scalar(
-                    'train_topdown_loss',
-                    td_l[0],
-                    step=gs)
-                
-                tf2.summary.scalar(
-                    'train_bottomup_acc',
-                    c_bu_a[0],
-                    step=gs)
-                tf2.summary.scalar(
-                    'train_topdown_acc',
-                    c_td_a[0],
-                    step=gs)
-                
-                tf2.summary.scalar(
-                    'train_label_accuracy',
-                    l_a[0],
-                    step=gs)
-                
-                tf2.summary.scalar(
-                    'contrast_bu_entropy',
-                    c_e_bu[0],
-                    step=gs)
-                tf2.summary.scalar(
-                    'contrast_td_entropy',
-                    c_e_td[0],
-                    step=gs)
-                
-                tf2.summary.scalar(
-                    'learning_rate', lr[0],
-                    step=gs)
-
-                # print("Images")
-                # print(target_images)
-                # print("Features")
-                # print(viz_features)
-                # print("Reconstruction")
-                # print(reconstruction)
-                tf2.summary.image(
-                    'Images',
-                    tar_im[0],
-                    step=gs)
-                tf2.summary.image(
-                    'Transformed images',
-                    viz_f[0],
-                    step=gs)
-                tf2.summary.image(
-                    'Reconstructed images',
-                    rec_im[0],
-                    step=gs)
-
-              return tf.summary.all_v2_summary_ops()
           gs = gs[0]
-          
-          should_record = tf.math.equal(
-                tf.math.floormod(gs,
-                                 checkpoint_steps), 0) #FLAGS.train_summary_steps
-          return tf.cond(should_record, 
-                        lambda: summary(gs, g_l, bu_l, td_l, c_bu_a, c_td_a, l_a, c_e_bu, c_e_td, lr, tar_im, viz_f, rec_im),
-                        lambda: tf.math.add(1, 1)
-                        )
+                          
+          with tf2.summary.create_file_writer(
+              FLAGS.model_dir,
+              max_queue=1).as_default():
+            
+            with tf2.summary.record_if(True):
+              tf2.summary.scalar(
+                  'total_loss',
+                  g_l[0],
+                  step=gs)
+                  
+              tf2.summary.scalar(
+                  'train_bottomup_loss',
+                  bu_l[0],
+                  step=gs)
 
-        n_images = 5
+              tf2.summary.scalar(
+                  'train_topdown_loss',
+                  td_l[0],
+                  step=gs)
+              
+              tf2.summary.scalar(
+                  'train_bottomup_acc',
+                  c_bu_a[0],
+                  step=gs)
+              tf2.summary.scalar(
+                  'train_topdown_acc',
+                  c_td_a[0],
+                  step=gs)
+              
+              tf2.summary.scalar(
+                  'train_label_accuracy',
+                  l_a[0],
+                  step=gs)
+              
+              tf2.summary.scalar(
+                  'contrast_bu_entropy',
+                  c_e_bu[0],
+                  step=gs)
+              tf2.summary.scalar(
+                  'contrast_td_entropy',
+                  c_e_td[0],
+                  step=gs)
+              
+              tf2.summary.scalar(
+                  'learning_rate', lr[0],
+                  step=gs)
+
+              # print("Images")
+              # print(target_images)
+              # print("Features")
+              # print(viz_features)
+              # print("Reconstruction")
+              # print(reconstruction)
+              tf2.summary.image(
+                  'Images',
+                  tar_im[0],
+                  step=gs)
+              tf2.summary.image(
+                  'Transformed images',
+                  viz_f[0],
+                  step=gs)
+              tf2.summary.image(
+                  'Reconstructed images',
+                  rec_im[0],
+                  step=gs)
+
+            return tf.summary.all_v2_summary_ops()
+
+
+        n_images = 1
         image_shape = target_images.get_shape().as_list()
 
         tar_im = tf.reshape(tf.cast(target_images[:n_images], tf.float32), [1, n_images] + image_shape[1:])
