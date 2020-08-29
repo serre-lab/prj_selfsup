@@ -63,7 +63,8 @@ def build_model_fn(model, num_classes, num_train_examples):
       # transforms
       thetas_list = tf.split(
         labels['thetas'], num_or_size_splits=num_transforms, axis=-1)
-      thetas = tf.concat(thetas_list[:-1], 0)
+      if FLAGS.train_mode == 'pretrain':  # Fix for fine-tuning/eval
+        thetas = tf.concat(thetas_list[:-1], 0)
     else:
       target_images = features_list
     
@@ -75,7 +76,7 @@ def build_model_fn(model, num_classes, num_train_examples):
         sigmas = tf.concat(sigmas, 0)
         thetas = tf.concat([thetas, sigmas[:,None]], 1) 
     else:
-      if FLAGS.use_td_loss: 
+      if FLAGS.use_td_loss:
         sigmas = tf.zeros_like(thetas[:,0])
         thetas = tf.concat([thetas, sigmas[:,None]], 1) 
     
