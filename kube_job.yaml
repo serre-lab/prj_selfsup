@@ -11,6 +11,8 @@ spec:
         # TensorFlow version that your model is built on.
         tf-version.cloud-tpus.google.com: "1.15.2"
     spec:
+      securityContext:
+        runAsUser: 0
       restartPolicy: Never
       containers:
       - name: resnet-tpu
@@ -27,13 +29,12 @@ spec:
           BU_LOSS=ar
           git clone https://github.com/serre-lab/prj_selfsup.git
           cd prj_selfsup
-          pip3 install --upgrade --user pip
-          pip3 install --user -r requirements.txt
-          pip3 install --user -U tpunicorn
+          pip3 install --upgrade pip
+          pip3 install -r requirements.txt
+          pip3 install -U tpunicorn
           echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
           exec -l $SHELL
           pu list
-          chmod +x jobs/pretrain_ilsvrc.sh
           bash jobs/pretrain_ilsvrc.sh $CHANNELS $TD_LOSS $BU_LOSS $(KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS)s
         resources:
           limits:
