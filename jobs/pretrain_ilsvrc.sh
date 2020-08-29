@@ -18,7 +18,7 @@ encoder_depth=50
 decoder_depth=18
 metric_channels=16
 
-train_summary_steps=0  # 2502
+train_summary_steps=100  # 2502
 
 use_td_loss=True
 use_bu_loss=True
@@ -29,7 +29,6 @@ bu_loss=attractive_repulsive #'attractive_repulsive'
 td_loss_weight=1.0
 bu_loss_weight=1.0
 
-num_parallel_calls=8
 
 use_neptune=False
 experiment_name="pretrain_BU_TD_R${encoder_depth}_lr${learning_rate}_T${temperature}"
@@ -43,12 +42,14 @@ use_tpu=True
 export TPU_NAME='prj-selfsup-tpu'
 # export TPU_NAME='prj-selfsup-tpu-preempt0'
 # export TPU_NAME='prj-selfsup-v2-22'
-export STORAGE_BUCKET='gs://serrelab/prj-selfsup'
-DATA_DIR=gs://imagenet_data/train/
-MODEL_DIR=$STORAGE_BUCKET/$experiment_name
+export STORAGE_BUCKET='gs://serrelab'
+# DATA_DIR=gs://imagenet_data/train/
+
+DATA_DIR=$STORAGE_BUCKET/imagenet_dataset/
+MODEL_DIR=$STORAGE_BUCKET/prj-selfsup/$experiment_name
 
 
-python3 run_imagenet.py \
+python3 run.py \
   --encoder_depth=$encoder_depth \
   --decoder_depth=$decoder_depth \
   --metric_channels=$metric_channels \
@@ -62,7 +63,6 @@ python3 run_imagenet.py \
   --dataset=$dataset \
   --image_size=$image_size \
   --eval_split=$eval_split \
-  --num_parallel_calls=$num_parallel_calls \
   --data_dir=$DATA_DIR \
   --model_dir=$MODEL_DIR \
   --use_td_loss=$use_td_loss \

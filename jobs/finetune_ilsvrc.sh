@@ -28,11 +28,18 @@ train_summary_steps=0
 
 use_tpu=True
 
+checkpoint_name=""
+experiment_name="finetune_${checkpoint_name}"
+
 export TPU_NAME='prj-selfsup-tpu'
-export STORAGE_BUCKET='gs://serrelab/prj-selfsup'
-DATA_DIR=gs://imagenet_data/train/
-MODEL_DIR=$STORAGE_BUCKET/model_test_ft
-CHKPT_DIR=$STORAGE_BUCKET/model_test
+
+export STORAGE_BUCKET='gs://serrelab'
+# DATA_DIR=gs://imagenet_data/train/
+
+DATA_DIR=$STORAGE_BUCKET/imagenet_dataset/
+MODEL_DIR=$STORAGE_BUCKET/prj-selfsup/$experiment_name
+CHKPT_DIR=$STORAGE_BUCKET/prj-selfsup/model_test
+
 
 python3 run_imagenet.py \
   --mode=$mode --train_mode=$train_mode \
