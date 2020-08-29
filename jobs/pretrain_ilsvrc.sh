@@ -29,10 +29,8 @@ bu_loss=$3  #'ar'
 td_loss_weight=1.0
 bu_loss_weight=1.0
 
-num_parallel_calls=8
-
 use_neptune=False
-experiment_name="AR-BU-${2}_TD-${3}_R${encoder_depth}_lr${learning_rate}_T${temperature}_TPU$4"
+experiment_name="pretrain-BU-${2}_TD-${3}_R${encoder_depth}_lr${learning_rate}_T${temperature}_TPU$4"
 # experiment_name=BU_{bu_loss}_TD_{td_loss}_R50_lr0.1_T0.1
 # echo "Deleting gs://serrelab/prj-selfsup/${experiment_name} and tmp files"
 echo gs://serrelab/prj-selfsup/${experiment_name} > current_job.txt
@@ -45,7 +43,8 @@ use_tpu=True
 # export TPU_NAME='prj-selfsup-tpu-preempt0'
 export TPU_NAME=$4  # 'prj-selfsup-v2-22'
 export STORAGE_BUCKET='gs://serrelab/prj-selfsup'
-DATA_DIR=gs://imagenet_data/train/
+# DATA_DIR=gs://imagenet_data/train/
+DATA_DIR=gs://serrelab/imagenet_dataset/
 MODEL_DIR=$STORAGE_BUCKET/$experiment_name
 
 
@@ -63,7 +62,6 @@ python3 run_imagenet.py \
   --dataset=$dataset \
   --image_size=$image_size \
   --eval_split=$eval_split \
-  --num_parallel_calls=$num_parallel_calls \
   --data_dir=$DATA_DIR \
   --model_dir=$MODEL_DIR \
   --td_loss=$td_loss \

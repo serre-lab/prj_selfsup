@@ -1,4 +1,4 @@
-mode=train_then_eval
+mode=eval
 train_mode=finetune
 
 zero_init_logits_layer=True
@@ -25,21 +25,22 @@ resnet_depth=50
 
 train_summary_steps=0
 
-use_neptune=True
-experiment_name="${train_mode}_2_R${resnet_depth}_lr${learning_rate}"
+# use_neptune=True
+# experiment_name="${train_mode}_2_R${resnet_depth}_lr${learning_rate}"
 
 checkpoint_experiment="baseline_pretrain_R50_lr0.1_T0.1"
-# experiment_name="baseline_finetune_R50_lr0.005"
+experiment_name="finetune_2_R50_lr0.1"
 
-use_tpu=True
+use_tpu=False
 
-export TPU_NAME='prj-selfsup-tpu'
-export STORAGE_BUCKET='gs://serrelab/prj-selfsup'
-DATA_DIR=gs://imagenet_data/train/
-MODEL_DIR=$STORAGE_BUCKET/$experiment_name
-CHKPT_DIR=$STORAGE_BUCKET/$checkpoint_experiment
+export TPU_NAME='prj-selfsup-tpu-us'
+export STORAGE_BUCKET='gs://serrelab'
+# DATA_DIR=gs://imagenet_data/train/
+DATA_DIR=$STORAGE_BUCKET/imagenet_dataset/
+MODEL_DIR=$STORAGE_BUCKET/prj-selfsup/$experiment_name
+CHKPT_DIR=$STORAGE_BUCKET/prj-selfsup/$checkpoint_experiment
 
-python3 run_old_imagenet.py \
+python3 run_old.py \
   --mode=$mode --train_mode=$train_mode \
   --fine_tune_after_block=$fine_tune_after_block --zero_init_logits_layer=$zero_init_logits_layer \
   --variable_schema=$variable_schema \
