@@ -27,14 +27,14 @@ spec:
           BU_LOSS=ar
           git clone https://github.com/serre-lab/prj_selfsup.git
           cd prj_selfsup
-          pip install --upgrade pip
-          pip3 install -r requirements.txt
+          pip3 install --upgrade --user pip
+          pip3 install --user -r requirements.txt
           pip3 install --user -U tpunicorn
           echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
           exec -l $SHELL
           pu list
           chmod +x jobs/pretrain_ilsvrc.sh
-          ./jobs/pretrain_ilsvrc.sh $CHANNELS $TD_LOSS $BU_LOSS $(KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS)s
+          bash jobs/pretrain_ilsvrc.sh $CHANNELS $TD_LOSS $BU_LOSS $(KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS)s
         resources:
           limits:
             # Request a single Preemptible v2-8 Cloud TPU device to train the
