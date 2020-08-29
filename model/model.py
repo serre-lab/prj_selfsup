@@ -234,7 +234,10 @@ def build_model_fn(model, num_classes, num_train_examples):
           with tf2.summary.create_file_writer(
               FLAGS.model_dir,
               max_queue=checkpoint_steps).as_default():
-            with tf2.summary.record_if(True):
+            should_record = tf.math.equal(
+                tf.math.floormod(gs,
+                                 FLAGS.train_summary_steps), 0)
+            with tf2.summary.record_if(should_record):
               tf2.summary.scalar(
                   'total_loss',
                   g_l[0],
