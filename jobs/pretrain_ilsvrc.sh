@@ -6,7 +6,7 @@
 train_mode=pretrain
 
 train_batch_size=4096
-train_epochs=300 
+train_epochs=400 
 temperature=0.1
 
 learning_rate=0.1 
@@ -21,7 +21,7 @@ encoder_depth=50
 decoder_depth=18
 metric_channels=$1  # 16
 
-train_summary_steps=0  # 2502
+train_summary_steps=2502
 
 td_loss=$2  #'ar'
 bu_loss=$3  #'ar'

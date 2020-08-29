@@ -79,10 +79,10 @@ def resnet_autoencoder_v1_generator(encoder, decoder, metric, data_format='chann
       print("---")
       with tf.variable_scope('metric'):
         # Squash both recon and target images
-        recon_images = tf.tanh(recon_images)
+        recon_images_squash = tf.tanh(recon_images)
         target_images = (target_images * 2) - 1
         Bt = target_images.get_shape().as_list()[0]
-        Br = recon_images.get_shape().as_list()[0]
+        Br = recon_images_squash.get_shape().as_list()[0]
         if Bt == Br:
           # Attractive + repulsive loss
           pass
@@ -92,14 +92,22 @@ def resnet_autoencoder_v1_generator(encoder, decoder, metric, data_format='chann
 
         # Differentiable perceptual metric. First reconstruction.
         # both_images = tf.concat([recon_images, target_images], -1)  # B H W 6
-        all_images = tf.concat([recon_images, target_images], 0)  # Stack these in batch dim
+        all_images = tf.concat([recon_images_squash, target_images], 0)  # Stack these in batch dim
         metric_all_images = metric(all_images, is_training=is_training)
         B = metric_all_images.get_shape().as_list()[0]
         metric_all_images = tf.reshape(metric_all_images, [B, -1])
         metric_hidden_r, metric_hidden_t = tf.split(metric_all_images, 2, 0)  # Split these in batch dim
 
         # Prep recon_images for visualization
-        recon_images = (recon_images + 1) / 2
+        # recon_images = tf.clip_by_value(recon_images, clip_value_min=-5, clip_value_max=5)
+        # recon_images = (recon_images + 5) / 10
+
+        recon_mean, recon_std = tf.nn.moments(recon_images, axes=[1, 2], keep_dims=True)
+        recon_images = (recon_images - recon_mean) / recon_std
+        recon_images = tf.clip_by_value(recon_images, clip_value_min=-5, clip_value_max=5)
+        recon_images = (recon_images + 5) / 10
+        recon_images = tf.image.rgb_to_grayscale(recon_images)
+        recon_images = tf.concat([recon_images, recon_images, recon_images], -1)
       print("Embedding output: ")
       print(metric_hidden_t)
       print("---")
