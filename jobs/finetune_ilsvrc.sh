@@ -28,8 +28,9 @@ train_summary_steps=0
 
 use_tpu=True
 
-checkpoint_name=""
-experiment_name="finetune_${checkpoint_name}"
+checkpoint_name="model.ckpt-93836"
+# experiment_name="finetune_${checkpoint_name}"
+experiment_name=BU_{bu_loss}_TD_{td_loss}_R50_lr0.1_T0.1
 
 export TPU_NAME='prj-selfsup-tpu'
 

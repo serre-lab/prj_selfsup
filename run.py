@@ -435,6 +435,23 @@ def main(argv):
   if len(argv) > 1:
     raise app.UsageError('Too many command-line arguments.')
 
+  # Interpret losses
+  if FLAGS.td_loss == "a":
+    FLAGS.td_loss = "attractive"
+  elif FLAGS.td_loss == "ar":
+    FLAGS.td_loss = "attractive_repulsive"
+  if FLAGS.bu_loss == "a":
+    FLAGS.bu_loss = "attractive"
+  elif FLAGS.bu_loss == "ar":
+    FLAGS.bu_loss = "attractive_repulsive"
+
+  FLAGS.use_td_loss = True
+  if FLAGS.td_loss == "False":
+    FLAGS.use_td_loss = False
+  FLAGS.use_bu_loss = True
+  if FLAGS.bu_loss == "False":
+    FLAGS.use_bu_loss = False
+
   # # Enable training summary.
   # if FLAGS.train_summary_steps > 0:
   #   tf.config.set_soft_device_placement(True)
