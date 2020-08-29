@@ -234,7 +234,7 @@ def build_model_fn(model, num_classes, num_train_examples):
                           
           with tf2.summary.create_file_writer(
               FLAGS.model_dir,
-              max_queue=1).as_default():
+              max_queue=0).as_default():
             
             with tf2.summary.record_if(True):
               tf2.summary.scalar(
@@ -301,7 +301,7 @@ def build_model_fn(model, num_classes, num_train_examples):
             return tf.summary.all_v2_summary_ops()
 
 
-        n_images = 1
+        n_images = 2
         image_shape = target_images.get_shape().as_list()
 
         tar_im = tf.reshape(tf.cast(target_images[:n_images], tf.float32), [1, n_images] + image_shape[1:])
