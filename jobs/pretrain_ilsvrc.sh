@@ -1,4 +1,4 @@
-
+#!/usr/bin/env bash
 
 # metric_channels td_loss bu_loss TPU_NAME
 # bash pretrain_ilsrc.sh 16 ar ar prj-selfsup-v2-22
@@ -58,7 +58,7 @@ MODEL_DIR=$STORAGE_BUCKET/prj-selfsup/$experiment_name
 
 
 # python3 run_imagenet.py \
-sudo python3 run.py \
+python3 run.py \
   --encoder_depth=$encoder_depth \
   --decoder_depth=$decoder_depth \
   --metric_channels=$metric_channels \
