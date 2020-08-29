@@ -41,7 +41,7 @@ MODEL_DIR=$STORAGE_BUCKET/prj-selfsup/$experiment_name
 CHKPT_DIR=$STORAGE_BUCKET/prj-selfsup/model_test
 
 
-python3 run_imagenet.py \
+python3 run.py \
   --mode=$mode --train_mode=$train_mode \
   --fine_tune_after_block=$fine_tune_after_block --zero_init_logits_layer=$zero_init_logits_layer \
   --variable_schema=$variable_schema \
