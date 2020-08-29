@@ -225,16 +225,16 @@ def build_model_fn(model, num_classes, num_train_examples):
         label_acc = tf.reduce_mean(tf.cast(label_acc, tf.float32))
         
         
-        # epoch_steps = int(round(num_train_examples / FLAGS.train_batch_size))
-        # checkpoint_steps = (
-        #   FLAGS.checkpoint_steps or (FLAGS.checkpoint_epochs * epoch_steps))
+        epoch_steps = int(round(num_train_examples / FLAGS.train_batch_size))
+        checkpoint_steps = (
+          FLAGS.checkpoint_steps or (FLAGS.checkpoint_epochs * epoch_steps))
 
         def host_call_fn(gs, g_l, bu_l, td_l, c_bu_a, c_td_a, l_a, c_e_bu, c_e_td, lr, tar_im, viz_f, rec_im):
           gs = gs[0]
                           
           with tf2.summary.create_file_writer(
               FLAGS.model_dir,
-              max_queue=0).as_default():
+              max_queue=checkpoint_steps).as_default():
             
             with tf2.summary.record_if(True):
               tf2.summary.scalar(
