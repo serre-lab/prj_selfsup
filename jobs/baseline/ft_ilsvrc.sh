@@ -31,7 +31,7 @@ train_summary_steps=0
 checkpoint_experiment="baseline_pretrain_R50_lr0.1_T0.1"
 experiment_name="finetune_2_R50_lr0.1"
 
-use_tpu=True
+use_tpu=False
 
 export TPU_NAME='prj-selfsup-tpu-us'
 export STORAGE_BUCKET='gs://serrelab'
