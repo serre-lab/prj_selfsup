@@ -16,7 +16,8 @@ spec:
       - name: resnet-tpu
         # The official TensorFlow 1.15.2 image.
         # https://hub.docker.com/r/tensorflow/tensorflow
-        image: tensorflow/tensorflow:1.15.2
+        # image: tensorflow/tensorflow:1.15.2
+        image: gcr.io/kubeflow-images-public/tensorflow-1.15.2-notebook-gpu:1.0.0
         command:
         - bash
         - -c
@@ -24,9 +25,10 @@ spec:
           CHANNELS=32
           TD_LOSS=ar
           BU_LOSS=ar
-          sudo pip3 install -U tpunicorn
+          pip3 install -r requirements.txt
           git clone https://github.com/serre-lab/prj_selfsup.git
-          bash pretrain_ilsvrc.sh $CHANNELS $TD_LOSS $BU_LOSS $(KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS)s
+          echo $(KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS)s
+          bash prj_selfsup/jobs/pretrain_ilsvrc.sh $CHANNELS $TD_LOSS $BU_LOSS $(KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS)s
         resources:
           limits:
             # Request a single Preemptible v2-8 Cloud TPU device to train the
@@ -34,4 +36,5 @@ spec:
             # which has 2 cores, so there are 8 cores in total.
             cloud-tpus.google.com/preemptible-v3: 256
 
+# sudo pip3 install -U tpunicorn
 # pu babysit $(KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS) 'bash pretrain_ilsvrc.sh $CHANNELS $TD_LOSS $BU_LOSS $(KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS)'
