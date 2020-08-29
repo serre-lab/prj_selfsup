@@ -456,8 +456,8 @@ def main(argv):
   # if FLAGS.train_summary_steps > 0:
   #   tf.config.set_soft_device_placement(True)
 
-  # if FLAGS.train_mode == 'finetune':
-  #   FLAGS.use_td_loss = False
+  if FLAGS.train_mode == 'finetune':
+    FLAGS.use_td_loss = False
 
   builder = tfds.builder(FLAGS.dataset, data_dir=FLAGS.data_dir)
   builder.download_and_prepare()
