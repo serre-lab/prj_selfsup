@@ -308,28 +308,6 @@ flags.DEFINE_string(
     'experiment_name', 'test',
     'used for logging in neptune.')
 
-flags.DEFINE_string(
-    'bigtable_project', None,
-    'The Cloud Bigtable project.  If None, --gcp_project will be used.')
-flags.DEFINE_string(
-    'bigtable_instance', None,
-    'The Cloud Bigtable instance to load data from.')
-flags.DEFINE_string(
-    'bigtable_table', 'imagenet',
-    'The Cloud Bigtable table to load data from.')
-flags.DEFINE_string(
-    'bigtable_train_prefix', 'train_',
-    'The prefix identifying training rows.')
-flags.DEFINE_string(
-    'bigtable_eval_prefix', 'validation_',
-    'The prefix identifying evaluation rows.')
-flags.DEFINE_string(
-    'bigtable_column_family', 'tfexample',
-    'The column family storing TFExamples.')
-flags.DEFINE_string(
-    'bigtable_column_qualifier', 'example',
-    'The column name storing TFExamples.')
-
 
     
 ###### extra flags

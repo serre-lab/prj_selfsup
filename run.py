@@ -44,11 +44,11 @@ import tensorflow_datasets as tfds
 import tensorflow_hub as hub
 
 
-import neptune
-import neptune_tensorboard as neptune_tb
+# import neptune
+# import neptune_tensorboard as neptune_tb
 
-neptune.init(project_qualified_name='Serre-Lab/self-sup')
-neptune_tb.integrate_with_tensorflow()
+# neptune.init(project_qualified_name='Serre-Lab/self-sup')
+# neptune_tb.integrate_with_tensorflow()
 
 # from tensorflow.python import debug as tf_debug
 
@@ -236,9 +236,24 @@ flags.DEFINE_integer(
     'width_multiplier', 1,
     'Multiplier to change width of network.')
 
+################################################ old version
 flags.DEFINE_integer(
     'resnet_depth', 50,
     'Depth of ResNet.')
+################################################ new version
+
+flags.DEFINE_integer(
+    'metric_channels', 3,
+    'Number of channels in the metric output.')
+
+flags.DEFINE_integer(
+    'encoder_depth', 50,
+    'Depth of ResNet Encoder.')
+
+flags.DEFINE_integer(
+    'decoder_depth', 50,
+    'Depth of ResNet Decoder.')
+################################################
 
 flags.DEFINE_float(
     'sk_ratio', 0.,
@@ -279,7 +294,7 @@ flags.DEFINE_string(
 
 flags.DEFINE_integer(
     'rec_loss_exponent', 2,
-    'reconstruction loss L1 - L1.')
+    'reconstruction loss L1 - L2.')
 
 flags.DEFINE_float(
     'td_loss_weight', 1,
@@ -421,12 +436,11 @@ def main(argv):
     raise app.UsageError('Too many command-line arguments.')
 
   # Enable training summary.
-  if FLAGS.train_summary_steps > 0:
-    tf.config.set_soft_device_placement(True)
+#   if FLAGS.train_summary_steps > 0:
+#     tf.config.set_soft_device_placement(True)
 
-#   assert (not FLAGS.use_td_loss) or (not FLAGS.train_mode == 'finetune'), 'no top down loss during finetuning'
-  if FLAGS.train_mode == 'finetune':
-    FLAGS.use_td_loss = False
+#   if FLAGS.train_mode == 'finetune':
+#     FLAGS.use_td_loss = False
 
   builder = tfds.builder(FLAGS.dataset, data_dir=FLAGS.data_dir)
   builder.download_and_prepare()
@@ -442,16 +456,11 @@ def main(argv):
   resnet_decoder.BATCH_NORM_DECAY = FLAGS.batch_norm_decay
 
   model = resnet_ae.resnet_autoencoder_v1(
-        resnet_depth=FLAGS.resnet_depth,
-        width_multiplier=FLAGS.width_multiplier,
-        cifar_stem=FLAGS.image_size <= 32)
-#   if FLAGS.use_td_loss:
-#   else:
-#     resnet_encoder.BATCH_NORM_DECAY = FLAGS.batch_norm_decay
-#     model = resnet_encoder.resnet_encoder_v1(
-#         resnet_depth=FLAGS.resnet_depth,
-#         width_multiplier=FLAGS.width_multiplier,
-#         cifar_stem=FLAGS.image_size <= 32)
+      encoder_depth=FLAGS.encoder_depth,
+      decoder_depth=FLAGS.decoder_depth,
+      width_multiplier=FLAGS.width_multiplier,
+      metric_channels=FLAGS.metric_channels,
+      cifar_stem=False) #cifar_stem=FLAGS.image_size <= 32
 
   checkpoint_steps = (
       FLAGS.checkpoint_steps or (FLAGS.checkpoint_epochs * epoch_steps))
@@ -480,82 +489,39 @@ def main(argv):
       master=FLAGS.master,
       cluster=cluster)
   
-  print('#'*180)
-  print('#'*180)
-  
   estimator = tf.estimator.tpu.TPUEstimator(
       model_lib.build_model_fn(model, num_classes, num_train_examples),
       config=run_config,
       train_batch_size=FLAGS.train_batch_size,
       eval_batch_size=FLAGS.eval_batch_size,
       use_tpu=FLAGS.use_tpu)
-  
-#   print('#'*180)
-#   print('#'*180)
-  
-#   estimator.train(
-#         data_lib.build_input_fn(builder, True), max_steps=1)
-  
-#   weights = estimator.get_variable_value('base_model/encoder/conv2d/kernel:0')
-#   print(weights)
-  if FLAGS.use_neptune:
-    with neptune.create_experiment(name=FLAGS.experiment_name, params=argv_to_dict()):
-      if FLAGS.mode == 'eval':
-        for ckpt in tf.train.checkpoints_iterator(
-            run_config.model_dir, min_interval_secs=15):
-          try:
-            result = perform_evaluation(
-                estimator=estimator,
-                input_fn=data_lib.build_input_fn(builder, False),
-                eval_steps=eval_steps,
-                model=model,
-                num_classes=num_classes,
-                checkpoint_path=ckpt)
-          except tf.errors.NotFoundError:
-            continue
-          if result['global_step'] >= train_steps:
-            return
-      else:
-        # hooks = [tf_debug.LocalCLIDebugHook(ui_type="readline")]
-        
-        estimator.train(
-            data_lib.build_input_fn(builder, True), max_steps=train_steps) #, hooks=hooks
-        if FLAGS.mode == 'train_then_eval':
-          perform_evaluation(
-              estimator=estimator,
-              input_fn=data_lib.build_input_fn(builder, False),
-              eval_steps=eval_steps,
-              model=model,
-              num_classes=num_classes)
-  else:
-      
-    if FLAGS.mode == 'eval':
-      for ckpt in tf.train.checkpoints_iterator(
-          run_config.model_dir, min_interval_secs=15):
-        try:
-          result = perform_evaluation(
-              estimator=estimator,
-              input_fn=data_lib.build_input_fn(builder, False),
-              eval_steps=eval_steps,
-              model=model,
-              num_classes=num_classes,
-              checkpoint_path=ckpt)
-        except tf.errors.NotFoundError:
-          continue
-        if result['global_step'] >= train_steps:
-          return
-    else:
-      # hooks = [tf_debug.LocalCLIDebugHook(ui_type="readline")]
-      
-      estimator.train(
-          data_lib.build_input_fn(builder, True), max_steps=train_steps) #, hooks=hooks
-      if FLAGS.mode == 'train_then_eval':
-        perform_evaluation(
+    
+  if FLAGS.mode == 'eval':
+    for ckpt in tf.train.checkpoints_iterator(
+        run_config.model_dir, min_interval_secs=15):
+      try:
+        result = perform_evaluation(
             estimator=estimator,
             input_fn=data_lib.build_input_fn(builder, False),
             eval_steps=eval_steps,
             model=model,
-            num_classes=num_classes)
+            num_classes=num_classes,
+            checkpoint_path=ckpt)
+      except tf.errors.NotFoundError:
+        continue
+      if result['global_step'] >= train_steps:
+        return
+  else:
+    # hooks = [tf_debug.LocalCLIDebugHook(ui_type="readline")]
+    estimator.train(
+        data_lib.build_input_fn(builder, True), max_steps=train_steps) #, hooks=hooks
+    if FLAGS.mode == 'train_then_eval':
+      perform_evaluation(
+          estimator=estimator,
+          input_fn=data_lib.build_input_fn(builder, False),
+          eval_steps=eval_steps,
+          model=model,
+          num_classes=num_classes)
 
 
 if __name__ == '__main__':
