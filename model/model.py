@@ -236,7 +236,7 @@ def build_model_fn(model, num_classes, num_train_examples):
               max_queue=checkpoint_steps).as_default():
             should_record = tf.math.equal(
                 tf.math.floormod(gs,
-                                 FLAGS.train_summary_steps), 0)
+                                 checkpoint_steps), 0) #FLAGS.train_summary_steps
             with tf2.summary.record_if(should_record):
               tf2.summary.scalar(
                   'total_loss',
