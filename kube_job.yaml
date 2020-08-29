@@ -25,9 +25,8 @@ spec:
           CHANNELS=32
           TD_LOSS=ar
           BU_LOSS=ar
-          pip3 install -r requirements.txt
+          sudo pip3 install -r requirements.txt
           sudo pip3 install -U tpunicorn
-          pip3 install tensorflow-datasets==3.1.0
           git clone https://github.com/serre-lab/prj_selfsup.git
           cd prj_selfsup
           bash jobs/pretrain_ilsvrc.sh $CHANNELS $TD_LOSS $BU_LOSS $(KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS)s
