@@ -170,7 +170,7 @@ def build_model_fn(model, num_classes, num_train_examples):
       hiddens = model_util.projection_head(hiddens, is_training)
       logits_sup = model_util.supervised_head(
           hiddens, num_classes, is_training)
-      sup_loss = obj_lib.add_supervised_loss(
+      sup_loss = obj_lib.supervised_loss(
           labels=labels['labels'],
           logits=logits_sup,
           weights=labels['mask'])
