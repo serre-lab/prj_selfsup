@@ -26,10 +26,13 @@ spec:
           TD_LOSS=ar
           BU_LOSS=ar
           git clone https://github.com/serre-lab/prj_selfsup.git
-          pip install --upgrade pip
-          pip3 install --user -r requirements.txt
-          sudo pip3 install -U tpunicorn
           cd prj_selfsup
+          pip install --upgrade pip
+          pip3 install -r requirements.txt
+          pip3 install --user -U tpunicorn
+          echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+          exec -l $SHELL
+          pu list
           chmod +x jobs/pretrain_ilsvrc.sh
           ./jobs/pretrain_ilsvrc.sh $CHANNELS $TD_LOSS $BU_LOSS $(KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS)s
         resources:
