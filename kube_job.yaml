@@ -34,7 +34,7 @@ spec:
             pip3 install -U tpunicorn &&
             export PATH="$HOME/.local/bin:$PATH" &&
             pu list &&
-            pu babysit $(KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS) 'bash jobs/pretrain_ilsvrc.sh $CHANNELS $TD_LOSS $BU_LOSS $(KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS)'
+            pu babysit $(KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS) -c 'bash jobs/pretrain_ilsvrc.sh $CHANNELS $TD_LOSS $BU_LOSS $(KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS)'
         resources:
           limits:
             # Request a single Preemptible v2-8 Cloud TPU device to train the
