@@ -24,20 +24,17 @@ spec:
         args:
           - -c
           - >-
-            command1 arg1 arg2 &&
-            command2 arg3 &&
-            command3 arg4
-            CHANNELS=32
-            TD_LOSS=ar
-            BU_LOSS=ar
-            git clone https://github.com/serre-lab/prj_selfsup.git
-            cd prj_selfsup
-            pip3 install --upgrade pip
-            pip3 install -r requirements.txt
-            pip3 install -U tpunicorn
-            echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
-            exec -l $SHELL
-            pu list
+            CHANNELS=32 &&
+            TD_LOSS=ar &&
+            BU_LOSS=ar &&
+            git clone https://github.com/serre-lab/prj_selfsup.git &&
+            cd prj_selfsup &&
+            pip3 install --upgrade pip &&
+            pip3 install -r requirements.txt &&
+            pip3 install -U tpunicorn &&
+            echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc &&
+            exec -l $SHELL &&
+            pu list &&
             bash jobs/pretrain_ilsvrc.sh $CHANNELS $TD_LOSS $BU_LOSS $(KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS)s
         resources:
           limits:
