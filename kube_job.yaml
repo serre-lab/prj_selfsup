@@ -41,8 +41,3 @@ spec:
             # model. A single v2-8 Cloud TPU device consists of 4 chips, each of
             # which has 2 cores, so there are 8 cores in total.
             cloud-tpus.google.com/preemptible-v3: 256
-
-          # cd prj_selfsup
-          # echo $(KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS)s
-          # pu babysit $(KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS) 'bash jobs/pretrain_ilsvrc.sh $CHANNELS $TD_LOSS $BU_LOSS $(KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS)'
-            # pu babysit $(KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS) -c 'bash jobs/pretrain_ilsvrc.sh $CHANNELS $TD_LOSS $BU_LOSS $(KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS)'
