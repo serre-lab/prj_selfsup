@@ -13,7 +13,7 @@ spec:
     spec:
       securityContext:
         runAsUser: 0
-      restartPolicy: Never
+      restartPolicy: OnFailure
       containers:
       - name: resnet-tpu
         # The official TensorFlow 1.15.2 image.

@@ -1,17 +1,21 @@
 # SimCLR - A Simple Framework for Contrastive Learning of Visual Representations
 
-
-# Train a model on ILSVRC12 on the vm
-bash jobs/pretrain_ilsrc.sh 16 ar ar prj-selfsup-v2-22
-
-# Create a tensorboard
-tensorboard --logdir=$(cat current_job.txt) &
-bash get_ip.sh  # navigate to <ip>:6006 in your web browser
-
+## Run jobs on the GCP cluster
 # Create a cluster, generate and run experiments, then delete cluster
 bash create_cluster.sh
 python prepare_experiments.py  --exp=experiments/bu_td_attractive_repulsive.yaml
 bash run_kube_exps.sh
+bash babysit_tpus.sh
+
+# Run tensorboard on the cluster
+kubectl run tensorboard \
+  --image tensorflow/tensorflow:1.15.2 \
+  --port 6006 \
+  -- bash -c "pip install tensorboard-plugin-profile==1.15.2 cloud-tpu-client && tensorboard --logdir=gs://serrelab/prj-selfsup"
+kubectl port-forward pod/tensorboard 6006  # Access the TB at http://localhost:6006
+
+# Clean up cluster
+bash stop_babysitting.sh
 bash delete_cluster.sh
 
 # Check kube status
@@ -23,14 +27,15 @@ kubectl get pods -w
 # Run a single kube job
 kubectl create -f kube_job.yaml
 
-# Run tensorboard on the cluster
-kubectl run tensorboard \
-  --image tensorflow/tensorflow:1.15.2 \
-  --port 6006 \
-  -- bash -c "pip install tensorboard-plugin-profile==1.15.2 cloud-tpu-client && tensorboard --logdir=gs://serrelab/prj-selfsup"
-kubectl port-forward pod/tensorboard 6006  # Access the TB at http://localhost:6006
+## Run individual jobs
+# Train a model on ILSVRC12 on the vm
+bash jobs/pretrain_ilsrc.sh 16 ar ar prj-selfsup-v2-22
 
-### 
+# Create a tensorboard
+tensorboard --logdir=$(cat current_job.txt) &
+bash get_ip.sh  # navigate to <ip>:6006 in your web browser
+
+## Googles stuff
 <div align="center">
   <img width="50%" alt="SimCLR Illustration" src="https://1.bp.blogspot.com/--vH4PKpE9Yo/Xo4a2BYervI/AAAAAAAAFpM/vaFDwPXOyAokAC8Xh852DzOgEs22NhbXwCLcBGAsYHQ/s1600/image4.gif">
 </div>

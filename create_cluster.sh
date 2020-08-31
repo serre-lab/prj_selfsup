@@ -23,5 +23,6 @@ clusters create "$CLUSTER_NAME" \
 --enable-autoupgrade --enable-autorepair \
 --max-surge-upgrade 1 --max-unavailable-upgrade 0 --enable-tpu
 
-# --num-nodes "$NUM_NODES" \
-
+# Apply a quota to the cluster that matches preemptible resources
+kubectl create namespace quota-pod
+kubectl apply -f quota.yaml --namespace=quota-pod
