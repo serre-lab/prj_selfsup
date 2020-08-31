@@ -14,12 +14,12 @@ kubectl run tensorboard \
   -- bash -c "pip install tensorboard-plugin-profile==1.15.2 cloud-tpu-client && tensorboard --logdir=gs://serrelab/prj-selfsup"
 kubectl port-forward pod/tensorboard 6006  # Access the TB at http://localhost:6006
 
+# Check kube status
+kubectl get pods -w
+
 # Clean up cluster
 bash stop_babysitting.sh
 bash delete_cluster.sh
-
-# Check kube status
-kubectl get pods -w
 
 # Monitor your kube
 `https://console.cloud.google.com/monitoring`
