@@ -1,6 +1,9 @@
 # SimCLR - A Simple Framework for Contrastive Learning of Visual Representations
 
 ## Run jobs on the GCP cluster
+# Install TPU unicorn for babysitting TPUs
+`https://github.com/shawwn/tpunicorn`
+
 # Create a cluster, generate and run experiments, then delete cluster
 bash create_cluster.sh
 python prepare_experiments.py  --exp=experiments/bu_td_attractive_repulsive.yaml
