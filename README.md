@@ -1,29 +1,40 @@
 # SimCLR - A Simple Framework for Contrastive Learning of Visual Representations
 
 ## Run jobs on the GCP cluster
-# Install TPU unicorn for babysitting TPUs
+
+Install TPU unicorn for babysitting TPUs
 `https://github.com/shawwn/tpunicorn`
 
-# Create a cluster, generate and run experiments, then delete cluster
+Create a cluster, generate and run experiments, then delete cluster
+```
 bash create_cluster.sh
 python prepare_experiments.py  --exp=experiments/bu_td_attractive_repulsive.yaml
 bash run_kube_exps.sh
+```
 
-# Check kube status
+Check kube status
+```
 kubectl get pods -w
+```
 
-# Check pod logs
+Check pod logs
+```
 kubectl logs <pod-name>
+```
 
-# Babysit existing preemptibles
+Babysit existing preemptibles
+```
 bash babysit_tpus.sh
+```
 
-# Run tensorboard on the cluster
+Run tensorboard on the cluster
+```
 kubectl run tensorboard \
   --image tensorflow/tensorflow:1.15.2 \
   --port 6006 \
   -- bash -c "pip install tensorboard-plugin-profile==1.15.2 cloud-tpu-client && tensorboard --logdir=gs://serrelab/prj-selfsup"
 kubectl port-forward pod/tensorboard 6006  # Access the TB at http://localhost:6006
+```
 
 # Delete pods in the cluster
 kubectl delete pods <pod-name>
@@ -31,20 +42,29 @@ kubectl delete pods <pod-name>
 # Clean up cluster
 bash stop_babysitting.sh
 bash delete_cluster.sh
+```
 
-# Monitor your kube
+Monitor your kube
 `https://console.cloud.google.com/monitoring`
 
-# Run a single kube job
+Run a single kube job
+```
 kubectl create -f kube_job.yaml
+```
 
 ## Run individual jobs
-# Train a model on ILSVRC12 on the vm
-bash jobs/pretrain_ilsrc.sh 16 ar ar prj-selfsup-v2-22
 
-# Create a tensorboard
+Train a model on ILSVRC12 on the vm
+```
+bash jobs/pretrain_ilsrc.sh 16 ar ar prj-selfsup-v2-22
+```
+
+Create a tensorboard
+```
 tensorboard --logdir=$(cat current_job.txt) &
 bash get_ip.sh  # navigate to <ip>:6006 in your web browser
+```
+
 
 ## Googles stuff
 <div align="center">
