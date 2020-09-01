@@ -736,6 +736,14 @@ def resnet_v1_generator_decoder(block_fn, layers, width_multiplier,
 
     # Skip
     if skip:
+      # Check that inputs/endpoints match. Might not be the case if different
+      # networks for encoding/decoding
+      ec = endpoints["block3"].get_shape().as_list()[-1]
+      ic = inputs.get_shape().as_list()[-1]
+      if ec != ic:
+        endpoints["block3"] = conv2d_fixed_padding(
+          inputs=endpoints["block3"], filters=ic, kernel_size=1, strides=1,
+          data_format=data_format)
       inputs = inputs + endpoints["block3"]
     filter_trainable_variables(trainable_variables, after_block=2)
     # if FLAGS.train_mode == 'finetune' and FLAGS.fine_tune_after_block == 2:
@@ -750,7 +758,16 @@ def resnet_v1_generator_decoder(block_fn, layers, width_multiplier,
         dropblock_keep_prob=dropblock_keep_probs[2],
         dropblock_size=dropblock_size)
     # Skip
-    inputs = inputs + endpoints["block2"]
+    if skip:
+      # Check that inputs/endpoints match. Might not be the case if different
+      # networks for encoding/decoding
+      ec = endpoints["block2"].get_shape().as_list()[-1]
+      ic = inputs.get_shape().as_list()[-1]
+      if ec != ic:
+        endpoints["block2"] = conv2d_fixed_padding(
+          inputs=endpoints["block2"], filters=ic, kernel_size=1, strides=1,
+          data_format=data_format)
+      inputs = inputs + endpoints["block2"]
     filter_trainable_variables(trainable_variables, after_block=3)
     # if FLAGS.train_mode == 'finetune' and FLAGS.fine_tune_after_block == 3:
     #   inputs = tf.stop_gradient(inputs)
@@ -765,7 +782,15 @@ def resnet_v1_generator_decoder(block_fn, layers, width_multiplier,
         dropblock_size=dropblock_size)
     # Skip
     if skip:
-      inputs = inputs + endpoints["block1"]
+      # Check that inputs/endpoints match. Might not be the case if different
+      # networks for encoding/decoding
+      ec = endpoints["block2"].get_shape().as_list()[-1]
+      ic = inputs.get_shape().as_list()[-1]
+      if ec != ic:
+        endpoints["block2"] = conv2d_fixed_padding(
+          inputs=endpoints["block2"], filters=ic, kernel_size=1, strides=1,
+          data_format=data_format)
+      inputs = inputs + endpoints["block2"]
     filter_trainable_variables(trainable_variables, after_block=4)
     # if FLAGS.train_mode == 'finetune' and FLAGS.fine_tune_after_block == 4:
     #   inputs = tf.stop_gradient(inputs)
