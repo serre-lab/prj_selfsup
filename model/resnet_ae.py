@@ -37,8 +37,8 @@ BATCH_NORM_EPSILON = 1e-5
 
 
 
-def resnet_autoencoder_v1_generator(encoder, decoder, metric, data_format='channels_last'):
-  def model(inputs, target_images, is_training, skip):
+def resnet_autoencoder_v1_generator(encoder, decoder, metric, skip, data_format='channels_last'):
+  def model(inputs, target_images, is_training):
     """Creation of the model graph."""
     # if isinstance(inputs, tuple):
     if FLAGS.use_td_loss and isinstance(inputs, tuple):
