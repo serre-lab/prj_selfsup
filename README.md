@@ -27,6 +27,7 @@ kubectl port-forward pod/tensorboard 6006  # Access the TB at http://localhost:6
 
 # Delete pods in the cluster
 kubectl delete pods <pod-name>
+kubectl delete --all pods
 
 # Clean up cluster
 bash stop_babysitting.sh
