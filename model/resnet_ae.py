@@ -47,7 +47,7 @@ def resnet_autoencoder_v1_generator(encoder, decoder, metric, data_format='chann
       assert metric is not None, "Metric function is None"
       inputs, augs = inputs
       with tf.variable_scope('encoder'): # variable_scope name_scope
-        features = encoder(inputs, is_training=is_training)
+        features, block_activities = encoder(inputs, is_training=is_training)
       print("Features: ")
       print(features)
       print("---")
@@ -72,7 +72,7 @@ def resnet_autoencoder_v1_generator(encoder, decoder, metric, data_format='chann
       features = tf.concat([features, augs], axis=-1)
     
       with tf.variable_scope('decoder'):
-        recon_images = decoder(features, is_training=is_training)
+        recon_images = decoder(features, block_activities, is_training=is_training)
       print("Reconstructed images and target images: ")
       print(recon_images)
       print(target_images)

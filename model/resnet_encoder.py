@@ -570,6 +570,8 @@ def resnet_v1_generator_encoder(block_fn, layers, width_multiplier,
 
   def model(inputs, is_training):
     """Creation of the model graph."""
+    # Keep track of endpoint activities
+    endpoints = {}
     if cifar_stem:
       inputs = conv2d_fixed_padding(
           inputs=inputs, filters=64 * width_multiplier, kernel_size=3,
@@ -635,7 +637,7 @@ def resnet_v1_generator_encoder(block_fn, layers, width_multiplier,
         name='block_group1', data_format=data_format,
         dropblock_keep_prob=dropblock_keep_probs[0],
         dropblock_size=dropblock_size)
-
+    endpoints["block1"] = inputs
     filter_trainable_variables(trainable_variables, after_block=1)
     if FLAGS.train_mode == 'finetune' and FLAGS.fine_tune_after_block == 1:
       inputs = tf.stop_gradient(inputs)
@@ -646,6 +648,7 @@ def resnet_v1_generator_encoder(block_fn, layers, width_multiplier,
         name='block_group2', data_format=data_format,
         dropblock_keep_prob=dropblock_keep_probs[1],
         dropblock_size=dropblock_size)
+    endpoints["block2"] = inputs
 
     filter_trainable_variables(trainable_variables, after_block=2)
     if FLAGS.train_mode == 'finetune' and FLAGS.fine_tune_after_block == 2:
@@ -657,6 +660,7 @@ def resnet_v1_generator_encoder(block_fn, layers, width_multiplier,
         name='block_group3', data_format=data_format,
         dropblock_keep_prob=dropblock_keep_probs[2],
         dropblock_size=dropblock_size)
+    endpoints["block3"] = inputs
 
     filter_trainable_variables(trainable_variables, after_block=3)
     if FLAGS.train_mode == 'finetune' and FLAGS.fine_tune_after_block == 3:
@@ -668,6 +672,7 @@ def resnet_v1_generator_encoder(block_fn, layers, width_multiplier,
         name='block_group4', data_format=data_format,
         dropblock_keep_prob=dropblock_keep_probs[3],
         dropblock_size=dropblock_size)
+    endpoints["block4"] = inputs
 
     filter_trainable_variables(trainable_variables, after_block=4)
     if FLAGS.train_mode == 'finetune' and FLAGS.fine_tune_after_block == 4:
@@ -681,7 +686,7 @@ def resnet_v1_generator_encoder(block_fn, layers, width_multiplier,
     filter_trainable_variables(trainable_variables, after_block=5)
     add_to_collection(trainable_variables, 'trainable_variables_inblock_')
 
-    return inputs
+    return inputs, endpoints
 
   return model
 
