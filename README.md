@@ -8,6 +8,14 @@
 bash create_cluster.sh
 python prepare_experiments.py  --exp=experiments/bu_td_attractive_repulsive.yaml
 bash run_kube_exps.sh
+
+# Check kube status
+kubectl get pods -w
+
+# Check pod logs
+kubectl logs <pod-name>
+
+# Babysit existing preemptibles
 bash babysit_tpus.sh
 
 # Run tensorboard on the cluster
@@ -16,9 +24,6 @@ kubectl run tensorboard \
   --port 6006 \
   -- bash -c "pip install tensorboard-plugin-profile==1.15.2 cloud-tpu-client && tensorboard --logdir=gs://serrelab/prj-selfsup"
 kubectl port-forward pod/tensorboard 6006  # Access the TB at http://localhost:6006
-
-# Check kube status
-kubectl get pods -w
 
 # Clean up cluster
 bash stop_babysitting.sh

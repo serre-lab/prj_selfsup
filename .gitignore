@@ -6,4 +6,4 @@ logs/
 *.pyc
 SETENV.sh
 kube_files/
-
+.vscode
