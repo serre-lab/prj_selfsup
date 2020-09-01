@@ -38,7 +38,7 @@ BATCH_NORM_EPSILON = 1e-5
 
 
 def resnet_autoencoder_v1_generator(encoder, decoder, metric, data_format='channels_last'):
-  def model(inputs, target_images, is_training):
+  def model(inputs, target_images, is_training, skip):
     """Creation of the model graph."""
     # if isinstance(inputs, tuple):
     if FLAGS.use_td_loss and isinstance(inputs, tuple):
@@ -72,7 +72,11 @@ def resnet_autoencoder_v1_generator(encoder, decoder, metric, data_format='chann
       features = tf.concat([features, augs], axis=-1)
     
       with tf.variable_scope('decoder'):
-        recon_images = decoder(features, block_activities, is_training=is_training)
+        recon_images = decoder(
+          features,
+          block_activities,
+          is_training=is_training,
+          skip=skip)
       print("Reconstructed images and target images: ")
       print(recon_images)
       print(target_images)
@@ -135,9 +139,8 @@ def resnet_autoencoder_v1_generator(encoder, decoder, metric, data_format='chann
 
 def resnet_autoencoder_v1(encoder_depth, decoder_depth, width_multiplier, metric_channels,  # noqa
               cifar_stem=False, data_format='channels_last',
-              dropblock_keep_probs=None, dropblock_size=None):
+              dropblock_keep_probs=None, dropblock_size=None, skip=True):
   """Returns the ResNet model for a given size and number of output classes."""
-
   encoder = resnet_encoder_v1(encoder_depth, 
                               width_multiplier,
                               cifar_stem=cifar_stem, 
@@ -159,5 +162,6 @@ def resnet_autoencoder_v1(encoder_depth, decoder_depth, width_multiplier, metric
     encoder=encoder,
     decoder=decoder,
     metric=metric,
+    skip=skip,
     data_format=data_format)
 

@@ -25,6 +25,9 @@ kubectl run tensorboard \
   -- bash -c "pip install tensorboard-plugin-profile==1.15.2 cloud-tpu-client && tensorboard --logdir=gs://serrelab/prj-selfsup"
 kubectl port-forward pod/tensorboard 6006  # Access the TB at http://localhost:6006
 
+# Delete pods in the cluster
+kubectl delete pods <pod-name>
+
 # Clean up cluster
 bash stop_babysitting.sh
 bash delete_cluster.sh
