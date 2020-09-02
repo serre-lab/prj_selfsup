@@ -114,7 +114,7 @@ def build_model_fn(model, num_classes, num_train_examples):
       if FLAGS.use_td_loss:
         with tf.name_scope('td_loss'):
           if FLAGS.td_loss=='attractive':
-            td_loss = obj_lib.td_attractive_loss(
+            td_loss, logits_td_con, labels_td_con = obj_lib.td_attractive_loss(
               reconstruction=metric_hidden_r,
               target=metric_hidden_t,
               temperature=FLAGS.temperature,
@@ -139,7 +139,7 @@ def build_model_fn(model, num_classes, num_train_examples):
       if FLAGS.use_bu_loss:
         with tf.name_scope('bu_loss'):
           if FLAGS.bu_loss=='attractive':
-            bu_loss = obj_lib.attractive_loss(
+            bu_loss, logits_bu_con, labels_bu_con = obj_lib.attractive_loss(
               hiddens_proj,
               temperature=FLAGS.temperature,
               hidden_norm=FLAGS.hidden_norm)
@@ -153,7 +153,7 @@ def build_model_fn(model, num_classes, num_train_examples):
               temperature=FLAGS.temperature,
               tpu_context=tpu_context if is_training else None)  
           else:
-            raise 'Unknown loss'
+            raise NotImplementedError('Unknown loss')
       else:
         # No BU loss
         logits_bu_con = tf.zeros([params['batch_size'], params['batch_size']])
