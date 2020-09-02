@@ -112,10 +112,11 @@ def resnet_autoencoder_v1_generator(encoder, decoder, metric, skip, mask_augs=0.
         # recon_images = tf.clip_by_value(recon_images, clip_value_min=-5, clip_value_max=5)
         # recon_images = (recon_images + 5) / 10
 
-        recon_mean, recon_std = tf.nn.moments(recon_images, axes=[1, 2], keep_dims=True)
-        recon_images = (recon_images - recon_mean) / recon_std
-        recon_images = tf.clip_by_value(recon_images, clip_value_min=-5, clip_value_max=5)
-        recon_images = (recon_images + 5) / 10
+        # recon_mean, recon_std = tf.nn.moments(recon_images, axes=[1, 2], keep_dims=True)
+        # recon_images = (recon_images - recon_mean) / recon_std
+        # recon_images = tf.clip_by_value(recon_images, clip_value_min=-5, clip_value_max=5)
+        # recon_images = (recon_images + 5) / 10
+        recon_images = recon_images_squash
         if greyscale_viz:
           recon_images = tf.image.rgb_to_grayscale(recon_images)
           recon_images = tf.concat([recon_images, recon_images, recon_images], -1)
