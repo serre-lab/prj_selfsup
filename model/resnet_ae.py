@@ -131,6 +131,8 @@ def resnet_autoencoder_v1_generator(encoder, decoder, metric, skip, mask_augs=0.
         features = encoder(inputs, is_training)
       
       if data_format == 'channels_last':
+        print("Features:")
+        print(features)
         outputs = tf.reduce_mean(features, [1, 2])
       else:
         outputs = tf.reduce_mean(features, [2, 3])
