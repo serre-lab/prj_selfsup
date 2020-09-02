@@ -303,6 +303,8 @@ def build_model_fn(model, num_classes, num_train_examples):
 
 
         n_images = 5
+        if isinstance(target_images, list):
+          target_images = target_images[0]
         image_shape = target_images.get_shape().as_list()
 
         tar_im = tf.reshape(tf.cast(target_images[:n_images], tf.float32), [1, n_images] + image_shape[1:])
