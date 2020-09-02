@@ -128,7 +128,7 @@ def resnet_autoencoder_v1_generator(encoder, decoder, metric, skip, mask_augs=0.
       # augs = None
     
       with tf.variable_scope('encoder'): # variable_scope name_scope
-        features = encoder(inputs, is_training)
+        features, block_activities = encoder(inputs, is_training)
       
       if data_format == 'channels_last':
         print("Features:")
