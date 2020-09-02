@@ -36,6 +36,7 @@ def supervised_loss(labels, logits, weights, **kwargs):
 
 
 def attractive_loss(hidden,
+                         temperature=1.0,
                          hidden_norm=True,
                          weights=1.0):
   """Compute bottom up attractive loss based on cosine similarity.  

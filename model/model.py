@@ -140,6 +140,7 @@ def build_model_fn(model, num_classes, num_train_examples):
           if FLAGS.bu_loss=='attractive':
             bu_loss = obj_lib.attractive_loss(
               hiddens_proj,
+              temperature=FLAGS.temperature,
               hidden_norm=FLAGS.hidden_norm)
             logits_bu_con = tf.zeros([params['batch_size'], params['batch_size']])
             labels_bu_con = tf.zeros([params['batch_size'], params['batch_size']])
