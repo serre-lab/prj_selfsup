@@ -33,8 +33,8 @@ mask_augs=0.
 greyscale_viz=False
 skips=True
 
-datetime="$(date +'%d_%m_%Y-%H_%M')"
-experiment_name="pretrain-BU-${2}_TD-${3}_R${encoder_depth}_lr${learning_rate}_T${temperature}_TPU$datetime"
+# datetime="$(date +'%d_%m_%Y-%H_%M')"
+experiment_name="pretrain-BU-${2}_TD-${3}_R${encoder_depth}_lr${learning_rate}_T${temperature}"  # _TPU$datetime"
 # experiment_name=BU_{bu_loss}_TD_{td_loss}_R50_lr0.1_T0.1
 # echo "Deleting gs://serrelab/prj-selfsup/${experiment_name} and tmp files"
 gsutil mkdir gs://serrelab/prj-selfsup/results/
