@@ -312,6 +312,18 @@ flags.DEFINE_string(
     'experiment_name', 'test',
     'used for logging in neptune.')
 
+flags.DEFINE_float(
+    'mask_augs', 0.,
+    'Randomly mask augmentations before TD.')
+
+flags.DEFINE_boolean(
+    'greyscale_viz', False,
+    'Visualize TD reconstructions in greyscale.')
+
+flags.DEFINE_boolean(
+    'skips', True,
+    'Use skip connections in the decoder (from the encoder).')
+
 
 ###### extra flags
 # use bottom up loss
@@ -477,6 +489,9 @@ def main(argv):
       decoder_depth=FLAGS.decoder_depth,
       width_multiplier=FLAGS.width_multiplier,
       metric_channels=FLAGS.metric_channels,
+      mask_augs=FLAGS.mask_augs,
+      greyscale_viz=FLAGS.greyscale_viz,
+      skip=FLAGS.skips,
       cifar_stem=False)  # cifar_stem=FLAGS.image_size <= 32
 #   if FLAGS.use_td_loss:
 #   else:

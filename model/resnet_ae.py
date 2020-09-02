@@ -37,15 +37,22 @@ BATCH_NORM_EPSILON = 1e-5
 
 
 
-def resnet_autoencoder_v1_generator(encoder, decoder, metric, skip, data_format='channels_last'):
+def resnet_autoencoder_v1_generator(encoder, decoder, metric, skip, mask_augs=0., greyscale_viz=False, data_format='channels_last'):
   def model(inputs, target_images, is_training):
     """Creation of the model graph."""
     # if isinstance(inputs, tuple):
+    assert mask_augs >= 0. and mask_augs <= 1., "mask_augs must be in [0, 1]"
     if FLAGS.use_td_loss and isinstance(inputs, tuple):
       # print('#'*80)
       # print(inputs)
       assert metric is not None, "Metric function is None"
       inputs, augs = inputs
+      B = inputs.get_shape().as_list()[0]
+      A = augs.get_shape().as_list()[1]
+      if mask_augs > 0:
+        mask = tf.cast(tf.greater(tf.random.uniform(shape=[B, A], minval=0., maxval=1.), 0.5), augs.dtype)  # noqa
+        bias = mask * -1
+        augs = (augs * mask) + bias  # Randomly mask out augs for difficulty and code those dims as -1
       with tf.variable_scope('encoder'): # variable_scope name_scope
         features, block_activities = encoder(inputs, is_training=is_training)
       print("Features: ")
@@ -98,7 +105,7 @@ def resnet_autoencoder_v1_generator(encoder, decoder, metric, skip, data_format=
         # both_images = tf.concat([recon_images, target_images], -1)  # B H W 6
         all_images = tf.concat([recon_images_squash, target_images], 0)  # Stack these in batch dim
         metric_all_images = metric(all_images, is_training=is_training)
-        B = metric_all_images.get_shape().as_list()[0]
+        # B = metric_all_images.get_shape().as_list()[0]
         metric_all_images = tf.reshape(metric_all_images, [B, -1])
         metric_hidden_r, metric_hidden_t = tf.split(metric_all_images, 2, 0)  # Split these in batch dim
 
@@ -110,7 +117,8 @@ def resnet_autoencoder_v1_generator(encoder, decoder, metric, skip, data_format=
         recon_images = (recon_images - recon_mean) / recon_std
         recon_images = tf.clip_by_value(recon_images, clip_value_min=-5, clip_value_max=5)
         recon_images = (recon_images + 5) / 10
-        recon_images = tf.image.rgb_to_grayscale(recon_images)
+        if greyscale_viz:
+          recon_images = tf.image.rgb_to_grayscale(recon_images)
         recon_images = tf.concat([recon_images, recon_images, recon_images], -1)
       print("Embedding output: ")
       print(metric_hidden_t)
@@ -139,7 +147,8 @@ def resnet_autoencoder_v1_generator(encoder, decoder, metric, skip, data_format=
 
 def resnet_autoencoder_v1(encoder_depth, decoder_depth, width_multiplier, metric_channels,  # noqa
               cifar_stem=False, data_format='channels_last',
-              dropblock_keep_probs=None, dropblock_size=None, skip=True):
+              dropblock_keep_probs=None, dropblock_size=None,
+              mask_augs=0., greyscale_viz=False, skip=True):
   """Returns the ResNet model for a given size and number of output classes."""
   encoder = resnet_encoder_v1(encoder_depth, 
                               width_multiplier,
@@ -163,5 +172,7 @@ def resnet_autoencoder_v1(encoder_depth, decoder_depth, width_multiplier, metric
     decoder=decoder,
     metric=metric,
     skip=skip,
+    mask_augs=mask_augs,
+    greyscale_viz=greyscale_viz,
     data_format=data_format)
 

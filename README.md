@@ -20,10 +20,12 @@ bash babysit_tpus.sh
 
 # Run tensorboard on the cluster
 kubectl run tensorboard \
-  --image tensorflow/tensorflow:1.15.2 \
+  --image tensorflow/tensorflow:2.2.0 \
   --port 6006 \
-  -- bash -c "pip install tensorboard-plugin-profile==1.15.2 cloud-tpu-client && tensorboard --logdir=gs://serrelab/prj-selfsup"
+  -- bash -c "pip install tensorboard-plugin-profile==2.2.0 cloud-tpu-client && curl -i icanhazip.com && tensorboard --logdir=gs://serrelab/prj-selfsup --bind_all"
+kubectl get pod tensorboard -w
 kubectl port-forward pod/tensorboard 6006  # Access the TB at http://localhost:6006
+kubectl delete pod tensorboard
 
 # Delete pods in the cluster
 kubectl delete pods <pod-name>

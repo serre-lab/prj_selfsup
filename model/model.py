@@ -128,7 +128,7 @@ def build_model_fn(model, num_classes, num_train_examples):
               temperature=FLAGS.temperature,
               tpu_context=tpu_context if is_training else None)
           else:
-            raise 'Unknown loss'
+            raise NotImplementedError("Error at TD loss {}".format(FLAGS.td_loss))
       else:
         # No TD loss
         logits_td_con = tf.zeros([params['batch_size'], params['batch_size']])

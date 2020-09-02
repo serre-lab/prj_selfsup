@@ -29,6 +29,10 @@ bu_loss=$3  #'ar'
 td_loss_weight=1.0
 bu_loss_weight=1.0
 
+mask_augs=0.
+greyscale_viz=False
+skips=True
+
 datetime="$(date +'%d_%m_%Y-%H_%M')"
 experiment_name="pretrain-BU-${2}_TD-${3}_R${encoder_depth}_lr${learning_rate}_T${temperature}_TPU$datetime"
 # experiment_name=BU_{bu_loss}_TD_{td_loss}_R50_lr0.1_T0.1
@@ -84,3 +88,6 @@ python3 run.py \
   --tpu_name=$TPU_NAME \
   --train_summary_steps=$train_summary_steps \
   --experiment_name=$experiment_name \
+  --mask_augs=$mask_augs \
+  --greyscale_viz=$greyscale_viz \
+  --skips=$skips \
