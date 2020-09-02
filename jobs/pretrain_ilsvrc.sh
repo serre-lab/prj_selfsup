@@ -29,7 +29,7 @@ bu_loss=$3  #'ar'
 td_loss_weight=1.0
 bu_loss_weight=1.0
 
-mask_augs=0.
+mask_augs=$4
 greyscale_viz=False
 skips=True
 
@@ -53,7 +53,7 @@ echo gs://serrelab/prj-selfsup/results/${experiment_name} > current_job.txt
 # MODEL_DIR=$STORAGE_BUCKET/$experiment_name
 
 use_tpu=True
-export TPU_NAME=$4  # 'prj-selfsup-v2-22'
+export TPU_NAME=$5  # 'prj-selfsup-v2-22'
 # export TPU_NAME='prj-selfsup-tpu-preempt0'
 # export TPU_NAME='prj-selfsup-v2-22'
 export STORAGE_BUCKET='gs://serrelab'
