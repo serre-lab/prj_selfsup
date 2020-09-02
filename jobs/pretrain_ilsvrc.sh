@@ -60,7 +60,7 @@ export STORAGE_BUCKET='gs://serrelab'
 # DATA_DIR=gs://imagenet_data/train/
 
 DATA_DIR=$STORAGE_BUCKET/imagenet_dataset/
-MODEL_DIR=$STORAGE_BUCKET/prj-selfsup/$experiment_name
+MODEL_DIR=$STORAGE_BUCKET/prj-selfsup/results/$experiment_name
 
 
 # python3 run_imagenet.py \
