@@ -36,7 +36,6 @@ FLAGS = flags.FLAGS
 BATCH_NORM_EPSILON = 1e-5
 
 
-
 def resnet_autoencoder_v1_generator(encoder, decoder, metric, skip, mask_augs=0., greyscale_viz=False, data_format='channels_last'):
   def model(inputs, target_images, is_training):
     """Creation of the model graph."""
@@ -119,7 +118,7 @@ def resnet_autoencoder_v1_generator(encoder, decoder, metric, skip, mask_augs=0.
         recon_images = (recon_images + 5) / 10
         if greyscale_viz:
           recon_images = tf.image.rgb_to_grayscale(recon_images)
-        recon_images = tf.concat([recon_images, recon_images, recon_images], -1)
+          recon_images = tf.concat([recon_images, recon_images, recon_images], -1)
       print("Embedding output: ")
       print(metric_hidden_t)
       print("---")
