@@ -130,9 +130,10 @@ def build_model_fn(model, num_classes, num_train_examples):
           else:
             raise 'Unknown loss'
       else:
+        # No TD loss
         logits_td_con = tf.zeros([params['batch_size'], params['batch_size']])
         labels_td_con = tf.zeros([params['batch_size'], params['batch_size']])
-        td_loss = tf.zeros([])
+        td_loss = 0.
       hiddens_proj = model_util.projection_head(hiddens, is_training)
 
       if FLAGS.use_bu_loss:
@@ -154,9 +155,10 @@ def build_model_fn(model, num_classes, num_train_examples):
           else:
             raise 'Unknown loss'
       else:
+        # No BU loss
         logits_bu_con = tf.zeros([params['batch_size'], params['batch_size']])
         labels_bu_con = tf.zeros([params['batch_size'], params['batch_size']])
-        bu_loss = tf.zeros([])
+        bu_loss = 0.
       logits_sup = tf.zeros([params['batch_size'], num_classes])
 
     else:
@@ -183,6 +185,8 @@ def build_model_fn(model, num_classes, num_train_examples):
 
     
     if FLAGS.train_mode == 'pretrain':
+      print(bu_loss)
+      print(td_loss)
       loss =  tf.add_n([td_loss * FLAGS.td_loss_weight, bu_loss * FLAGS.bu_loss_weight] + tf.losses.get_regularization_losses())
     else:
       loss =  tf.add_n([sup_loss] + tf.losses.get_regularization_losses())
