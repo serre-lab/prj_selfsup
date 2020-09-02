@@ -55,20 +55,10 @@ def attractive_loss(hidden,
   batch_size = tf.shape(hidden1)[0]
 
   # Gather hidden1/hidden2 across replicas and create local labels.
-  if tpu_context is not None:
-    hidden1_large = tpu_cross_replica_concat(hidden1, tpu_context)
-    hidden2_large = tpu_cross_replica_concat(hidden2, tpu_context)
-    enlarged_batch_size = tf.shape(hidden1_large)[0]
-    # TODO(iamtingchen): more elegant way to convert u32 to s32 for replica_id.
-    replica_id = tf.cast(tf.cast(xla.replica_id(), tf.uint32), tf.int32)
-    labels_idx = tf.range(batch_size) + replica_id * batch_size
-    labels = tf.one_hot(labels_idx, enlarged_batch_size * 2)
-    masks = tf.one_hot(labels_idx, enlarged_batch_size)
-  else:
-    hidden1_large = hidden1
-    hidden2_large = hidden2
-    labels = tf.one_hot(tf.range(batch_size), batch_size * 2)
-    masks = tf.one_hot(tf.range(batch_size), batch_size)
+  hidden1_large = hidden1
+  hidden2_large = hidden2
+  labels = tf.one_hot(tf.range(batch_size), batch_size * 2)
+  masks = tf.one_hot(tf.range(batch_size), batch_size)
 
   logits_aa = tf.matmul(hidden1, hidden1_large, transpose_b=True) / temperature
   logits_aa = logits_aa - masks * LARGE_NUM
@@ -178,22 +168,10 @@ def td_attractive_loss(reconstruction,
     # batch_size = tf.shape(reconstruction1)[0]
 
     # Gather hidden1/hidden2 across replicas and create local labels.
-    if tpu_context is not None:
-      reconstruction1_large = tpu_cross_replica_concat(reconstruction1, tpu_context)
-      reconstruction2_large = tpu_cross_replica_concat(reconstruction2, tpu_context)
-      target_large = tpu_cross_replica_concat(target, tpu_context)
-      
-      enlarged_batch_size = tf.shape(reconstruction1_large)[0]
-      # TODO(iamtingchen): more elegant way to convert u32 to s32 for replica_id.
-      replica_id = tf.cast(tf.cast(xla.replica_id(), tf.uint32), tf.int32)
-      labels_idx = tf.range(batch_size) + replica_id * batch_size
-      labels = tf.one_hot(labels_idx, enlarged_batch_size * 3)
-      masks = tf.one_hot(labels_idx, enlarged_batch_size)
-    else:
-      reconstruction1_large = reconstruction1
-      reconstruction2_large = reconstruction2
-      labels = tf.one_hot(tf.range(batch_size), batch_size * 3)
-      masks = tf.one_hot(tf.range(batch_size), batch_size)
+    reconstruction1_large = reconstruction1
+    reconstruction2_large = reconstruction2
+    labels = tf.one_hot(tf.range(batch_size), batch_size * 3)
+    masks = tf.one_hot(tf.range(batch_size), batch_size)
 
     # target = tf.reshape(target, [batch_size, -1])
     reconstruction1 = tf.reshape(reconstruction1, [batch_size, -1])
