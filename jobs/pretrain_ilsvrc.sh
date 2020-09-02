@@ -29,9 +29,13 @@ bu_loss=$3  #'ar'
 td_loss_weight=1.0
 bu_loss_weight=1.0
 
-mask_augs=$4
 greyscale_viz=False
 skips=True
+mask_augs=$4
+if [ -z "$mask_augs" ]
+then
+mask_augs=False
+fi
 
 # datetime="$(date +'%d_%m_%Y-%H_%M')"
 experiment_name="pretrain-BU-${2}_TD-${3}_R${encoder_depth}_lr${learning_rate}_T${temperature}"  # _TPU$datetime"
