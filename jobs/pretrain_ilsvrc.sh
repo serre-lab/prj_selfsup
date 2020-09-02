@@ -32,9 +32,8 @@ bu_loss_weight=1.0
 greyscale_viz=False
 skips=True
 mask_augs=$4
-if [ -z "$mask_augs" ]
-then
-mask_augs=False
+if [ -z "$mask_augs" ]; then
+mask_augs=false
 fi
 
 # datetime="$(date +'%d_%m_%Y-%H_%M')"
@@ -66,32 +65,59 @@ export STORAGE_BUCKET='gs://serrelab'
 DATA_DIR=$STORAGE_BUCKET/imagenet_dataset/
 MODEL_DIR=$STORAGE_BUCKET/prj-selfsup/results/$experiment_name
 
-
-# python3 run_imagenet.py \
-python3 run.py \
-  --encoder_depth=$encoder_depth \
-  --decoder_depth=$decoder_depth \
-  --metric_channels=$metric_channels \
-  --train_mode=$train_mode \
-  --train_batch_size=$train_batch_size \
-  --train_epochs=$train_epochs \
-  --temperature=$temperature \
-  --learning_rate=$learning_rate \
-  --learning_rate_scaling=$learning_rate_scaling \
-  --weight_decay=$weight_decay \
-  --dataset=$dataset \
-  --image_size=$image_size \
-  --eval_split=$eval_split \
-  --data_dir=$DATA_DIR \
-  --model_dir=$MODEL_DIR \
-  --td_loss=$td_loss \
-  --bu_loss=$bu_loss \
-  --td_loss_weight=$td_loss_weight \
-  --bu_loss_weight=$bu_loss_weight \
-  --use_tpu=$use_tpu \
-  --tpu_name=$TPU_NAME \
-  --train_summary_steps=$train_summary_steps \
-  --experiment_name=$experiment_name \
-  --mask_augs=$mask_augs \
-  --greyscale_viz=$greyscale_viz \
-  --skips=$skips \
+if [ $mask_augs = true]; then
+  python3 run.py \
+    --encoder_depth=$encoder_depth \
+    --decoder_depth=$decoder_depth \
+    --metric_channels=$metric_channels \
+    --train_mode=$train_mode \
+    --train_batch_size=$train_batch_size \
+    --train_epochs=$train_epochs \
+    --temperature=$temperature \
+    --learning_rate=$learning_rate \
+    --learning_rate_scaling=$learning_rate_scaling \
+    --weight_decay=$weight_decay \
+    --dataset=$dataset \
+    --image_size=$image_size \
+    --eval_split=$eval_split \
+    --data_dir=$DATA_DIR \
+    --model_dir=$MODEL_DIR \
+    --td_loss=$td_loss \
+    --bu_loss=$bu_loss \
+    --td_loss_weight=$td_loss_weight \
+    --bu_loss_weight=$bu_loss_weight \
+    --use_tpu=$use_tpu \
+    --tpu_name=$TPU_NAME \
+    --train_summary_steps=$train_summary_steps \
+    --experiment_name=$experiment_name \
+    --mask_augs=$mask_augs \
+    --greyscale_viz=$greyscale_viz \
+    --skips=$skips \
+else
+  python3 run.py \
+    --encoder_depth=$encoder_depth \
+    --decoder_depth=$decoder_depth \
+    --metric_channels=$metric_channels \
+    --train_mode=$train_mode \
+    --train_batch_size=$train_batch_size \
+    --train_epochs=$train_epochs \
+    --temperature=$temperature \
+    --learning_rate=$learning_rate \
+    --learning_rate_scaling=$learning_rate_scaling \
+    --weight_decay=$weight_decay \
+    --dataset=$dataset \
+    --image_size=$image_size \
+    --eval_split=$eval_split \
+    --data_dir=$DATA_DIR \
+    --model_dir=$MODEL_DIR \
+    --td_loss=$td_loss \
+    --bu_loss=$bu_loss \
+    --td_loss_weight=$td_loss_weight \
+    --bu_loss_weight=$bu_loss_weight \
+    --use_tpu=$use_tpu \
+    --tpu_name=$TPU_NAME \
+    --train_summary_steps=$train_summary_steps \
+    --experiment_name=$experiment_name \
+    --greyscale_viz=$greyscale_viz \
+    --skips=$skips \
+fi
