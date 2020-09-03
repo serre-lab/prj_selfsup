@@ -40,7 +40,7 @@ export STORAGE_BUCKET='gs://serrelab'
 
 DATA_DIR=$STORAGE_BUCKET/imagenet_dataset/
 MODEL_DIR=$STORAGE_BUCKET/prj-selfsup/results/$new_experiment_name
-CHKPT_DIR=$STORAGE_BUCKET/prj-selfsup/$old_experiment_name/$checkpoint_name
+CHKPT_DIR=$STORAGE_BUCKET/prj-selfsup/results/$old_experiment_name/$checkpoint_name
 
 
 python3 run.py \
