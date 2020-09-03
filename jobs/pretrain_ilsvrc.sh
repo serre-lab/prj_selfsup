@@ -37,7 +37,7 @@ mask_augs=$4
 experiment_name="pretrain-BU-${2}_TD-${3}_R${encoder_depth}_lr${learning_rate}_T${temperature}_mask${mask_augs}"  # _TPU$datetime"
 # experiment_name=BU_{bu_loss}_TD_{td_loss}_R50_lr0.1_T0.1
 # echo "Deleting gs://serrelab/prj-selfsup/${experiment_name} and tmp files"
-gsutil mkdir gs://serrelab/prj-selfsup/results/
+gsutil mkdir gs://serrelab/prj-selfsup/results_ft/
 echo gs://serrelab/prj-selfsup/results/${experiment_name} > current_job.txt
 
 # gsutil  rm -r gs://serrelab/prj-selfsup/${experiment_name}
@@ -60,7 +60,7 @@ export STORAGE_BUCKET='gs://serrelab'
 # DATA_DIR=gs://imagenet_data/train/
 
 DATA_DIR=$STORAGE_BUCKET/imagenet_dataset/
-MODEL_DIR=$STORAGE_BUCKET/prj-selfsup/results/$experiment_name
+MODEL_DIR=$STORAGE_BUCKET/prj-selfsup/results_ft/$experiment_name
 
 
 python3 run.py \
