@@ -2,6 +2,7 @@
 CLUSTER_NAME=self-sup
 MIN_NODES=1
 MAX_NODES=16
+START_NODES=8
 
 gcloud beta container --project "beyond-dl-1503610372419" \
 clusters create "$CLUSTER_NAME" \
@@ -15,6 +16,7 @@ clusters create "$CLUSTER_NAME" \
 --scopes "https://www.googleapis.com/auth/cloud-platform" --preemptible \
 --max-nodes "$MAX_NODES" \
 --min-nodes "$MIN_NODES" \
+--num-nodes "$START_NODES" \
 --enable-stackdriver-kubernetes --enable-ip-alias \
 --network "projects/beyond-dl-1503610372419/global/networks/default" \
 --subnetwork "projects/beyond-dl-1503610372419/regions/europe-west4/subnetworks/default" \
