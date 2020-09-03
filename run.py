@@ -341,7 +341,7 @@ def build_hub_module(model, num_classes, global_step, checkpoint_path):
   tags_and_args = [
       # The default graph is built with batch_norm, dropout etc. in inference
       # mode. This graph version is good for inference, not training.
-      ([], {'is_training': False}),
+      (set(), {'is_training': False}),
       # A separate "train" graph builds batch_norm, dropout etc. in training
       # mode.
       (['train'], {'is_training': True}),
@@ -372,7 +372,10 @@ def build_hub_module(model, num_classes, global_step, checkpoint_path):
 
   # Drop the non-supported non-standard graph collection.
   drop_collections = ['trainable_variables_inblock_%d'%d for d in range(6)]
-  spec = hub.create_module_spec(module_fn, tags_and_args, drop_collections)
+  spec = hub.create_module_spec(
+    module_fn=module_fn,
+    tags_and_args=tags_and_args,
+    drop_collections=drop_collections)
   hub_export_dir = os.path.join(FLAGS.model_dir, 'hub')
   checkpoint_export_dir = os.path.join(hub_export_dir, str(global_step))
   if tf.io.gfile.exists(checkpoint_export_dir):

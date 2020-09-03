@@ -30,4 +30,4 @@ spec:
             cloud-tpus.google.com/preemptible-v3: 256
       securityContext:
         runAsUser: 0
-      restartPolicy: OnFailure
+      restartPolicy: Never
