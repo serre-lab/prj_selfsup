@@ -43,19 +43,10 @@ spec:
             NEW_EXP=finetune-BU-${BU_LOSS}_TD-${TD_LOSS}_R${encoder_depth}_lr${learning_rate}_T${temperature}_mask${MASK} &&
             OLD_EXP=pretrain-BU-${BU_LOSS}_TD-${TD_LOSS}_R${encoder_depth}_lr${learning_rate}_T${temperature}_mask${MASK} &&
             TPU=$(KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS) &&
-            CHECK_NAME=model.ckpt-125114 &&
-            bash jobs/finetune_ilsvrc.sh $NEW_EXP $OLD_EXP $CHECK_NAME $TPU
+            bash jobs/finetune_ilsvrc.sh $NEW_EXP $OLD_EXP $TPU
         resources:
           limits:
             # Request a single Preemptible v2-8 Cloud TPU device to train the
             # model. A single v2-8 Cloud TPU device consists of 4 chips, each of
             # which has 2 cores, so there are 8 cores in total.
             cloud-tpus.google.com/preemptible-v3: 256
-
-
-          TPU=$(KUBE_GOOGLE_CLOUD_TPU_ENDPOINTS) &&
-          git clone https://github.com/serre-lab/prj_selfsup.git &&
-          cd prj_selfsup && pip3 install --upgrade pip && pip3 install -r requirements.txt &&
-          pip3 install -U tpunicorn && export PATH="$HOME/.local/bin:$PATH" &&
-          pu list &&
-          bash jobs/finetune_ilsvrc.sh $NEW_EXP $OLD_EXP $CHECK_NAME $TPU
