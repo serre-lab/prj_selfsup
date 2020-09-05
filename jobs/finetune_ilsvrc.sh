@@ -23,7 +23,7 @@ dataset=imagenet2012
 image_size=224 
 eval_split=validation 
 
-train_summary_steps=5000
+train_summary_steps=0
 
 use_tpu=True
 
