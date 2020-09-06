@@ -302,7 +302,7 @@ def build_model_fn(model, num_classes, num_train_examples):
             return tf.summary.all_v2_summary_ops()
 
 
-        n_images = 5
+        n_images = 4
         if isinstance(target_images, list):
           target_images = target_images[0]
         image_shape = target_images.get_shape().as_list()
