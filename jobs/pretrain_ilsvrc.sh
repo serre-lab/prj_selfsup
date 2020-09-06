@@ -5,7 +5,7 @@
 
 train_mode=pretrain
 
-train_batch_size=2048
+train_batch_size=1024
 train_epochs=400 
 temperature=0.1
 
