@@ -904,15 +904,30 @@ def learned_metric_v1(metric_channels, data_format='channels_last'):
   """Returns the learned metric for a given data format.
   Model expects concatenated [recon, target] images as input (6D)
   """
+  # DEFAULT_METRIC_MODEL = [
+  #   {'conv': ['conv1_1', 3, 1, 3, 64]},  # noqa name, kernel, stride, in, out
+  #   {'conv': ['conv1_2', 3, 1, 64, 128]},  # noqa name, kernel, stride, in, out
+  #   {'pool': ['pool1', 2, 2, 128, 128]},  # noqa name, kernel, stride, in, out
+  #   {'conv': ['conv2_2', 3, 1, 128, 128]},  # noqa name, kernel, stride, in, out
+  #   {'conv': ['conv2_2', 3, 1, 128, 256]},  # noqa name, kernel, stride, in, out
+  #   {'pool': ['pool2', 2, 2, 256, 256]},  # noqa name, kernel, stride, in, out
+  #   {'conv': ['conv3_1', 3, 1, 256, 256]},  # noqa name, kernel, stride, in, out
+  #   {'conv': ['conv3_2', 3, 1, 256, metric_channels]},  # noqa name, kernel, stride, in, out
+  #   # {'global_mean': ['gap', 3, 1, 128, 128]},  # noqa name, kernel, stride, in, out
+  # ]
   DEFAULT_METRIC_MODEL = [
     {'conv': ['conv1_1', 3, 1, 3, 64]},  # noqa name, kernel, stride, in, out
     {'conv': ['conv1_2', 3, 1, 64, 128]},  # noqa name, kernel, stride, in, out
-    {'pool': ['pool1', 2, 2, 128, 128]},  # noqa name, kernel, stride, in, out
-    {'conv': ['conv2_2', 3, 1, 128, 128]},  # noqa name, kernel, stride, in, out
-    {'conv': ['conv2_2', 3, 1, 128, 256]},  # noqa name, kernel, stride, in, out
-    {'pool': ['pool2', 2, 2, 256, 256]},  # noqa name, kernel, stride, in, out
-    {'conv': ['conv3_1', 3, 1, 256, 256]},  # noqa name, kernel, stride, in, out
-    {'conv': ['conv3_2', 3, 1, 256, metric_channels]},  # noqa name, kernel, stride, in, out
+    {'conv': ['conv1_3', 3, 1, 128, 128]},  # noqa name, kernel, stride, in, out
+    {'conv': ['conv1_4', 3, 1, 128, 128]},  # noqa name, kernel, stride, in, out
+    {'conv': ['conv1_5', 3, 1, 128, 128]},  # noqa name, kernel, stride, in, out
+    {'conv': ['conv1_6', 3, 1, 128, 128]},  # noqa name, kernel, stride, in, out
+    {'conv': ['conv1_7', 3, 1, 128, 128]},  # noqa name, kernel, stride, in, out
+    {'conv': ['conv1_8', 3, 1, 128, 128]},  # noqa name, kernel, stride, in, out
+    {'conv': ['conv1_9', 3, 1, 128, 128]},  # noqa name, kernel, stride, in, out
+    {'conv': ['conv1_10', 3, 1, 128, 128]},  # noqa name, kernel, stride, in, out
+    {'conv': ['conv1_11', 3, 1, 128, 128]},  # noqa name, kernel, stride, in, out
+    {'conv': ['conv1_12', 3, 1, 128, metric_channels]},  # noqa name, kernel, stride, in, out
     # {'global_mean': ['gap', 3, 1, 128, 128]},  # noqa name, kernel, stride, in, out
   ]
   return metric_model_builder(

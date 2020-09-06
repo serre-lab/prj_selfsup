@@ -18,7 +18,7 @@ dataset=imagenet2012
 image_size=224
 eval_split=validation
 encoder_depth=50
-decoder_depth=18
+decoder_depth=50
 metric_channels=$1  # 16
 
 train_summary_steps=2502
@@ -34,7 +34,7 @@ skips=True
 mask_augs=$4
 
 # datetime="$(date +'%d_%m_%Y-%H_%M')"
-experiment_name="pretrain-BU-${2}_TD-${3}_R${encoder_depth}_lr${learning_rate}_T${temperature}_mask${mask_augs}"  # _TPU$datetime"
+experiment_name="pretrain-TD-${2}_BU-${3}_R${encoder_depth}_lr${learning_rate}_T${temperature}_mask${mask_augs}"  # _TPU$datetime"
 # experiment_name=BU_{bu_loss}_TD_{td_loss}_R50_lr0.1_T0.1
 # echo "Deleting gs://serrelab/prj-selfsup/${experiment_name} and tmp files"
 gsutil mkdir gs://serrelab/prj-selfsup/results_ft/
@@ -60,7 +60,7 @@ export STORAGE_BUCKET='gs://serrelab'
 # DATA_DIR=gs://imagenet_data/train/
 
 DATA_DIR=$STORAGE_BUCKET/imagenet_dataset/
-MODEL_DIR=$STORAGE_BUCKET/prj-selfsup/results/$experiment_name
+MODEL_DIR=$STORAGE_BUCKET/prj-selfsup/results_50/$experiment_name
 
 
 python3 run.py \
