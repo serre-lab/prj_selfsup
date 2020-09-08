@@ -1,6 +1,9 @@
 # SimCLR - A Simple Framework for Contrastive Learning of Visual Representations
 
 ## Run jobs on the GCP cluster
+# Add your google credentials to your .bash_profile
+`https://cloud.google.com/docs/authentication/getting-started`
+
 # Install TPU unicorn for babysitting TPUs
 `https://github.com/shawwn/tpunicorn`
 
