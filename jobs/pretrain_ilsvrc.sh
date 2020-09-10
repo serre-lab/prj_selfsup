@@ -5,7 +5,7 @@
 
 train_mode=pretrain
 
-train_batch_size=1024
+train_batch_size=4096
 train_epochs=400 
 temperature=0.1
 
@@ -17,8 +17,8 @@ learning_rate_scaling=sqrt
 dataset=imagenet2012 
 image_size=224
 eval_split=validation
-encoder_depth=50
-decoder_depth=50
+encoder_depth=34
+decoder_depth=34
 metric_channels=$1  # 16
 
 train_summary_steps=2502
