@@ -17,8 +17,8 @@ learning_rate_scaling=sqrt
 dataset=imagenet2012 
 image_size=224
 eval_split=validation
-encoder_depth=34
-decoder_depth=34
+encoder_depth=18
+decoder_depth=18
 metric_channels=$1  # 16
 
 train_summary_steps=2502
