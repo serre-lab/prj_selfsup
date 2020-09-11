@@ -716,7 +716,7 @@ def resnet_v1_generator_decoder(block_fn, layers, width_multiplier,
       # networks for encoding/decoding
       ec = endpoints["block4"].get_shape().as_list()[-1]
       ic = inputs.get_shape().as_list()[-1]
-      if ec != ic:
+      if 0:  # ec != ic:
         endpoints["block4"] = conv2d_fixed_padding(
           inputs=endpoints["block4"], filters=ic, kernel_size=1, strides=1,
           data_format=data_format)
@@ -740,7 +740,7 @@ def resnet_v1_generator_decoder(block_fn, layers, width_multiplier,
       # networks for encoding/decoding
       ec = endpoints["block3"].get_shape().as_list()[-1]
       ic = inputs.get_shape().as_list()[-1]
-      if ec != ic:
+      if 0:  # ec != ic:
         endpoints["block3"] = conv2d_fixed_padding(
           inputs=endpoints["block3"], filters=ic, kernel_size=1, strides=1,
           data_format=data_format)
@@ -786,7 +786,7 @@ def resnet_v1_generator_decoder(block_fn, layers, width_multiplier,
       # networks for encoding/decoding
       ec = endpoints["block1"].get_shape().as_list()[-1]
       ic = inputs.get_shape().as_list()[-1]
-      if ec != ic:
+      if 0:  # ec != ic:
         endpoints["block1"] = conv2d_fixed_padding(
           inputs=endpoints["block1"], filters=ic, kernel_size=1, strides=1,
           data_format=data_format)
