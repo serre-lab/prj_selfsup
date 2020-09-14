@@ -166,10 +166,6 @@ def build_model_fn(model, num_classes, num_train_examples):
                 contrast_acc,
                 step=tf.train.get_global_step())
             tf2.summary.scalar(
-                'train_label_accuracy',
-                label_acc,
-                step=tf.train.get_global_step())
-            tf2.summary.scalar(
                 'contrast_entropy',
                 entropy_con,
                 step=tf.train.get_global_step())
