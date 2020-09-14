@@ -130,7 +130,7 @@ def build_model_fn(model, num_classes, num_train_examples):
                   continue
               _var_mapping[q_encoder_var] = mom_var
 
-      _var_mapping = get_var_mapping()
+      #_var_mapping = get_var_mapping()
       tf.logging.info("Found %d pairs of matched variables."%(len(_var_mapping)))
       return _var_mapping
 
@@ -160,7 +160,8 @@ def build_model_fn(model, num_classes, num_train_examples):
     var_mapping = get_var_mapping()
     assign_ops = [tf.assign(mom_var, var) for var, mom_var in var_mapping.items()]
     assign_op = tf.group(*assign_ops, name="initialize_momentum_encoder")
-    tf.get_collection(tf.GraphKeys.INIT_OPS, assign_op)
+    #tf.get_collection(tf.GraphKeys.INIT_OPS, assign_op)
+    tf.add_to_collection(tf.GraphKeys.INIT_OP, assign_op)
 
     # learning rate schedule
     learning_rate = model_util.learning_rate_schedule(
