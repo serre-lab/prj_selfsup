@@ -22,8 +22,8 @@ from __future__ import print_function
 import math
 from absl import flags
 
-import model_simclr.resnet as resnet
-from model_simclr.lars_optimizer import LARSOptimizer
+import model_moco.resnet as resnet
+from model_moco.lars_optimizer import LARSOptimizer
 
 import tensorflow.compat.v1 as tf
 
