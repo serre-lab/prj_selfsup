@@ -11,3 +11,4 @@ Minju:
 1. Edit `create_cluster.sh` CLUSTER_NAME
 2. Edit `kub_job.yaml` TPU type + experiment name
 3. Create a new experiment (experiment dims are hardcoded in prepare_experiments.py for now -- feel free to make this dynamic).
+4. Change out_dir in `jobs/pretrain_ilsvrc.sh`
