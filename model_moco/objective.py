@@ -67,7 +67,7 @@ def add_moco_contrastive_loss(
   
   batch_size = tf.shape(query)[0]
   key_pos_batch_size = tf.shape(key_pos)[0]
-  queue_size = tf.shape(query)[0]
+  queue_size = tf.shape(key_neg)[0]
 
   # Gather hidden1/hidden2 across replicas and create local labels.
   if tpu_context is not None:
