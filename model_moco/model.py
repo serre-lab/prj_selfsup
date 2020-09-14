@@ -114,6 +114,26 @@ def build_model_fn(model, num_classes, num_train_examples):
       queue_update = tf.scatter_update(queue, inds, item)
       return tf.group(queue_update, queue_ptr_update)
     
+    def get_var_mapping():
+      nontrainable_vars = list(set(tf.get_collection(tf.GraphKeys.MODEL_VARIABLES)))
+      all_vars = {v.name: v for v in tf.global_variables() + tf.local_variables()}
+
+      # find variables of encoder & momentum encoder
+      _var_mapping = {}  # var -> mom var
+      momentum_prefix = "momentum_model/"
+      for mom_var in nontrainable_vars:
+          if momentum_prefix in mom_var.name:
+              q_encoder_name = mom_var.name.replace(momentum_prefix, "base_model/")
+              q_encoder_var = all_vars[q_encoder_name]
+              assert q_encoder_var not in _var_mapping
+              if not q_encoder_var.trainable:  # don't need to copy EMA
+                  continue
+              _var_mapping[q_encoder_var] = mom_var
+
+      _var_mapping = get_var_mapping()
+      tf.logging.info("Found %d pairs of matched variables."%(len(_var_mapping)))
+      return _var_mapping
+
     # update queue (depend on l_neg)
     with tf.control_dependencies([logits_con]):
       queue_push_op = push_queue(queue, queue_ptr, key_proj)
@@ -136,6 +156,13 @@ def build_model_fn(model, num_classes, num_train_examples):
     tf.logging.info(variables_to_train)
     tf.logging.info('================Variables to train (end)================')
 
+    # momentum model initialization    
+    var_mapping = get_var_mapping()
+    assign_ops = [tf.assign(mom_var, var) for var, mom_var in var_mapping.items()]
+    assign_op = tf.group(*assign_ops, name="initialize_momentum_encoder")
+    tf.get_collection(tf.GraphKeys.INIT_OPS, assign_op)
+
+    # learning rate schedule
     learning_rate = model_util.learning_rate_schedule(
         FLAGS.learning_rate, num_train_examples)
 
@@ -173,25 +200,7 @@ def build_model_fn(model, num_classes, num_train_examples):
                 'learning_rate', learning_rate,
                 step=tf.train.get_global_step())
 
-    def get_var_mapping():
-      nontrainable_vars = list(set(tf.get_collection(tf.GraphKeys.MODEL_VARIABLES)))
-      all_vars = {v.name: v for v in tf.global_variables() + tf.local_variables()}
-
-      # find variables of encoder & momentum encoder
-      _var_mapping = {}  # var -> mom var
-      momentum_prefix = "momentum_model/"
-      for mom_var in nontrainable_vars:
-          if momentum_prefix in mom_var.name:
-              q_encoder_name = mom_var.name.replace(momentum_prefix, "base_model/")
-              q_encoder_var = all_vars[q_encoder_name]
-              assert q_encoder_var not in _var_mapping
-              if not q_encoder_var.trainable:  # don't need to copy EMA
-                  continue
-              _var_mapping[q_encoder_var] = mom_var
-
-      _var_mapping = get_var_mapping()
-      tf.logging.info("Found %d pairs of matched variables."%(len(_var_mapping)))
-      return _var_mapping
+    
             
     optimizer = model_util.get_optimizer(learning_rate)
     control_deps = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
@@ -239,31 +248,31 @@ def build_model_fn(model, num_classes, num_train_examples):
         else:
           return tf.train.Scaffold()
     else:
-      # scaffold_fn = None
-      def scaffold_fn():
+      scaffold_fn = None
+      # def scaffold_fn():
         
-        # nontrainable_vars = list(set(tf.get_collection(tf.GraphKeys.MODEL_VARIABLES)))
-        # all_vars = {v.name: v for v in tf.global_variables() + tf.local_variables()}
+      #   # nontrainable_vars = list(set(tf.get_collection(tf.GraphKeys.MODEL_VARIABLES)))
+      #   # all_vars = {v.name: v for v in tf.global_variables() + tf.local_variables()}
 
-        # # find variables of encoder & momentum encoder
-        # _var_mapping = {}  # var -> mom var
-        # momentum_prefix = "momentum_model/"
-        # for mom_var in nontrainable_vars:
-        #     if momentum_prefix in mom_var.name:
-        #         q_encoder_name = mom_var.name.replace(momentum_prefix, "base_model/")
-        #         q_encoder_var = all_vars[q_encoder_name]
-        #         assert q_encoder_var not in _var_mapping
-        #         if not q_encoder_var.trainable:  # don't need to copy EMA
-        #             continue
-        #         _var_mapping[q_encoder_var] = mom_var
+      #   # # find variables of encoder & momentum encoder
+      #   # _var_mapping = {}  # var -> mom var
+      #   # momentum_prefix = "momentum_model/"
+      #   # for mom_var in nontrainable_vars:
+      #   #     if momentum_prefix in mom_var.name:
+      #   #         q_encoder_name = mom_var.name.replace(momentum_prefix, "base_model/")
+      #   #         q_encoder_var = all_vars[q_encoder_name]
+      #   #         assert q_encoder_var not in _var_mapping
+      #   #         if not q_encoder_var.trainable:  # don't need to copy EMA
+      #   #             continue
+      #   #         _var_mapping[q_encoder_var] = mom_var
 
-        # tf.logging.info("Found %d pairs of matched variables."%(len(_var_mapping)))
-        _var_mapping = get_var_mapping()
+      #   # tf.logging.info("Found %d pairs of matched variables."%(len(_var_mapping)))
+      #   _var_mapping = get_var_mapping()
         
-        assign_ops = [tf.assign(mom_var, var) for var, mom_var in _var_mapping.items()]
-        assign_op = tf.group(*assign_ops, name="initialize_momentum_encoder")
+      #   assign_ops = [tf.assign(mom_var, var) for var, mom_var in _var_mapping.items()]
+      #   assign_op = tf.group(*assign_ops, name="initialize_momentum_encoder")
 
-        return tf.train.Scaffold(init_op=assign_op)
+      #   return tf.train.Scaffold(init_op=assign_op)
 
 
     return tf.estimator.tpu.TPUEstimatorSpec(
@@ -336,7 +345,8 @@ def build_model_fn(model, num_classes, num_train_examples):
                   'learning_rate', learning_rate,
                   step=tf.train.get_global_step())
 
-              
+      
+
       optimizer = model_util.get_optimizer(learning_rate)
       control_deps = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
       if FLAGS.train_summary_steps > 0:
