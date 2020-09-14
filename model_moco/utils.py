@@ -20,18 +20,11 @@ def custom_getter_scope(custom_getter):
         The current variable scope with a custom_getter.
     """
     scope = tf.get_variable_scope()
-    if get_tf_version_tuple() >= (1, 5):
-        with tf.variable_scope(
+    with tf.variable_scope(
                 scope, custom_getter=custom_getter,
                 auxiliary_name_scope=False):
-            yield
-    else:
-        ns = tf.get_default_graph().get_name_scope()
-        with tf.variable_scope(
-                scope, custom_getter=custom_getter):
-            with tf.name_scope(ns + '/' if ns else ''):
-                yield
-
+    	yield
+    
 def freeze_variables(stop_gradient=True, skip_collection=False):
     """
     Return a context to freeze variables,
