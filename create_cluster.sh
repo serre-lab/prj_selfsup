@@ -1,6 +1,6 @@
 # Create kubernetes cluster with 4 nodes for self-sup experiments
 CLUSTER_NAME=self-sup
-MIN_NODES=1
+MIN_NODES=0
 MAX_NODES=16
 START_NODES=8
 
