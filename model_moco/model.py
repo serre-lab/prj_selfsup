@@ -79,7 +79,7 @@ def build_model_fn(model, num_classes, num_train_examples):
     # shuffled_key, shuffle_idxs = batch_shuffle(key)
     # shuffled_key.set_shape([self.batch_size, None, None, None])
     with tf.variable_scope("momentum_model"), \
-            utils.freeze_variables(skip_collection=True), \
+            utils.freeze_variables(skip_collection=True):
             # argscope(BatchNorm, ema_update='skip'):  # don't maintain EMA (will not be used at all)
       key_hiddens = model(key, is_training=False)
       key_proj = model_util.projection_head(key_hiddens, is_training)
@@ -102,7 +102,7 @@ def build_model_fn(model, num_classes, num_train_examples):
         temperature=FLAGS.temperature,
         tpu_context=tpu_context if is_training else None)
 
-    def push_queue(queue, queue_ptr, item)
+    def push_queue(queue, queue_ptr, item):
       # item = allgather(item, 'queue_gather')  # GN x C
       
       batch_size = tf.shape(item, out_type=tf.int64)[0]
