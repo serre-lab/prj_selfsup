@@ -156,9 +156,7 @@ def build_model_fn(model, num_classes, num_train_examples):
             contrast_acc = tf.equal(
                 tf.argmax(labels_con, 1), tf.argmax(logits_con, axis=1))
             contrast_acc = tf.reduce_mean(tf.cast(contrast_acc, tf.float32))
-            label_acc = tf.equal(
-                tf.argmax(labels['labels'], 1), tf.argmax(logits_sup, axis=1))
-            label_acc = tf.reduce_mean(tf.cast(label_acc, tf.float32))
+
             tf2.summary.scalar(
                 'train_contrast_loss',
                 contrast_loss,
