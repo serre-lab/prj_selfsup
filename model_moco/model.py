@@ -78,9 +78,12 @@ def build_model_fn(model, num_classes, num_train_examples):
 
     # shuffled_key, shuffle_idxs = batch_shuffle(key)
     # shuffled_key.set_shape([self.batch_size, None, None, None])
-    with tf.variable_scope("momentum_model"), \
-            utils.freeze_variables(skip_collection=True):
+    # with tf.variable_scope("momentum_model"), \
+    #         utils.freeze_variables(skip_collection=True):
             # argscope(BatchNorm, ema_update='skip'):  # don't maintain EMA (will not be used at all)
+    
+    with tf.variable_scope("momentum_model"):
+    
       key_hiddens = model(key, is_training=False)
       key_proj = model_util.projection_head(key_hiddens, is_training)
       # key_feat = self.net.forward(shuffled_key)
@@ -160,8 +163,8 @@ def build_model_fn(model, num_classes, num_train_examples):
     var_mapping = get_var_mapping()
     assign_ops = [tf.assign(mom_var, var) for var, mom_var in var_mapping.items()]
     assign_op = tf.group(*assign_ops, name="initialize_momentum_encoder")
-    tf.get_collection(tf.GraphKeys.INIT_OPS, assign_op)
-
+    tf.add_to_collection(tf.GraphKeys.INIT_OP, assign_op)
+    
     # learning rate schedule
     learning_rate = model_util.learning_rate_schedule(
         FLAGS.learning_rate, num_train_examples)
