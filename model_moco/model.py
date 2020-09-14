@@ -110,7 +110,7 @@ def build_model_fn(model, num_classes, num_train_examples):
 
       inds = tf.range(queue_ptr, end_queue_ptr, dtype=tf.int64)
       with tf.control_dependencies([inds]):
-          queue_ptr_update = tf.assign(queue_ptr, end_queue_ptr % self.queue_size)
+          queue_ptr_update = tf.assign(queue_ptr, end_queue_ptr % FLAGS.queue_size)
       queue_update = tf.scatter_update(queue, inds, item)
       return tf.group(queue_update, queue_ptr_update)
     
