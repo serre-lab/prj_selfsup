@@ -22,7 +22,7 @@ color_jitter_strength=0.5
 experiment_name="cifar_moco_test"
 use_neptune=True
 
-model_dir="/home/aimen/projects/prj_selfsup_moco" 
+model_dir="/home/azerroug/prj_selfsup_exps/moco" 
 use_tpu=False
 
 GPU_IDX=0
@@ -30,7 +30,7 @@ GPU_IDX=0
 
 rm -r $model_dir
 
-CUDA_VISIBLE_DEVICES=GPU_IDX python run.py \
+CUDA_VISIBLE_DEVICES=GPU_IDX python run_moco.py \
     --train_mode=$train_mode \
     --train_batch_size=$train_batch_size --train_epochs=$train_epochs \
     --learning_rate=$learning_rate --weight_decay=$weight_decay --temperature=$temperature \
