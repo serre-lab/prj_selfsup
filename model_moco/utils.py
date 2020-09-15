@@ -24,7 +24,7 @@ def custom_getter_scope(custom_getter):
                 scope, custom_getter=custom_getter,
                 auxiliary_name_scope=False):
     	yield
-    
+
 def freeze_variables(stop_gradient=True, skip_collection=False):
     """
     Return a context to freeze variables,

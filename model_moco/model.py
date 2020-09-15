@@ -71,9 +71,7 @@ def build_model_fn(model, num_classes, num_train_examples):
     # Base network forward pass.
     with tf.variable_scope('base_model'):
       # Pretrain or finetuen anything else will update BN stats.
-      model_train_mode = is_training
-      
-      query_hiddens = model(query, is_training=model_train_mode)
+      query_hiddens = model(query, is_training=is_training)
       query_proj = model_util.projection_head(query_hiddens, is_training)
 
     # shuffled_key, shuffle_idxs = batch_shuffle(key)
@@ -82,10 +80,10 @@ def build_model_fn(model, num_classes, num_train_examples):
     #         utils.freeze_variables(skip_collection=True):
             # argscope(BatchNorm, ema_update='skip'):  # don't maintain EMA (will not be used at all)
     
-    with tf.variable_scope("momentum_model"):
+    with tf.variable_scope("momentum_model"), utils.freeze_variables(skip_collection=True):
     
       key_hiddens = model(key, is_training=False)
-      key_proj = model_util.projection_head(key_hiddens, is_training)
+      key_proj = model_util.projection_head(key_hiddens, is_training=False)
       # key_feat = self.net.forward(shuffled_key)
     # key_proj = tf.math.l2_normalize(key_proj, axis=1)  # NxC
     # key_proj = batch_unshufflekey_proj, shuffle_idxs)
@@ -133,7 +131,7 @@ def build_model_fn(model, num_classes, num_train_examples):
                   continue
               _var_mapping[q_encoder_var] = mom_var
 
-      _var_mapping = get_var_mapping()
+      #_var_mapping = get_var_mapping()
       tf.logging.info("Found %d pairs of matched variables."%(len(_var_mapping)))
       return _var_mapping
 
@@ -160,10 +158,10 @@ def build_model_fn(model, num_classes, num_train_examples):
     tf.logging.info('================Variables to train (end)================')
 
     # momentum model initialization    
-    var_mapping = get_var_mapping()
-    assign_ops = [tf.assign(mom_var, var) for var, mom_var in var_mapping.items()]
-    assign_op = tf.group(*assign_ops, name="initialize_momentum_encoder")
-    tf.add_to_collection(tf.GraphKeys.INIT_OP, assign_op)
+    # var_mapping = get_var_mapping()
+    # assign_ops = [tf.assign(mom_var, var) for var, mom_var in var_mapping.items()]
+    # assign_op = tf.group(*assign_ops, name="initialize_momentum_encoder")
+    # tf.add_to_collection(tf.GraphKeys.INIT_OP, assign_op)
     
     # learning rate schedule
     learning_rate = model_util.learning_rate_schedule(
@@ -249,34 +247,28 @@ def build_model_fn(model, num_classes, num_train_examples):
           return tf.train.Scaffold()
     else:
       scaffold_fn = None
-      # def scaffold_fn():
+      def scaffold_fn():
         
-      #   # nontrainable_vars = list(set(tf.get_collection(tf.GraphKeys.MODEL_VARIABLES)))
-      #   # all_vars = {v.name: v for v in tf.global_variables() + tf.local_variables()}
-
-      #   # # find variables of encoder & momentum encoder
-      #   # _var_mapping = {}  # var -> mom var
-      #   # momentum_prefix = "momentum_model/"
-      #   # for mom_var in nontrainable_vars:
-      #   #     if momentum_prefix in mom_var.name:
-      #   #         q_encoder_name = mom_var.name.replace(momentum_prefix, "base_model/")
-      #   #         q_encoder_var = all_vars[q_encoder_name]
-      #   #         assert q_encoder_var not in _var_mapping
-      #   #         if not q_encoder_var.trainable:  # don't need to copy EMA
-      #   #             continue
-      #   #         _var_mapping[q_encoder_var] = mom_var
-
-      #   # tf.logging.info("Found %d pairs of matched variables."%(len(_var_mapping)))
-      #   _var_mapping = get_var_mapping()
+        _var_mapping = get_var_mapping()
+        assign_ops = [tf.assign(mom_var, var) for var, mom_var in _var_mapping.items()]
+        assign_op = tf.group(*assign_ops, name="initialize_momentum_encoder")
         
-      #   assign_ops = [tf.assign(mom_var, var) for var, mom_var in _var_mapping.items()]
-      #   assign_op = tf.group(*assign_ops, name="initialize_momentum_encoder")
+        def init_momentum_model(_, session):
+          session.run(assign_op)
+          
+        return tf.train.Scaffold(init_fn=init_momentum_model)
 
-      #   return tf.train.Scaffold(init_op=assign_op)
+    # print(var_mapping.keys())
 
-
+    # log_var = list(var_mapping.keys())[0]
+    # log_var_mom = var_mapping[log_var]
+    # hook = tf.train.LoggingTensorHook({"var": log_var[0,0,0], "var_mom": log_var_mom[0,0,0]}, every_n_iter=10)
+    
+    queue_mean = tf.reduce_mean(queue, -1)
+    hook = tf.train.LoggingTensorHook({"queue": queue_mean}, every_n_iter=10)
+    
     return tf.estimator.tpu.TPUEstimatorSpec(
-        mode=mode, train_op=global_train_op, loss=loss, scaffold_fn=scaffold_fn)
+        mode=mode, train_op=global_train_op, loss=loss, scaffold_fn=scaffold_fn, training_hooks=[hook]) #, training_hooks=[hook]
 
 
   def model_fn_finetune(features, labels, mode, params=None):
