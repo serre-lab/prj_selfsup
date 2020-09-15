@@ -17,13 +17,15 @@ clusters create "$CLUSTER_NAME" \
 --max-nodes "$MAX_NODES" \
 --min-nodes "$MIN_NODES" \
 --num-nodes "$START_NODES" \
---enable-stackdriver-kubernetes --enable-ip-alias \
+--enable-ip-alias \
 --network "projects/beyond-dl-1503610372419/global/networks/default" \
 --subnetwork "projects/beyond-dl-1503610372419/regions/europe-west4/subnetworks/default" \
 --default-max-pods-per-node "110" \
 --no-enable-master-authorized-networks --addons HorizontalPodAutoscaling,HttpLoadBalancing \
 --enable-autoupgrade --enable-autorepair \
 --max-surge-upgrade 1 --max-unavailable-upgrade 0 --enable-tpu
+
+# --enable-stackdriver-kubernetes 
 
 # Apply a quota to the cluster that matches preemptible resources
 kubectl create namespace quota-pod
