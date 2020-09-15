@@ -34,8 +34,8 @@ def add_supervised_loss(labels, logits, weights, **kwargs):
   """Compute loss for model and add it to loss collection."""
   return tf.losses.softmax_cross_entropy(labels, logits, weights, **kwargs)
 
-
-def add_moco_contrastive_loss(
+# DON'T USE THIS !
+def add_moco_contrastive_loss_2(
                          query,
                          key_pos,
                          key_neg,
@@ -79,7 +79,10 @@ def add_moco_contrastive_loss(
   
   else:
     labels = tf.one_hot(tf.range(batch_size), key_pos_batch_size + queue_size)
-    
+  
+  # logits_pos = tf.reshape(tf.einsum('nc,nc->n', q_feat, key_feat), (-1, 1))
+  # logits_neg = tf.einsum('nc,kc->nk', q_feat, queue)  # nxK
+
   logits_pos = tf.matmul(query, key_pos, transpose_b=True) / temperature
   logits_neg = tf.matmul(query, key_neg, transpose_b=True) / temperature
   
@@ -93,6 +96,50 @@ def add_moco_contrastive_loss(
 
   return loss, logits, labels
 
+
+def add_moco_contrastive_loss(
+                         query,
+                         key_pos,
+                         key_neg,
+                         hidden_norm=True,
+                         temperature=1.0,
+                         tpu_context=None,
+                         weights=1.0):
+  """Compute loss for model.
+
+  Args:
+    query: (`Tensor`) of shape (bsz, dim).
+    key_pos: positive keys (`Tensor`) of shape (bsz, dim).
+    key_neg: queue of negative keys(`Tensor`) of shape (queue_size, dim).
+    hidden_norm: whether or not to use normalization on the hidden vector.
+    temperature: a `floating` number for temperature scaling.
+    tpu_context: context information for tpu.
+    weights: a weighting number or vector.
+
+  Returns:
+    A loss scalar.
+    The logits for contrastive prediction task.
+    The labels for contrastive prediction task.
+  """
+  # Get (normalized) hidden1 and hidden2.
+  if hidden_norm:
+    query = tf.math.l2_normalize(query, -1)
+    key_pos = tf.math.l2_normalize(key_pos, -1)
+    key_neg = tf.math.l2_normalize(key_neg, -1)
+  
+  batch_size = tf.shape(query)[0]
+  queue_size = tf.shape(key_neg)[0]
+
+  logits_pos = tf.reshape(tf.einsum('nc,nc->n', q_feat, key_feat), (-1, 1))
+  logits_neg = tf.einsum('nc,kc->nk', q_feat, queue)  # nxK
+
+  logits = tf.concat([logits_pos, logits_neg], 1)
+
+  labels = tf.zeros(batch_size, dtype=tf.int64)  # n
+  loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits, labels=labels)
+  loss = tf.reduce_mean(loss, name='xentropy-loss')
+
+  return loss, logits, labels
 
 def tpu_cross_replica_concat(tensor, tpu_context=None):
   """Reduce a concatenation of the `tensor` across TPU cores.

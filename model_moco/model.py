@@ -264,11 +264,11 @@ def build_model_fn(model, num_classes, num_train_examples):
     # log_var_mom = var_mapping[log_var]
     # hook = tf.train.LoggingTensorHook({"var": log_var[0,0,0], "var_mom": log_var_mom[0,0,0]}, every_n_iter=10)
     
-    queue_mean = tf.reduce_mean(queue, -1)
-    hook = tf.train.LoggingTensorHook({"queue": queue_mean}, every_n_iter=10)
+    # queue_mean = tf.reduce_mean(queue, -1)
+    # hook = tf.train.LoggingTensorHook({"queue": queue_mean}, every_n_iter=10)
     
     return tf.estimator.tpu.TPUEstimatorSpec(
-        mode=mode, train_op=global_train_op, loss=loss, scaffold_fn=scaffold_fn, training_hooks=[hook]) #, training_hooks=[hook]
+        mode=mode, train_op=global_train_op, loss=loss, scaffold_fn=scaffold_fn) #, training_hooks=[hook]
 
 
   def model_fn_finetune(features, labels, mode, params=None):
