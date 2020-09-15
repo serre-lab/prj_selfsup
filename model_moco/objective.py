@@ -34,7 +34,9 @@ def add_supervised_loss(labels, logits, weights, **kwargs):
   """Compute loss for model and add it to loss collection."""
   return tf.losses.softmax_cross_entropy(labels, logits, weights, **kwargs)
 
+####################
 # DON'T USE THIS !
+####################
 def add_moco_contrastive_loss_2(
                          query,
                          key_pos,

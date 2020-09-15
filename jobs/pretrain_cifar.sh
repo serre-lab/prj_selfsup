@@ -22,7 +22,9 @@ color_jitter_strength=0.5
 experiment_name="cifar_moco_test"
 use_neptune=True
 
-model_dir="/home/aimen/projects/prj_selfsup_exps/moco_test" 
+# model_dir="/home/aimen/projects/prj_selfsup_exps/moco_test" 
+model_dir="/home/azerroug/prj_selfsup_exps/moco_test"
+
 use_tpu=False
 
 queue_size=256
