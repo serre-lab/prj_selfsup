@@ -92,7 +92,7 @@ def add_moco_contrastive_loss_2(
 
   loss = tf.losses.softmax_cross_entropy(
       labels, logits, weights=weights)
-  
+  # tf.losses.add_loss(loss)
   # loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits, labels=labels)
   # loss = tf.reduce_mean(loss, name='xentropy-loss')
 
@@ -132,8 +132,8 @@ def add_moco_contrastive_loss(
   batch_size = tf.shape(query)[0]
   queue_size = tf.shape(key_neg)[0]
 
-  logits_pos = tf.reshape(tf.einsum('nc,nc->n', q_feat, key_feat), (-1, 1))
-  logits_neg = tf.einsum('nc,kc->nk', q_feat, queue)  # nxK
+  logits_pos = tf.reshape(tf.einsum('nc,nc->n', query, key_pos), (-1, 1))
+  logits_neg = tf.einsum('nc,kc->nk', query, key_neg)  # nxK
 
   logits = tf.concat([logits_pos, logits_neg], 1) * (1 / temperature)
 
@@ -141,6 +141,8 @@ def add_moco_contrastive_loss(
   loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits, labels=labels)
   loss = tf.reduce_mean(loss, name='xentropy-loss')
 
+  tf.losses.add_loss(loss)
+  
   return loss, logits, labels
 
 def tpu_cross_replica_concat(tensor, tpu_context=None):

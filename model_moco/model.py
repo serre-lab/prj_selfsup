@@ -26,6 +26,7 @@ import model_moco.utils as utils
 import model_moco.model_util as model_util
 import model_moco.objective as obj_lib
 
+import numpy as np
 import tensorflow.compat.v1 as tf
 import tensorflow.compat.v2 as tf2
 
@@ -58,9 +59,13 @@ def build_model_fn(model, num_classes, num_train_examples):
     features = tf.concat(features_list, 0)  # (num_transforms * bsz, h, w, c)
     key, query = features_list
     
-    queue_init = tf.math.l2_normalize(
-        tf.random.normal([FLAGS.queue_size, FLAGS.proj_out_dim]), axis=1)
-    queue = tf.get_variable('queue', initializer=queue_init, trainable=False)
+    # queue_init = tf.math.l2_normalize(
+    #     tf.random.normal([FLAGS.queue_size, FLAGS.proj_out_dim]), axis=1)
+    # queue = tf.get_variable('queue', initializer=queue_init, trainable=False)
+    
+    queue_init = np.random.normal(0,1,[FLAGS.queue_size, FLAGS.proj_out_dim])
+    queue_init = queue_init/np.linalg.norm(queue_init, axis=1)[:,None]
+    queue = tf.get_variable('queue', [FLAGS.queue_size, FLAGS.proj_out_dim], initializer=tf.constant_initializer(queue_init), trainable=False)
     queue_ptr = tf.get_variable(
         'queue_ptr',
         [], initializer=tf.zeros_initializer(),
