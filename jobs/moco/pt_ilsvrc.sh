@@ -41,7 +41,7 @@ python3 run_moco.py \
   --train_mode=$train_mode \
   --train_batch_size=$train_batch_size --train_epochs=$train_epochs --temperature=$temperature \
   --learning_rate=$learning_rate --learning_rate_scaling=$learning_rate_scaling --weight_decay=$weight_decay \
-  --dataset=$dataset --image_size=$image_size --eval_split=$eval_split /
+  --dataset=$dataset --image_size=$image_size --eval_split=$eval_split \
   --data_dir=$DATA_DIR --model_dir=$MODEL_DIR \
   --use_tpu=$use_tpu --tpu_name=$TPU_NAME \
   --queue_size=$queue_size --moco_momentum=$moco_momentum \
