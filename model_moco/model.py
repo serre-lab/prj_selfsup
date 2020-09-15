@@ -113,10 +113,13 @@ def build_model_fn(model, num_classes, num_train_examples):
       # item = allgather(item, 'queue_gather')  # GN x C
       
       # batch_size = tf.shape(item, out_type=tf.int64)[0]
+      # inds = tf.range(queue_ptr, end_queue_ptr, dtype=tf.int64)
+
       batch_size = item.get_shape().as_list()[0]
       end_queue_ptr = queue_ptr + batch_size
 
-      inds = tf.range(queue_ptr, end_queue_ptr, dtype=tf.int64)
+      inds = tf.range(0, batch_size, dtype=tf.int64) + queue_ptr
+
       with tf.control_dependencies([inds]):
           queue_ptr_update = tf.assign(queue_ptr, end_queue_ptr % FLAGS.queue_size)
       queue_update = tf.scatter_update(queue, inds, item)
