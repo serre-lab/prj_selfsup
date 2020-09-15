@@ -181,8 +181,11 @@ def build_model_fn(model, num_classes, num_train_examples):
               tf.math.floormod(tf.train.get_global_step(),
                                 FLAGS.train_summary_steps), 0)
           with tf2.summary.record_if(should_record):
+            # contrast_acc = tf.equal(
+            #     tf.argmax(labels_con, 1), tf.argmax(logits_con, axis=1))
             contrast_acc = tf.equal(
-                tf.argmax(labels_con, 1), tf.argmax(logits_con, axis=1))
+                labels_con, tf.argmax(logits_con, axis=1))
+            
             contrast_acc = tf.reduce_mean(tf.cast(contrast_acc, tf.float32))
 
             tf2.summary.scalar(

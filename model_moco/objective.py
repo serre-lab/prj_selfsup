@@ -135,7 +135,7 @@ def add_moco_contrastive_loss(
   logits_pos = tf.reshape(tf.einsum('nc,nc->n', q_feat, key_feat), (-1, 1))
   logits_neg = tf.einsum('nc,kc->nk', q_feat, queue)  # nxK
 
-  logits = tf.concat([logits_pos, logits_neg], 1)
+  logits = tf.concat([logits_pos, logits_neg], 1) * (1 / temperature)
 
   labels = tf.zeros(batch_size, dtype=tf.int64)  # n
   loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits, labels=labels)
