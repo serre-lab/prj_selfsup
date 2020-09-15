@@ -97,9 +97,7 @@ def build_model_fn(model, num_classes, num_train_examples):
     # Add head and loss.
     tpu_context = params['context'] if 'context' in params else None
     
-    if tpu_context is not None:
-      key_proj = obj_lib.tpu_cross_replica_concat(key_proj, tpu_context) 
-
+    
     contrast_loss, logits_con, labels_con = obj_lib.add_moco_contrastive_loss(
         query_proj,
         key_proj,
@@ -107,6 +105,9 @@ def build_model_fn(model, num_classes, num_train_examples):
         hidden_norm=FLAGS.hidden_norm,
         temperature=FLAGS.temperature,
         tpu_context=tpu_context if is_training else None)
+
+    if tpu_context is not None:
+      key_proj = obj_lib.tpu_cross_replica_concat(key_proj, tpu_context) 
 
     def push_queue(queue, queue_ptr, item):
       # item = allgather(item, 'queue_gather')  # GN x C
