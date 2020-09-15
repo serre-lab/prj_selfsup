@@ -112,7 +112,8 @@ def build_model_fn(model, num_classes, num_train_examples):
     def push_queue(queue, queue_ptr, item):
       # item = allgather(item, 'queue_gather')  # GN x C
       
-      batch_size = tf.shape(item, out_type=tf.int64)[0]
+      # batch_size = tf.shape(item, out_type=tf.int64)[0]
+      batch_size = item.get_shape().as_list()[0]
       end_queue_ptr = queue_ptr + batch_size
 
       inds = tf.range(queue_ptr, end_queue_ptr, dtype=tf.int64)
