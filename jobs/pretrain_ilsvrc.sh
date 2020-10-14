@@ -4,6 +4,7 @@
 # bash pretrain_ilsrc.sh 16 ar ar prj-selfsup-v2-22
 
 train_mode=pretrain
+mode=train_then_eval
 
 train_batch_size=4096
 train_epochs=800 
@@ -81,6 +82,7 @@ python3 run.py \
   --eval_split=$eval_split \
   --data_dir=$DATA_DIR \
   --model_dir=$MODEL_DIR \
+  --mode=$mode \
   --td_loss=$td_loss \
   --bu_loss=$bu_loss \
   --td_loss_weight=$td_loss_weight \

@@ -49,5 +49,5 @@ python3 run.py \
   --global_bn=$global_bn --optimizer=$optimizer --learning_rate=$learning_rate --weight_decay=$weight_decay \
   --train_epochs=$train_epochs --train_batch_size=$train_batch_size --warmup_epochs=$warmup_epochs \
   --dataset=$dataset --image_size=$image_size --eval_split=$eval_split \
-  --data_dir=$DATA_DIR --model_dir=$MODEL_DIR --checkpoint=$CHKPT_DIR \
-  --use_tpu=True --tpu_name=$TPU_NAME --train_summary_steps=$train_summary_steps
+  --data_dir=$DATA_DIR --model_dir=$MODEL_DIR \  # WHAT IF I DONT ADD A CKPT? --checkpoint=$CHKPT_DIR \
+  --use_tpu=True --train_summary_steps=$train_summary_steps

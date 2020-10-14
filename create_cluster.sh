@@ -7,7 +7,7 @@ START_NODES=8
 gcloud beta container --project "beyond-dl-1503610372419" \
 clusters create "$CLUSTER_NAME" \
 --zone "europe-west4-a" --no-enable-basic-auth \
---cluster-version "1.15.12-gke.2" \
+--cluster-version "1.15.12-gke.5000" \
 --machine-type "n1-standard-4" \
 --image-type "UBUNTU" \
 --disk-type "pd-standard" \
@@ -18,6 +18,7 @@ clusters create "$CLUSTER_NAME" \
 --min-nodes "$MIN_NODES" \
 --num-nodes "$START_NODES" \
 --enable-ip-alias \
+--enable-stackdriver-kubernetes \
 --network "projects/beyond-dl-1503610372419/global/networks/default" \
 --subnetwork "projects/beyond-dl-1503610372419/regions/europe-west4/subnetworks/default" \
 --default-max-pods-per-node "110" \
@@ -25,7 +26,7 @@ clusters create "$CLUSTER_NAME" \
 --enable-autoupgrade --enable-autorepair \
 --max-surge-upgrade 1 --max-unavailable-upgrade 0 --enable-tpu
 
-# --enable-stackdriver-kubernetes 
+
 
 # Apply a quota to the cluster that matches preemptible resources
 kubectl create namespace quota-pod
