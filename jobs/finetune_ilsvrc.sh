@@ -29,8 +29,8 @@ use_tpu=True
 
 new_experiment_name=$1  # finetune_BU_{bu_loss}_TD_{td_loss}_R50_lr0.1_T0.1
 old_experiment_name=$2  # "model.ckpt-93836"
-tpu_name=$3
-checkpoint_name=$4  # "model.ckpt-93836"
+tpu_name=$4
+checkpoint_name=$3  # "model.ckpt-93836"
 
 export TPU_NAME=$tpu_name  # 'prj-selfsup-tpu'
 
