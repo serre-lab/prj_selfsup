@@ -396,14 +396,14 @@ def build_model_fn(model, num_classes, num_train_examples):
         metrics['bottomup_top_1_accuracy'] = tf.metrics.accuracy(
             tf.argmax(labels_bu_con, 1), tf.argmax(logits_bu_con, axis=1),
             weights=mask)
-        metrics['bottomup_top_5_accuracy'] = tf.metrics.recall_at_k(
-            tf.argmax(labels_bu_con, 1), logits_bu_con, k=5, weights=mask)
+        # metrics['bottomup_top_5_accuracy'] = tf.metrics.recall_at_k(
+        #     tf.argmax(labels_bu_con, 1), logits_bu_con, k=5, weights=mask)
 
         metrics['topdown_top_1_accuracy'] = tf.metrics.accuracy(
             tf.argmax(labels_td_con, 1), tf.argmax(logits_td_con, axis=1),
             weights=mask)
-        metrics['topdown_top_5_accuracy'] = tf.metrics.recall_at_k(
-            tf.argmax(labels_td_con, 1), logits_td_con, k=5, weights=mask)
+        # metrics['topdown_top_5_accuracy'] = tf.metrics.recall_at_k(
+        #     tf.argmax(labels_td_con, 1), logits_td_con, k=5, weights=mask)
         return metrics
 
       metrics = {
