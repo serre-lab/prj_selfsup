@@ -1,13 +1,13 @@
 # Create kubernetes cluster with 4 nodes for self-sup experiments
 CLUSTER_NAME=self-sup
 MIN_NODES=0
-MAX_NODES=16
-START_NODES=8
+MAX_NODES=1  # 16
+START_NODES=1  # 8
 
 gcloud beta container --project "beyond-dl-1503610372419" \
 clusters create "$CLUSTER_NAME" \
 --zone "europe-west4-a" --no-enable-basic-auth \
---cluster-version "1.15.12-gke.5000" \
+--cluster-version "1.15.12-gke.6002" \
 --machine-type "n1-standard-4" \
 --image-type "UBUNTU" \
 --disk-type "pd-standard" \
@@ -31,5 +31,4 @@ clusters create "$CLUSTER_NAME" \
 # Apply a quota to the cluster that matches preemptible resources
 kubectl create namespace quota-pod
 kubectl apply -f quota.yaml --namespace=quota-pod
-gcloud beta container clusters update $CLUSTER_NAME \
---autoscaling-profile optimize-utilization
+gcloud beta container clusters update $CLUSTER_NAME --autoscaling-profile optimize-utilization
