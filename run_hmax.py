@@ -465,20 +465,20 @@ def main(argv):
   resnet_decoder.BATCH_NORM_DECAY = FLAGS.batch_norm_decay
 
   model = resnet_model.resnet(
-      resnet_depth=params['resnet_depth'],
-        num_classes=params['num_label_classes'],
-        dropblock_size=params['dropblock_size'],
-        dropblock_keep_probs=dropblock_keep_probs,
-        pre_activation=params['pre_activation'],
-        norm_act_layer=params['norm_act_layer'],
-        data_format=params['data_format'],
-        se_ratio=params['se_ratio'],
-        drop_connect_rate=params['drop_connect_rate'],
-        use_resnetd_stem=params['use_resnetd_stem'],
-        resnetd_shortcut=params['resnetd_shortcut'],
-        replace_stem_max_pool=params['replace_stem_max_pool'],
-        dropout_rate=params['dropout_rate'],
-        bn_momentum=params['bn_momentum']) 
+        resnet_depth=FLAGS.resnet_depth,
+        num_classes=num_classes,
+        dropblock_size=7,
+        dropblock_keep_probs=None,
+        pre_activation=None,
+        norm_act_layer='bn_relu',
+        data_format='channels_last',
+        se_ratio=None,
+        drop_connect_rate=None,
+        use_resnetd_stem=False,
+        resnetd_shortcut=False,
+        replace_stem_max_pool=False,
+        dropout_rate=None,
+        bn_momentum=FLAGS.batch_norm_decay) 
 
 #   model = resnet_model.resnet(
 #       encoder_depth=FLAGS.encoder_depth,
