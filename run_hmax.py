@@ -464,16 +464,31 @@ def main(argv):
   resnet_encoder.BATCH_NORM_DECAY = FLAGS.batch_norm_decay
   resnet_decoder.BATCH_NORM_DECAY = FLAGS.batch_norm_decay
 
-  model = resnet_model.resnet(
-      encoder_depth=FLAGS.encoder_depth,
-      decoder_depth=FLAGS.decoder_depth,
-      width_multiplier=FLAGS.width_multiplier,
-      metric_channels=FLAGS.metric_channels,
-      mask_augs=FLAGS.mask_augs,
-      greyscale_viz=FLAGS.greyscale_viz,
-      skip=FLAGS.skips,
-      cifar_stem=False) 
+#   model = resnet_model.resnet(
+#       encoder_depth=FLAGS.encoder_depth,
+#       decoder_depth=FLAGS.decoder_depth,
+#       width_multiplier=FLAGS.width_multiplier,
+#       metric_channels=FLAGS.metric_channels,
+#       mask_augs=FLAGS.mask_augs,
+#       greyscale_viz=FLAGS.greyscale_viz,
+#       skip=FLAGS.skips,
+#       cifar_stem=False) 
 
+    model = resnet_model.resnet(
+            resnet_depth=params['resnet_depth'],
+            num_classes=params['num_label_classes'],
+            dropblock_size=params['dropblock_size'],
+            dropblock_keep_probs=dropblock_keep_probs,
+            pre_activation=params['pre_activation'],
+            norm_act_layer=params['norm_act_layer'],
+            data_format=params['data_format'],
+            se_ratio=params['se_ratio'],
+            drop_connect_rate=params['drop_connect_rate'],
+            use_resnetd_stem=params['use_resnetd_stem'],
+            resnetd_shortcut=params['resnetd_shortcut'],
+            replace_stem_max_pool=params['replace_stem_max_pool'],
+            dropout_rate=params['dropout_rate'],
+            bn_momentum=params['bn_momentum'])
 # def resnet(resnet_depth, num_classes, data_format='channels_first',
 #            dropblock_keep_probs=None, dropblock_size=None,
 #            pre_activation=False, norm_act_layer=LAYER_BN_RELU,
