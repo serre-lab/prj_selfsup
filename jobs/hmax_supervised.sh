@@ -1,6 +1,6 @@
 
 mode=train_then_eval
-train_mode=finetune
+train_mode=pretrain
 
 zero_init_logits_layer=True
 fine_tune_after_block=4
