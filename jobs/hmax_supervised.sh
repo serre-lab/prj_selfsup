@@ -3,7 +3,7 @@ mode=train_then_eval
 train_mode=pretrain
 
 zero_init_logits_layer=True
-fine_tune_after_block=4
+fine_tune_after_block=-1
 
 variable_schema='(?!global_step|(?:.*/|^)Momentum|head)'
 
