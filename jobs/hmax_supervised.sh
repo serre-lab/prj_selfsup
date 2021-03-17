@@ -29,7 +29,7 @@ bu_loss_weight=1.0
 greyscale_viz=False
 skips=True
 mask_augs=$4
-out_dir=results_50
+# out_dir=results_50
 
 # datetime="$(date +'%d_%m_%Y-%H_%M')"
 experiment_name="pretrain-hmax-${2}_BU-${3}_R${encoder_depth}_lr${learning_rate}_T${temperature}_mask${mask_augs}_tag${tag}"  # _TPU$datetime"
