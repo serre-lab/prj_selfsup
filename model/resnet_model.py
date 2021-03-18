@@ -61,7 +61,7 @@ def norm_activation(
 
 
 def batch_norm_relu(inputs, is_training, relu=True, init_zero=False,
-                    data_format='channels_first',
+                    data_format='channels_last',
                     bn_momentum=MOVING_AVERAGE_DECAY):
   """Performs a batch normalization followed by a ReLU.
 
@@ -106,7 +106,7 @@ def batch_norm_relu(inputs, is_training, relu=True, init_zero=False,
 
 def _instance_std(inputs,
                   epsilon=EPSILON,
-                  data_format='channels_first'):
+                  data_format='channels_last'):
   """Instance standard deviation."""
   axes = [1, 2] if data_format == 'channels_last' else [2, 3]
   _, variance = tf.nn.moments(inputs, axes=axes, keepdims=True)
@@ -117,7 +117,7 @@ def _batch_std(inputs,
                training,
                decay=MOVING_AVERAGE_DECAY,
                epsilon=EPSILON,
-               data_format='channels_first',
+               data_format='channels_last',
                name='moving_variance'):
   """Batch standard deviation."""
   if data_format == 'channels_last':
@@ -166,7 +166,7 @@ def _get_shape_list(tensor):
 
 def _group_std(inputs,
                epsilon=EPSILON,
-               data_format='channels_first',
+               data_format='channels_last',
                num_groups=32):
   """Grouped standard deviation along the channel dimension."""
   axis = 3 if data_format == 'channels_last' else 1
@@ -195,7 +195,7 @@ def evonorm(inputs,
             decay=MOVING_AVERAGE_DECAY,
             epsilon=EPSILON,
             num_groups=32,
-            data_format='channels_first'):
+            data_format='channels_last'):
   """Apply an EvoNorm transformation (an alternative to BN-ReLU).
 
      Hanxiao Liu, Andrew Brock, Karen Simonyan, Quoc V. Le.
@@ -270,7 +270,7 @@ def evonorm(inputs,
 
 
 def dropblock(net, is_training, keep_prob, dropblock_size,
-              data_format='channels_first'):
+              data_format='channels_last'):
   """DropBlock: a regularization method for convolutional neural networks.
 
   DropBlock is a form of structured dropout, where units in a contiguous
@@ -350,7 +350,7 @@ def dropblock(net, is_training, keep_prob, dropblock_size,
   return net
 
 
-def fixed_padding(inputs, kernel_size, data_format='channels_first'):
+def fixed_padding(inputs, kernel_size, data_format='channels_last'):
   """Pads the input along the spatial dimensions independently of input size.
 
   Args:
@@ -379,7 +379,7 @@ def fixed_padding(inputs, kernel_size, data_format='channels_first'):
 
 
 def conv2d_fixed_padding(inputs, filters, kernel_size, strides,
-                         data_format='channels_first'):
+                         data_format='channels_last'):
   """Strided 2-D convolution with explicit padding.
 
   The padding is consistent and is based only on `kernel_size`, not on the
@@ -407,7 +407,7 @@ def conv2d_fixed_padding(inputs, filters, kernel_size, strides,
 
 
 def residual_block(inputs, filters, is_training, strides,
-                   use_projection=False, data_format='channels_first',
+                   use_projection=False, data_format='channels_last',
                    dropblock_keep_prob=None, dropblock_size=None,
                    pre_activation=False, norm_act_layer=LAYER_BN_RELU,
                    resnetd_shortcut=False, se_ratio=None,
@@ -482,7 +482,7 @@ def residual_block(inputs, filters, is_training, strides,
 
 
 def bottleneck_block(inputs, filters, is_training, strides,
-                     use_projection=False, data_format='channels_first',
+                     use_projection=False, data_format='channels_last',
                      dropblock_keep_prob=None, dropblock_size=None,
                      pre_activation=False, norm_act_layer=LAYER_BN_RELU,
                      resnetd_shortcut=False, se_ratio=None,
@@ -592,7 +592,7 @@ def bottleneck_block(inputs, filters, is_training, strides,
 
 
 def block_group(inputs, filters, block_fn, blocks, strides, is_training, name,
-                data_format='channels_first', dropblock_keep_prob=None,
+                data_format='channels_last', dropblock_keep_prob=None,
                 dropblock_size=None, pre_activation=False,
                 norm_act_layer=LAYER_BN_RELU, se_ratio=None,
                 resnetd_shortcut=False, drop_connect_rate=None,
@@ -655,7 +655,7 @@ def block_group(inputs, filters, block_fn, blocks, strides, is_training, name,
 def resnet_generator(block_fn,
                      layers,
                      num_classes,
-                     data_format='channels_first',
+                     data_format='channels_last',
                      use_resnetd_stem=False,
                      resnetd_shortcut=False,
                      replace_stem_max_pool=False,
@@ -822,7 +822,7 @@ def resnet_generator(block_fn,
   return model
 
 
-def resnet(resnet_depth, num_classes, data_format='channels_first',
+def resnet(resnet_depth, num_classes, data_format='channels_last',
            dropblock_keep_probs=None, dropblock_size=None,
            pre_activation=False, norm_act_layer=LAYER_BN_RELU,
            se_ratio=None, drop_connect_rate=None, use_resnetd_stem=False,
