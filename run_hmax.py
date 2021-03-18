@@ -35,7 +35,7 @@ import sys
 # import model_util as model_util
 
 from model import resnet_model, resnet_encoder, resnet_decoder, model_util  # noqa
-from model import model_hmax as model_lib
+from model import model as model_lib
 
 import data.default.data as data_lib
 
