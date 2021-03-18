@@ -44,7 +44,7 @@ LAYER_EVONORMS = [
 
 def norm_activation(
     inputs, is_training, layer=LAYER_BN_RELU, nonlinearity=True,
-    init_zero=False, data_format='channels_first',
+    init_zero=False, data_format='channels_last',
     bn_momentum=MOVING_AVERAGE_DECAY):
   """Normalization-activation layer."""
   if layer == LAYER_BN_RELU:
