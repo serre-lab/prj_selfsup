@@ -36,6 +36,7 @@ import sys
 
 from model import resnet_model, resnet_encoder, resnet_decoder, model_util  # noqa
 from model import model_hmax as model_lib
+from model_simclr import resnet
 
 import data.default.data as data_lib
 
@@ -464,21 +465,26 @@ def main(argv):
   resnet_encoder.BATCH_NORM_DECAY = FLAGS.batch_norm_decay
   resnet_decoder.BATCH_NORM_DECAY = FLAGS.batch_norm_decay
 
-  model = resnet_model.resnet(
-        resnet_depth=FLAGS.resnet_depth,
-        num_classes=num_classes,
-        dropblock_size=7,
-        dropblock_keep_probs=None,
-        pre_activation=None,
-        norm_act_layer='bn_relu',
-        data_format='channels_last',
-        se_ratio=None,
-        drop_connect_rate=None,
-        use_resnetd_stem=False,
-        resnetd_shortcut=False,
-        replace_stem_max_pool=False,
-        dropout_rate=None,
-        bn_momentum=FLAGS.batch_norm_decay) 
+  model = resnet.resnet_v1(
+      resnet_depth=FLAGS.resnet_depth,
+      width_multiplier=FLAGS.width_multiplier,
+      cifar_stem=False)
+
+#   model = resnet_model.resnet(
+#         resnet_depth=FLAGS.resnet_depth,
+#         num_classes=num_classes,
+#         dropblock_size=7,
+#         dropblock_keep_probs=None,
+#         pre_activation=None,
+#         norm_act_layer='bn_relu',
+#         data_format='channels_last',
+#         se_ratio=None,
+#         drop_connect_rate=None,
+#         use_resnetd_stem=False,
+#         resnetd_shortcut=False,
+#         replace_stem_max_pool=False,
+#         dropout_rate=None,
+#         bn_momentum=FLAGS.batch_norm_decay) 
 
 #   model = resnet_model.resnet(
 #       encoder_depth=FLAGS.encoder_depth,
